@@ -135,7 +135,7 @@ export default function LoginPage() {
             <label htmlFor="demo-role" className="block text-xs font-semibold">Masuk akun demo sementara</label>
             <p className="text-xs text-neutral-500">Khusus pengujian. Menggunakan akun uji nyata dan data berlabel UJI.</p>
             <select id="demo-role" name="demoRole" className="w-full rounded-lg border p-2 text-xs">
-              <option value="staff">Staff Accounting</option><option value="finance">Staff Finance</option><option value="gm">GM Accounting</option><option value="sm">SM Finance</option><option value="director">Direktur Utama</option>
+              <option value="staff">Staff Accounting</option><option value="finance">Staff Finance</option><option value="gm">GM Accounting</option><option value="sm">SM Finance</option><option value="director">Direktur Utama</option><option value="admin">Super Admin</option>
             </select>
             <label htmlFor="demo-password" className="block text-xs font-semibold">Kata sandi akun demo</label>
             <input id="demo-password" name="demoPassword" type="password" autoComplete="current-password" required className="w-full rounded-lg border p-2 text-xs" placeholder="Kata sandi dari berkas akun uji"/>
