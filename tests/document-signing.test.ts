@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { PDFDocument, StandardFonts } from "pdf-lib";
 import JSZip from "jszip";
 import { generateLetterDocx } from "../src/lib/docx-generator";
@@ -30,6 +30,7 @@ describe("Pengesahan dokumen nyata", () => {
       "DOCX",
       "00118-Tag/FIN/SIA/11.2026",
     );
+    vi.useFakeTimers({toFake:["Date"]});vi.setSystemTime(new Date("2026-11-17T20:00:00Z"));
     const first = await applyDocumentImages(numbered, "DOCX", [
       { marker: "{{SIGNATURE_1}}", bytes: png },
       { marker: "{{STAMP}}", bytes: png },
@@ -45,11 +46,12 @@ describe("Pengesahan dokumen nyata", () => {
     expect(xml).toContain("00118-Tag/FIN/SIA/11.2026");
     expect(xml).toContain("Naskah &lt;tetap&gt; &amp; aman");
     expect(xml.match(/<w:drawing>/g)?.length).toBe(3);
+    vi.setSystemTime(new Date("2026-11-17T20:05:00Z"));
     const repeat = await applyDocumentImages(numbered, "DOCX", [
       { marker: "{{SIGNATURE_1}}", bytes: png },
       { marker: "{{STAMP}}", bytes: png },
     ]);
-    expect(Buffer.compare(first, repeat)).toBe(0);
+    expect(Buffer.compare(first, repeat)).toBe(0);vi.useRealTimers();
   });
   it("menolak placeholder yang hilang dan gambar bukan PNG", async () => {
     const doc = await generateLetterDocx({ signatureCount: 0 });

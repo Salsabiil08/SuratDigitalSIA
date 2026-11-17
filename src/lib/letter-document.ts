@@ -150,6 +150,8 @@ export async function applyDocumentImages(
   zip.file("[Content_Types].xml", types, {
     date: zip.file("[Content_Types].xml")!.date,
   });
+  // JSZip may create parent directory entries. Normalize ZIP metadata so preview and commit are byte-identical.
+  for (const entry of Object.values(zip.files)) entry.date = new Date("2000-01-01T00:00:00Z");
   return zip.generateAsync({ type: "nodebuffer", compression: "DEFLATE" });
 }
 export async function fillOfficialNumber(
