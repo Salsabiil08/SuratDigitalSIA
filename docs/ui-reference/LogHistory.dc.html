@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<title>Log History SIADocs</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Playfair+Display:wght@800&amp;display=swap">
+<style>
+body{margin:0}
+.app{display:flex;flex-wrap:wrap;min-height:1000px;background:#F5F5F3;color:#1C1C1E;font:14px/1.5 Inter,system-ui,sans-serif}
+.side{flex:0 0 250px;box-sizing:border-box;background:#fff;border-right:1px solid #E4E4E0;padding:20px 14px;display:flex;flex-direction:column;gap:2px}
+.main{flex:999 1 560px;min-width:0;padding:28px 36px;display:flex;flex-direction:column;gap:20px}
+.brand{display:flex;align-items:center;gap:10px;padding:4px 10px 18px;font-weight:700;font-size:18px}
+.logo{width:32px;height:32px;border-radius:8px;background:#B30B0B;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px}
+.grp{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#6B6B66;padding:16px 10px 6px}
+.nav{display:flex;justify-content:space-between;align-items:center;padding:9px 10px;border-radius:8px;color:#2B2B28;text-decoration:none;min-height:20px}
+.nav:hover{background:#F1F1EE}
+.on{background:#FBE9EC;color:#A50D25;font-weight:600}
+.bdg{background:#B30B0B;color:#fff;border-radius:999px;font-size:11px;font-weight:600;padding:1px 8px}
+.me{margin-top:auto;padding:12px 10px;border-top:1px solid #E4E4E0;display:flex;gap:10px;align-items:center}
+.av{width:34px;height:34px;border-radius:50%;background:#ECECE8;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:12px}
+.card{background:#fff;border:1px solid #E4E4E0;border-radius:12px}
+.chip{display:inline-block;padding:2px 10px;border-radius:999px;font-size:12px;font-weight:600;white-space:nowrap}
+.gray{background:#ECECE8;color:#3D3D3A}.amber{background:#FFF0D1;color:#7A4B00}.blue{background:#E3EEFF;color:#1B4FA0}.green{background:#DDF3E4;color:#1D6B3A}.red{background:#FBE0E4;color:#9A1028}
+.muted{color:#5F5F5A}
+.inp{min-height:44px;padding:0 14px;border:1px solid #C9C9C3;border-radius:8px;font:inherit;box-sizing:border-box;background:#fff}
+.tbl{width:100%;border-collapse:collapse;min-width:860px}
+.tbl th{text-align:left;font-size:12px;color:#5F5F5A;font-weight:600;padding:12px 16px;border-bottom:1px solid #E4E4E0;white-space:nowrap}
+.tbl td{padding:14px 16px;border-top:1px solid #EEEEEA;vertical-align:top}
+.app{background:linear-gradient(135deg,#FFF3EA 0%,#F4F4F7 55%,#EEF0F5 100%)}
+.side{background:#121A22;border-right:0}
+.nav{color:#E1E5EA}.nav:hover{background:rgba(255,255,255,.08)}
+.on,.on:hover{background:rgba(242,106,15,.22);color:#FFB27A}
+.grp{color:#9AA3AE}
+.brand{color:#fff}
+.logo{background:linear-gradient(135deg,#B30B0B,#F26A0F)}
+.bdg{background:linear-gradient(90deg,#E62314,#F26A0F)}
+.me{border-top:1px solid rgba(255,255,255,.12);color:#fff}.me .muted{color:#9AA3AE}
+.av{background:rgba(255,255,255,.14);color:#fff}
+.main{border-top:4px solid transparent;border-image:linear-gradient(90deg,#B30B0B,#F26A0F) 1}
+.card{box-shadow:0 1px 2px rgba(18,26,34,.04),0 10px 28px rgba(18,26,34,.06)}
+</style>
+</helmet>
+<div class="app">
+<nav class="side" aria-label="Menu utama">
+<div class="brand"><img src="/_blob/5bb1725f0d70f09bcdb2598774c2d709" alt="" style="height:34px;width:auto;display:block"><span style="font-family:'Playfair Display',Georgia,serif;font-weight:800;font-size:25px;letter-spacing:-.01em;line-height:1">SIADocs</span></div>
+<a class="nav" href="Main.dc.html">Dashboard</a>
+<div class="grp">Surat</div>
+<a class="nav" href="Surat.dc.html">Surat Saya</a>
+<a class="nav" href="Buat.dc.html">Buat Surat</a>
+<a class="nav" href="Persetujuan.dc.html">Persetujuan <span class="bdg">3</span></a>
+<a class="nav" href="Surat.dc.html">Menunggu Pengesahan</a>
+<a class="nav" href="Surat.dc.html">Kotak Masuk</a>
+<a class="nav" href="Surat.dc.html">Disposisi</a>
+<div class="grp">Administrasi</div>
+<a class="nav" href="Main.dc.html">Master Organisasi</a>
+<a class="nav" href="Main.dc.html">Seri Penomoran</a>
+<a class="nav on" href="LogHistory.dc.html">Log History</a>
+<div class="me"><span class="av">SA</span><div><div style="font-weight:600">Super Admin</div><div class="muted" style="font-size:12px">Administrasi sistem</div></div></div>
+</nav>
+<main class="main">
+<div><h1 style="margin:0;font-size:26px;letter-spacing:-.01em">Log History</h1><div class="muted">Riwayat aktivitas sistem. Hanya Super Admin yang dapat membuka halaman ini. Isi dokumen tidak ditampilkan.</div></div>
+<div style="display:flex;flex-wrap:wrap;gap:12px">
+<label for="q" style="position:absolute;left:-9999px">Cari aktivitas</label>
+<input id="q" class="inp" style="flex:1 1 280px" placeholder="Cari aktivitas, pengguna, atau nomor surat">
+<label for="a" style="position:absolute;left:-9999px">Aksi</label>
+<select id="a" class="inp"><option>Semua aksi</option><option>Nomor diterbitkan</option><option>Persetujuan</option><option>Pembatalan</option><option>Pengiriman</option></select>
+<label for="t" style="position:absolute;left:-9999px">Periode</label>
+<select id="t" class="inp"><option>7 hari terakhir</option><option>30 hari terakhir</option></select>
+</div>
+<section class="card" style="overflow-x:auto">
+<table class="tbl">
+<thead><tr><th>Waktu</th><th>Pengguna</th><th>Aksi</th><th>Surat</th><th>Keterangan</th></tr></thead>
+<tbody>
+<tr><td class="muted">11 Nov 2026, 10.12</td><td>Pengguna Contoh</td><td><span class="chip green">Nomor diterbitkan</span></td><td>00105-IN/ACH/SIA/01.2027</td><td class="muted">Dokumen bernomor lolos pemeriksaan</td></tr>
+<tr><td class="muted">11 Nov 2026, 09.40</td><td>Direktur Utama</td><td><span class="chip blue">Persetujuan</span></td><td>Surat Pengantar Tagihan</td><td class="muted">Disetujui</td></tr>
+<tr><td class="muted">10 Nov 2026, 15.12</td><td>Senior Manager Finance</td><td><span class="chip blue">Persetujuan</span></td><td>Surat Pengantar Tagihan</td><td class="muted">Disetujui</td></tr>
+<tr><td class="muted">10 Nov 2026, 11.03</td><td>Staff Accounting</td><td><span class="chip amber">Revisi diminta</span></td><td>Undangan Rapat Evaluasi</td><td class="muted">Catatan revisi dikirim ke pembuat</td></tr>
+<tr><td class="muted">09 Nov 2026, 14.20</td><td>Pengguna Contoh</td><td><span class="chip gray">Catat Pengiriman</span></td><td>00098/KRE.DIR/01.2027</td><td class="muted">Kanal: kurir, bukti terlampir</td></tr>
+</tbody>
+</table>
+</section>
+<div class="muted" style="font-size:12px">Log bersifat tambah saja, tidak dapat diubah atau dihapus. Data pada layar ini adalah contoh.</div>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1000}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

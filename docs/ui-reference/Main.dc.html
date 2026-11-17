@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<title>Dashboard SIADocs</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Playfair+Display:wght@800&amp;display=swap">
+<style>
+body{margin:0}
+.app{display:flex;flex-wrap:wrap;min-height:1000px;background:#F5F5F3;color:#1C1C1E;font:14px/1.5 Inter,system-ui,sans-serif}
+.side{flex:0 0 250px;box-sizing:border-box;background:#fff;border-right:1px solid #E4E4E0;padding:20px 14px;display:flex;flex-direction:column;gap:2px}
+.main{flex:999 1 560px;min-width:0;padding:28px 36px;display:flex;flex-direction:column;gap:24px}
+.brand{display:flex;align-items:center;gap:10px;padding:4px 10px 18px;font-weight:700;font-size:18px}
+.logo{width:32px;height:32px;border-radius:8px;background:#B30B0B;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px}
+.grp{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#6B6B66;padding:16px 10px 6px}
+.nav{display:flex;justify-content:space-between;align-items:center;padding:9px 10px;border-radius:8px;color:#2B2B28;text-decoration:none;min-height:20px}
+.nav:hover{background:#F1F1EE}
+.on{background:#FBE9EC;color:#A50D25;font-weight:600}
+.bdg{background:#B30B0B;color:#fff;border-radius:999px;font-size:11px;font-weight:600;padding:1px 8px}
+.me{margin-top:auto;padding:12px 10px;border-top:1px solid #E4E4E0;display:flex;gap:10px;align-items:center}
+.av{width:34px;height:34px;border-radius:50%;background:#ECECE8;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:12px}
+.btn{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 18px;border-radius:8px;background:#B30B0B;color:#fff;font-weight:600;text-decoration:none;box-sizing:border-box}
+.btn:hover{background:#A50D25}
+.card{background:#fff;border:1px solid #E4E4E0;border-radius:12px}
+.chip{display:inline-block;padding:2px 10px;border-radius:999px;font-size:12px;font-weight:600;white-space:nowrap}
+.gray{background:#ECECE8;color:#3D3D3A}.amber{background:#FFF0D1;color:#7A4B00}.blue{background:#E3EEFF;color:#1B4FA0}.green{background:#DDF3E4;color:#1D6B3A}.red{background:#FBE0E4;color:#9A1028}
+.row{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,2fr) auto;gap:16px;align-items:center;padding:14px 20px;border-top:1px solid #EEEEEA;text-decoration:none;color:inherit}
+.row:hover{background:#FAFAF8}
+.muted{color:#5F5F5A}
+.app{background:linear-gradient(135deg,#FFF3EA 0%,#F4F4F7 55%,#EEF0F5 100%)}
+.side{background:#121A22;border-right:0}
+.nav{color:#E1E5EA}.nav:hover{background:rgba(255,255,255,.08)}
+.on,.on:hover{background:rgba(242,106,15,.22);color:#FFB27A}
+.grp{color:#9AA3AE}
+.brand{color:#fff}
+.logo{background:linear-gradient(135deg,#B30B0B,#F26A0F)}
+.bdg{background:linear-gradient(90deg,#E62314,#F26A0F)}
+.me{border-top:1px solid rgba(255,255,255,.12);color:#fff}.me .muted{color:#9AA3AE}
+.av{background:rgba(255,255,255,.14);color:#fff}
+.main{border-top:4px solid transparent;border-image:linear-gradient(90deg,#B30B0B,#F26A0F) 1}
+.btn{background:linear-gradient(90deg,#B30B0B,#E62314 55%,#F26A0F);border-radius:999px;box-shadow:0 6px 16px rgba(179,11,11,.25)}
+.btn:hover{background:linear-gradient(90deg,#B30B0B,#E62314 55%,#F26A0F);filter:brightness(1.08)}
+.card{box-shadow:0 1px 2px rgba(18,26,34,.04),0 10px 28px rgba(18,26,34,.06)}
+.brand{font-family:'Playfair Display',Georgia,serif;font-weight:800;font-size:22px;letter-spacing:.01em}
+</style>
+</helmet>
+<div class="app">
+<nav class="side" aria-label="Menu utama">
+<div class="brand"><img src="/_blob/5bb1725f0d70f09bcdb2598774c2d709" alt="" style="height:34px;width:auto;display:block"><span style="font-family:'Playfair Display',Georgia,serif;font-weight:800;font-size:25px;letter-spacing:-.01em;line-height:1">SIADocs</span></div>
+<a class="nav on" href="Main.dc.html">Dashboard</a>
+<div class="grp">Surat</div>
+<a class="nav" href="Surat.dc.html">Surat Saya</a>
+<a class="nav" href="Buat.dc.html">Buat Surat</a>
+<a class="nav" href="Persetujuan.dc.html">Persetujuan <span class="bdg">3</span></a>
+<a class="nav" href="Surat.dc.html">Menunggu Pengesahan</a>
+<a class="nav" href="Surat.dc.html">Kotak Masuk</a>
+<a class="nav" href="Surat.dc.html">Disposisi</a>
+<div class="grp">Administrasi</div>
+<a class="nav" href="Main.dc.html">Master Organisasi</a>
+<a class="nav" href="Main.dc.html">Seri Penomoran</a>
+<a class="nav" href="LogHistory.dc.html">Log History</a>
+<div class="me"><span class="av">PC</span><div><div style="font-weight:600">Pengguna Contoh</div><div class="muted" style="font-size:12px">GM, Accounting</div></div></div>
+</nav>
+<main class="main">
+<div style="display:flex;flex-wrap:wrap;gap:16px;justify-content:space-between;align-items:center">
+<div><h1 style="margin:0;font-size:26px;letter-spacing:-.01em">Dashboard</h1><div class="muted">Ringkasan surat dan tindakan yang menunggu Anda</div></div>
+<a class="btn" href="Buat.dc.html">+ Buat Surat</a>
+</div>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px">
+<div class="card" style="padding:18px 20px"><div class="muted">Draft</div><div style="font-size:32px;font-weight:700">5</div><div class="muted" style="font-size:12px">Belum diajukan</div></div>
+<div class="card" style="padding:18px 20px"><div class="muted">Menunggu Persetujuan</div><div style="font-size:32px;font-weight:700">3</div><div class="muted" style="font-size:12px">Pada Anda sebagai penyetuju</div></div>
+<div class="card" style="padding:18px 20px"><div class="muted">Siap Diberi Nomor</div><div style="font-size:32px;font-weight:700">1</div><div class="muted" style="font-size:12px">Menunggu Terbitkan Nomor Surat</div></div>
+<div class="card" style="padding:18px 20px"><div class="muted">Menunggu Pengesahan</div><div style="font-size:32px;font-weight:700">2</div><div class="muted" style="font-size:12px">Unggah dokumen bertanda tangan</div></div>
+</div>
+<div style="display:flex;flex-wrap:wrap;gap:24px;align-items:flex-start">
+<section class="card" style="flex:2 1 520px;min-width:0;overflow:hidden">
+<h2 style="margin:0;padding:18px 20px;font-size:16px">Perlu tindakan Anda</h2>
+<a class="row" href="Persetujuan.dc.html"><span class="muted">Belum bernomor</span><span><b>Permohonan Data Pelanggan</b><br><span class="muted">Surat Eksternal, penerima PT Mitra Contoh</span></span><span class="chip amber">Menunggu Persetujuan</span></a>
+<a class="row" href="Detail.dc.html"><span class="muted">Belum bernomor</span><span><b>Surat Pengantar Tagihan Periode Oktober</b><br><span class="muted">Pengantar Tagihan, unit Finance</span></span><span class="chip blue">Siap Diberi Nomor</span></a>
+<a class="row" href="Detail.dc.html"><span class="muted">00105-IN/ACH/SIA/01.2027</span><span><b>Pemberitahuan Jadwal Rekonsiliasi</b><br><span class="muted">Surat Internal</span></span><span class="chip amber">Menunggu Pengesahan</span></a>
+<a class="row" href="Surat.dc.html"><span class="muted">Belum bernomor</span><span><b>Undangan Rapat Evaluasi</b><br><span class="muted">Surat Internal</span></span><span class="chip red">Perlu Revisi</span></a>
+</section>
+<section class="card" style="flex:1 1 300px;min-width:0;padding:18px 20px">
+<h2 style="margin:0 0 12px;font-size:16px">Aktivitas terbaru</h2>
+<div style="display:flex;flex-direction:column;gap:14px">
+<div><b>Nomor diterbitkan</b><div class="muted">00105-IN/ACH/SIA/01.2027, 10.12</div></div>
+<div><b>Persetujuan diberikan</b><div class="muted">Surat Pengantar Tagihan, 09.40</div></div>
+<div><b>Revisi diminta</b><div class="muted">Undangan Rapat Evaluasi, kemarin</div></div>
+<div><b>Dokumen bertanda tangan diunggah</b><div class="muted">Surat Eksternal, kemarin</div></div>
+</div>
+</section>
+</div>
+<div class="muted" style="font-size:12px">Data pada layar ini adalah contoh.</div>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1000}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

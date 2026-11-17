@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<title>Masuk SIADocs</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Playfair+Display:wght@800&amp;display=swap">
+<style>
+body{margin:0}
+.wrap{display:flex;flex-wrap:wrap;min-height:900px;font:14px/1.5 Inter,system-ui,sans-serif;color:#1C1C1E;background:#fff}
+.hero{flex:1 1 420px;background:#B30B0B;color:#fff;padding:64px;display:flex;flex-direction:column;justify-content:space-between;box-sizing:border-box}
+.form{flex:1 1 420px;display:flex;align-items:center;justify-content:center;padding:48px 24px;box-sizing:border-box}
+.fld{display:flex;flex-direction:column;gap:6px}
+.inp{min-height:44px;padding:0 14px;border:1px solid #C9C9C3;border-radius:8px;font:inherit;box-sizing:border-box;width:100%}
+.inp:focus{outline:2px solid #B30B0B;outline-offset:1px}
+.btn{display:flex;align-items:center;justify-content:center;min-height:44px;border-radius:8px;background:#B30B0B;color:#fff;font:600 14px Inter,sans-serif;border:0;width:100%;cursor:pointer}
+.btn:hover{background:#A50D25}
+a{color:#A50D25}
+.hero{position:relative;overflow:hidden;background:linear-gradient(160deg,#121A22 0%,#1E1417 55%,#B30B0B 135%)}
+.hero>*{position:relative;z-index:1}
+.hero::before{content:"";position:absolute;left:0;right:0;bottom:0;height:6px;background:linear-gradient(90deg,#B30B0B,#E62314,#F26A0F);z-index:2}
+.hero::after{content:"";position:absolute;right:-70px;bottom:90px;width:420px;height:300px;border-radius:24px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.16);transform:rotate(-8deg);box-shadow:-60px 50px 0 -10px rgba(242,106,15,.16)}
+.form{background:linear-gradient(135deg,#FFF3EA 0%,#F4F4F7 100%)}
+.btn{background:linear-gradient(90deg,#B30B0B,#E62314 55%,#F26A0F);border-radius:999px;box-shadow:0 6px 16px rgba(179,11,11,.25)}
+.btn:hover{background:linear-gradient(90deg,#B30B0B,#E62314 55%,#F26A0F);filter:brightness(1.08)}
+.inp{border-radius:10px}
+</style>
+</helmet>
+<div class="wrap">
+<section class="hero">
+<div style="display:flex;align-items:center;gap:10px;font-weight:700;font-size:20px"><img src="/_blob/5bb1725f0d70f09bcdb2598774c2d709" alt="" style="height:44px;width:auto;display:block"><span style="font-family:'Playfair Display',Georgia,serif;font-weight:800;font-size:34px;letter-spacing:-.01em;line-height:1">SIADocs</span></div>
+<div>
+<h1 style="margin:0 0 12px;font-size:40px;line-height:1.15;letter-spacing:-.02em">Sistem surat digital PT Semen Indonesia Aceh</h1>
+<p style="margin:0;font-size:16px;max-width:460px;opacity:.95">Surat dibuat, disetujui, diberi nomor resmi, disahkan, dan dikirim dalam satu alur yang tercatat.</p>
+</div>
+<div style="font-size:12px;opacity:.9">PT Semen Indonesia (Persero) Tbk.</div>
+</section>
+<section class="form">
+<form style="width:100%;max-width:380px;display:flex;flex-direction:column;gap:18px" onsubmit="return false">
+<div><h2 style="margin:0;font-size:24px">Masuk ke akun Anda</h2><div style="color:#5F5F5A">Gunakan email kantor untuk melanjutkan</div></div>
+<div class="fld"><label for="em" style="font-weight:600">Alamat email</label><input id="em" class="inp" type="email" placeholder="nama@perusahaan.co.id"></div>
+<div class="fld"><label for="pw" style="font-weight:600">Kata sandi</label><input id="pw" class="inp" type="password" placeholder="Kata sandi"></div>
+<div style="display:flex;justify-content:space-between;align-items:center"><label style="display:flex;gap:8px;align-items:center"><input type="checkbox"> Ingat saya</label><a href="Login.dc.html">Lupa kata sandi?</a></div>
+<a class="btn" href="Main.dc.html" style="text-decoration:none">Masuk</a>
+<div style="color:#5F5F5A;font-size:12px">Akun dibuat oleh Super Admin. Pendaftaran mandiri tidak tersedia.</div>
+</form>
+</section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

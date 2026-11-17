@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<title>Detail Surat SIADocs</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Playfair+Display:wght@800&amp;display=swap">
+<style>
+body{margin:0}
+.app{display:flex;flex-wrap:wrap;min-height:1300px;background:#F5F5F3;color:#1C1C1E;font:14px/1.5 Inter,system-ui,sans-serif}
+.side{flex:0 0 250px;box-sizing:border-box;background:#fff;border-right:1px solid #E4E4E0;padding:20px 14px;display:flex;flex-direction:column;gap:2px}
+.main{flex:999 1 560px;min-width:0;padding:28px 36px;display:flex;flex-direction:column;gap:20px}
+.brand{display:flex;align-items:center;gap:10px;padding:4px 10px 18px;font-weight:700;font-size:18px}
+.logo{width:32px;height:32px;border-radius:8px;background:#B30B0B;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px}
+.grp{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#6B6B66;padding:16px 10px 6px}
+.nav{display:flex;justify-content:space-between;align-items:center;padding:9px 10px;border-radius:8px;color:#2B2B28;text-decoration:none;min-height:20px}
+.nav:hover{background:#F1F1EE}
+.on{background:#FBE9EC;color:#A50D25;font-weight:600}
+.bdg{background:#B30B0B;color:#fff;border-radius:999px;font-size:11px;font-weight:600;padding:1px 8px}
+.me{margin-top:auto;padding:12px 10px;border-top:1px solid #E4E4E0;display:flex;gap:10px;align-items:center}
+.av{width:34px;height:34px;border-radius:50%;background:#ECECE8;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:12px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 18px;border-radius:8px;background:#B30B0B;color:#fff;font:600 14px Inter,sans-serif;text-decoration:none;box-sizing:border-box;border:0;cursor:pointer}
+.btn:hover{background:#A50D25}
+.btn2{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:0 18px;border-radius:8px;background:#fff;color:#1C1C1E;font:600 14px Inter,sans-serif;text-decoration:none;border:1px solid #C9C9C3;box-sizing:border-box}
+.card{background:#fff;border:1px solid #E4E4E0;border-radius:12px;padding:20px 22px;display:flex;flex-direction:column;gap:12px}
+.chip{display:inline-block;padding:2px 10px;border-radius:999px;font-size:12px;font-weight:600;white-space:nowrap}
+.gray{background:#ECECE8;color:#3D3D3A}.amber{background:#FFF0D1;color:#7A4B00}.blue{background:#E3EEFF;color:#1B4FA0}.green{background:#DDF3E4;color:#1D6B3A}.red{background:#FBE0E4;color:#9A1028}
+.muted{color:#5F5F5A}
+.h{margin:0;font-size:15px}
+.kv{display:grid;grid-template-columns:150px minmax(0,1fr);gap:8px 16px}
+.st{display:flex;flex-direction:column;gap:6px;padding:14px 16px;border:1px solid #E4E4E0;border-radius:10px;background:#FAFAF8}
+.tl{display:flex;gap:12px}
+.dot{flex:0 0 10px;height:10px;border-radius:50%;background:#B30B0B;margin-top:7px}
+.dot.off{background:#C9C9C3}
+.paper{background:#fff;border:1px solid #E4E4E0;border-radius:6px;padding:28px 32px;min-height:300px}
+.app{background:linear-gradient(135deg,#FFF3EA 0%,#F4F4F7 55%,#EEF0F5 100%)}
+.side{background:#121A22;border-right:0}
+.nav{color:#E1E5EA}.nav:hover{background:rgba(255,255,255,.08)}
+.on,.on:hover{background:rgba(242,106,15,.22);color:#FFB27A}
+.grp{color:#9AA3AE}
+.brand{color:#fff}
+.logo{background:linear-gradient(135deg,#B30B0B,#F26A0F)}
+.bdg{background:linear-gradient(90deg,#E62314,#F26A0F)}
+.me{border-top:1px solid rgba(255,255,255,.12);color:#fff}.me .muted{color:#9AA3AE}
+.av{background:rgba(255,255,255,.14);color:#fff}
+.main{border-top:4px solid transparent;border-image:linear-gradient(90deg,#B30B0B,#F26A0F) 1}
+.btn{background:linear-gradient(90deg,#B30B0B,#E62314 55%,#F26A0F);border-radius:999px;box-shadow:0 6px 16px rgba(179,11,11,.25)}
+.btn:hover{background:linear-gradient(90deg,#B30B0B,#E62314 55%,#F26A0F);filter:brightness(1.08)}
+.btn2{border-radius:999px}
+.card{box-shadow:0 1px 2px rgba(18,26,34,.04),0 10px 28px rgba(18,26,34,.06)}
+.dot{background:linear-gradient(135deg,#B30B0B,#F26A0F)}.dot.off{background:#C9C9C3}
+.brand{font-family:'Playfair Display',Georgia,serif;font-weight:800;font-size:22px;letter-spacing:.01em}
+</style>
+</helmet>
+<div class="app">
+<nav class="side" aria-label="Menu utama">
+<div class="brand"><img src="/_blob/5bb1725f0d70f09bcdb2598774c2d709" alt="" style="height:34px;width:auto;display:block"><span style="font-family:'Playfair Display',Georgia,serif;font-weight:800;font-size:25px;letter-spacing:-.01em;line-height:1">SIADocs</span></div>
+<a class="nav" href="Main.dc.html">Dashboard</a>
+<div class="grp">Surat</div>
+<a class="nav on" href="Surat.dc.html">Surat Saya</a>
+<a class="nav" href="Buat.dc.html">Buat Surat</a>
+<a class="nav" href="Persetujuan.dc.html">Persetujuan <span class="bdg">3</span></a>
+<a class="nav" href="Surat.dc.html">Menunggu Pengesahan</a>
+<a class="nav" href="Surat.dc.html">Kotak Masuk</a>
+<a class="nav" href="Surat.dc.html">Disposisi</a>
+<div class="grp">Administrasi</div>
+<a class="nav" href="Main.dc.html">Master Organisasi</a>
+<a class="nav" href="Main.dc.html">Seri Penomoran</a>
+<a class="nav" href="LogHistory.dc.html">Log History</a>
+<div class="me"><span class="av">PC</span><div><div style="font-weight:600">Pengguna Contoh</div><div class="muted" style="font-size:12px">GM, Accounting</div></div></div>
+</nav>
+<main class="main">
+<div><a href="Surat.dc.html" style="color:#A50D25">Kembali ke Surat Saya</a></div>
+<div style="display:flex;flex-wrap:wrap;gap:16px;justify-content:space-between;align-items:flex-start">
+<div><h1 style="margin:0;font-size:26px;letter-spacing:-.01em">Surat Pengantar Tagihan Periode Oktober</h1><div class="muted">Surat Pengantar Tagihan, unit Finance</div></div>
+<span class="chip blue" style="font-size:14px;padding:4px 14px">Siap Diberi Nomor</span>
+</div>
+<section class="card">
+<h2 class="h">Tiga status</h2>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px">
+<div class="st"><span class="muted">Status proses</span><span><span class="chip blue">Siap Diberi Nomor</span></span><span class="muted" style="font-size:12px">Persetujuan wajib lengkap</span></div>
+<div class="st"><span class="muted">Pengesahan</span><span><span class="chip gray">Belum Dimulai</span></span><span class="muted" style="font-size:12px">Dimulai setelah nomor terbit</span></div>
+<div class="st"><span class="muted">Pengiriman</span><span><span class="chip gray">Belum Dikirim</span></span><span class="muted" style="font-size:12px">Unduh bukan pengiriman</span></div>
+</div>
+</section>
+<section class="card" style="border-color:#B30B0B">
+<h2 class="h">Konfirmasi penerbitan nomor</h2>
+<div class="kv">
+<span class="muted">Nomor surat</span><span><b>Belum diterbitkan</b></span>
+<span class="muted">Penerima</span><span>PT Pelanggan Contoh</span>
+<span class="muted">Perihal</span><span>Tagihan Periode Oktober</span>
+<span class="muted">Penandatangan</span><span>Senior Manager Finance, lalu Direktur Utama</span>
+<span class="muted">Metode pengesahan</span><span>Melalui SIADocs, dua tanda tangan berurutan</span>
+<span class="muted">Persetujuan</span><span><span class="chip green">Senior Manager Finance, disetujui</span> <span class="chip green">Direktur Utama, disetujui</span></span>
+</div>
+<div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center">
+<a class="btn" href="Detail.dc.html">Terbitkan Nomor Surat</a>
+<span class="muted">Setelah nomor terbit, dokumen dikunci dan nomor tidak dapat diubah atau dipakai ulang.</span>
+</div>
+</section>
+<div style="display:flex;flex-wrap:wrap;gap:20px;align-items:flex-start">
+<section class="card" style="flex:2 1 460px;min-width:0">
+<h2 class="h">Dokumen</h2>
+<div class="paper">
+<div style="display:flex;justify-content:space-between"><b>PT Semen Indonesia Aceh</b><span class="muted">DRAFT</span></div>
+<div class="muted" style="margin:18px 0 6px">Nomor: belum diterbitkan</div>
+<div>Perihal: Tagihan Periode Oktober</div>
+<div style="margin-top:14px">Kepada Yth. PT Pelanggan Contoh</div>
+<div style="margin-top:14px" class="muted">Isi surat dan rincian tagihan tampil di sini.</div>
+</div>
+<div style="display:flex;flex-wrap:wrap;gap:10px"><a class="btn2" href="Detail.dc.html">Versi dokumen</a><a class="btn2" href="Detail.dc.html">Lampiran (1)</a></div>
+</section>
+<aside style="flex:1 1 280px;min-width:0;display:flex;flex-direction:column;gap:20px">
+<section class="card">
+<h2 class="h">Setelah nomor terbit</h2>
+<div class="muted" style="font-size:13px">Jalur Ya: unggah dokumen bertanda tangan. Jalur Tidak: unduh, tanda tangan di luar sistem.</div>
+<a class="btn2" href="Detail.dc.html">Unduh Surat Bernomor</a>
+<a class="btn2" href="Detail.dc.html">Catat Pengiriman</a>
+</section>
+<section class="card">
+<h2 class="h">Riwayat</h2>
+<div class="tl"><span class="dot"></span><div><b>Direktur Utama menyetujui</b><div class="muted" style="font-size:12px">Hari ini, 09.40</div></div></div>
+<div class="tl"><span class="dot"></span><div><b>Senior Manager Finance menyetujui</b><div class="muted" style="font-size:12px">Kemarin, 15.12</div></div></div>
+<div class="tl"><span class="dot"></span><div><b>Diajukan untuk persetujuan</b><div class="muted" style="font-size:12px">Kemarin, 11.03</div></div></div>
+<div class="tl"><span class="dot off"></span><div><b>Draft dibuat</b><div class="muted" style="font-size:12px">2 hari lalu</div></div></div>
+</section>
+</aside>
+</div>
+<div class="muted" style="font-size:12px">Data pada layar ini adalah contoh.</div>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1300}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>
