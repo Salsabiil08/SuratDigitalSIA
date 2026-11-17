@@ -92,3 +92,11 @@ export async function getCurrentUserRoleAction(): Promise<UserRoleInfo> {
     canCreateDisposition,
   };
 }
+
+export async function demoLoginAction(_prev: {error?:string}|null, form: FormData) {
+ const roles: Record<string,string>={staff:'staff',finance:'finance',gm:'gm',sm:'sm',director:'director'};
+ const role=roles[String(form.get('demoRole')||'')];
+ if(!role)return {error:'Pilih peran demo yang tersedia.'};
+ const credentials=new FormData();credentials.set('email',`qa.rev18.${role}@siadocs.test`);credentials.set('password',String(form.get('demoPassword')||''));
+ return loginAction(null,credentials);
+}
