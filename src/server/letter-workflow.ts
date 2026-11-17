@@ -95,7 +95,7 @@ export async function peopleOptions() {
     db
       .from("user_assignments")
       .select(
-        "profile_id,is_official_signer,start_date,end_date,position:positions!user_assignments_position_id_fkey(code,name),unit:organizational_units!user_assignments_unit_id_fkey(code,name)",
+        "profile_id,is_official_signer,start_date,end_date,position:positions!user_assignments_position_id_fkey(code,name,is_active),unit:organizational_units!user_assignments_unit_id_fkey(id,code,name,is_active)",
       )
       .eq("is_active", true)
       .order("start_date", { ascending: false }),
@@ -127,13 +127,16 @@ export async function peopleOptions() {
         title: a?.position?.name || "",
         position: a?.position?.code || "",
         unit: a?.unit?.code || "",
+      unitId: a?.unit?.id || "",
+      active: !!a?.unit?.is_active && !!a?.position?.is_active,
         unitName: a?.unit?.name || "",
         signer:
           !!a?.is_official_signer && ["SM", "DIR"].includes(a?.position?.code),
       };
     })
-    .filter((p) => p.position);
-  return { user, people, banks: banks || [] };
+    .filter((p) => p.position && p.active);
+  const {data:billingType}=await db.from('letter_types').select('creator_unit_id').eq('category','BILLING').eq('is_active',true).maybeSingle();
+  return { user, people, banks: banks || [], financeUnitId:billingType?.creator_unit_id || '' };
 }
 export async function saveDraft(
   input: DraftInput,

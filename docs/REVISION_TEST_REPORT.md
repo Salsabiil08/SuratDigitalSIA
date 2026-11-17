@@ -10,7 +10,17 @@ Tanggal: 18 November 2026 (Asia/Jakarta).
 
 ## Production
 
-Hasil pengujian production dan akun nyata akan dilengkapi setelah deployment terverifikasi. Jangan menafsirkan tes lokal sebagai bukti seluruh alur cloud selesai.
+Production diverifikasi melalui form login asli, Server Actions dan endpoint aplikasi dengan lima akun Supabase Auth nyata, terpisah dari akun contoh lama. Seluruh pemeriksaan berikut lulus:
+- Internal tanpa TTD: Draft → Preview → pengajuan → nomor resmi → finalisasi.
+- Eksternal: antrean penyetuju yang benar, Setujui, nomor, preview gambar TTD/stempel, versi SIGNED dengan hash yang sesuai, finalisasi.
+- Impor PDF: tanggal mundur oleh GM, koordinat TTD/stempel, approval dan finalisasi; tanggal tetap.
+- Tagihan: Finance, rincian dan bukti, dua approval dan dua TTD berurutan, finalisasi.
+- Impor DOCX: permintaan revisi, koreksi/unggah ulang, siklus approval baru, unggahan hasil TTD basah dan finalisasi.
+- Penolakan tersimpan dan terlihat oleh pembuat; akun tidak terlibat menerima 403 saat mengunduh; endpoint menolak edit dokumen final.
+
+57 tes lokal lulus, termasuk transaksi PostgreSQL terisolasi dan perbandingan byte preview/hasil penandatanganan lintas waktu. Build production lulus. Pemeriksaan browser memastikan pengunjung baru tiba di login; pemeriksaan alur terautentikasi dilakukan melalui HTTP aplikasi, bukan penilaian visual seluruh layar.
+
+Data uji diberi label [UJI REV-18]. Lima surat uji telah final dan satu ditolak. Nomor uji yang sudah terbit tetap tercatat dan tidak dipakai ulang. Kredensial tidak dimasukkan ke repository.
 
 ## Batasan yang terlihat pengguna
 

@@ -1,7 +1,7 @@
 'use server';
 
 import { createClient } from '@/lib/supabase/server';
-import { requireUser } from '@/server/auth';
+import { getCurrentUser } from '@/server/auth';
 
 export interface ActionItem {
   id: string;
@@ -30,7 +30,8 @@ export interface DashboardMetrics {
 
 export async function getDashboardDataAction(): Promise<DashboardMetrics> {
   const supabase = createClient();
-  const user = await requireUser();
+  const user = await getCurrentUser();
+  if(!user) return {draftCount:0,numberedCount:0,waitingSignatureCount:0,activeDispositionsCount:0,pendingActions:[],recentActivities:[]};
   const currentUserId = user.id;
 
   try {

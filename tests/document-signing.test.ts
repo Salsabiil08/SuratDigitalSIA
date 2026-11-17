@@ -30,7 +30,8 @@ describe("Pengesahan dokumen nyata", () => {
       "DOCX",
       "00118-Tag/FIN/SIA/11.2026",
     );
-    vi.useFakeTimers({toFake:["Date"]});vi.setSystemTime(new Date("2026-11-17T20:00:00Z"));
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-11-17T20:00:00Z"));
     const first = await applyDocumentImages(numbered, "DOCX", [
       { marker: "{{SIGNATURE_1}}", bytes: png },
       { marker: "{{STAMP}}", bytes: png },
@@ -51,7 +52,8 @@ describe("Pengesahan dokumen nyata", () => {
       { marker: "{{SIGNATURE_1}}", bytes: png },
       { marker: "{{STAMP}}", bytes: png },
     ]);
-    expect(Buffer.compare(first, repeat)).toBe(0);vi.useRealTimers();
+    expect(Buffer.compare(first, repeat)).toBe(0);
+    vi.useRealTimers();
   });
   it("menolak placeholder yang hilang dan gambar bukan PNG", async () => {
     const doc = await generateLetterDocx({ signatureCount: 0 });

@@ -23,6 +23,7 @@ export async function getWorkflowLetter(id: string) {
     { data: signatures, error: se },
     { data: billing },
     { data: items },
+    { data: cancellations, error: ce },
   ] = await Promise.all([
     db
       .from("letter_versions")
@@ -50,8 +51,15 @@ export async function getWorkflowLetter(id: string) {
       .select("description,amount")
       .eq("letter_id", id)
       .order("line_no"),
+    db
+      .from("cancellation_requests")
+      .select(
+        "id,status,reason,cancellation_authorizations(authorizer_id,decision)",
+      )
+      .eq("letter_id", id)
+      .order("created_at", { ascending: false }),
   ]);
-  if (ve || ae || se) throw new Error((ve || ae || se)!.message);
+  if (ve || ae || se || ce) throw new Error((ve || ae || se || ce)!.message);
   return {
     letter: l,
     versions: versions || [],
@@ -59,6 +67,7 @@ export async function getWorkflowLetter(id: string) {
     signatures: signatures || [],
     billing,
     items: items || [],
+    cancellations: cancellations || [],
     isCreator: l.creator_id === user.id,
     userId: user.id,
   };

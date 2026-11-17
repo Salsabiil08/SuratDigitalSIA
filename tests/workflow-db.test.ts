@@ -89,9 +89,23 @@ beforeAll(async () => {
 }, 30000);
 afterAll(() => db.close());
 describe.sequential("Database: alur nyata dengan akun berbeda", () => {
-  it('RPC sensitif tidak dapat dipanggil anon atau authenticated',async()=>{
-    for(const fn of ['save_letter_draft(uuid,jsonb,jsonb)','review_letter(uuid,uuid,text,integer,text)','issue_letter_number(uuid,uuid,text)','record_signature(uuid,uuid,integer,uuid,jsonb,text,text,text)','finalize_letter(uuid,uuid,integer,boolean)','record_numbered_document(uuid,uuid,uuid,jsonb)']){
-      const r=(await rows("select has_function_privilege('anon',$1,'execute') a,has_function_privilege('authenticated',$1,'execute') u",[fn]))[0];expect(r.a).toBe(false);expect(r.u).toBe(false);
+  it("RPC sensitif tidak dapat dipanggil anon atau authenticated", async () => {
+    for (const fn of [
+      "save_letter_draft(uuid,jsonb,jsonb)",
+      "review_letter(uuid,uuid,text,integer,text)",
+      "issue_letter_number(uuid,uuid,text)",
+      "record_signature(uuid,uuid,integer,uuid,jsonb,text,text,text)",
+      "finalize_letter(uuid,uuid,integer,boolean)",
+      "record_numbered_document(uuid,uuid,uuid,jsonb)",
+    ]) {
+      const r = (
+        await rows(
+          "select has_function_privilege('anon',$1,'execute') a,has_function_privilege('authenticated',$1,'execute') u",
+          [fn],
+        )
+      )[0];
+      expect(r.a).toBe(false);
+      expect(r.u).toBe(false);
     }
   });
   it("membuat draft tanpa nomor, tanpa preview pengajuan ditolak", async () => {
@@ -342,4 +356,48 @@ describe.sequential("Database: alur nyata dengan akun berbeda", () => {
       l.revision,
     ]);
   });
+  it("pembatalan resmi menjaga nomor, alasan dan kewenangan; Super Admin tidak otomatis berwenang", async () => {
+    const id = await draft(5, "IN");
+    await act(id, 5, "PREVIEW");
+    await act(id, 5, "SUBMIT");
+    await issue(id, 5, "cancel-test");
+    const num = (await get(id)).official_number;
+    await expect(
+      run("select cancel_letter_workflow($1,$2,$3,$4)", [
+        actor(6),
+        id,
+        "REQUEST",
+        "Uji",
+      ]),
+    ).rejects.toThrow(/pembuat/);
+    await run("select cancel_letter_workflow($1,$2,$3,$4)", [
+      actor(5),
+      id,
+      "REQUEST",
+      "Uji pembatalan",
+    ]);
+    await expect(
+      run("select cancel_letter_workflow($1,$2,$3,$4)", [
+        actor(2),
+        id,
+        "APPROVE",
+        null,
+      ]),
+    ).rejects.toThrow(/otorisasi/);
+    await run("select cancel_letter_workflow($1,$2,$3,$4)", [
+      actor(4),
+      id,
+      "APPROVE",
+      "Sesuai kewenangan kepala unit",
+    ]);
+    expect((await get(id)).status).toBe("CANCELLED");
+    expect((await get(id)).official_number).toBe(num);
+  });
+  it('menolak rincian tagihan kosong dan konfirmasi luar null',async()=>{
+    const bank=(await rows('select id from master_bank limit 1'))[0].id;
+    await expect(draft(6,'Tag',[3,2],{billing:{bankId:bank,accountNumber:'UJI',accountHolder:'UJI'}})).rejects.toThrow(/rincian/i);
+    const id=await draft(5,'KRE',[2],{signatureMode:'EXTERNAL'});await act(id,5,'PREVIEW');await act(id,5,'SUBMIT');await act(id,2,'APPROVE');await issue(id,5,'null-guard');const l=await get(id);
+    await expect(run('select finalize_letter($1,$2,$3,$4)',[actor(5),id,l.revision,null])).rejects.toThrow(/Konfirmasi/);
+  });
+
 });

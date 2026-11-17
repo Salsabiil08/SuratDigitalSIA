@@ -61,13 +61,8 @@ export async function getCurrentUserRoleAction(): Promise<UserRoleInfo> {
   const isSuperAdmin = !!user?.isSuperAdmin;
 
   // Surat Penagihan: Finance (FIN), GM, Dirut, SM (atau Super Admin)
-  const canCreateBilling =
-    unitCode === 'FIN' ||
-    posCode === 'DIR' ||
-    posCode === 'SM' ||
-    posCode === 'GM' ||
-    posLevel >= 2 ||
-    isSuperAdmin;
+  const { data: billingType } = await createClient().from('letter_types').select('creator_unit_id').eq('category','BILLING').eq('is_active',true).maybeSingle();
+  const canCreateBilling = !!user?.unit?.id && user.unit.id === billingType?.creator_unit_id;
 
   // Ajukan Pengesahan: seluruh staff, seluruh GM, dan SM (Dirut level paling atas tidak mengajukan)
   const canApplySignature = posCode !== 'DIR' || isSuperAdmin;

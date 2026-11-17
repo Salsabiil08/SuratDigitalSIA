@@ -79,6 +79,7 @@ export function workflowLabel(letter: {
   signature_status?: string;
   finalized_at?: string | null;
 }) {
+  if (letter.status === "CANCELLED") return "Dibatalkan";
   if (letter.finalized_at) return "Selesai";
   if (letter.status === "READY_TO_ISSUE") return "Disetujui";
   if (letter.status === "NUMBERED" && letter.signature_status === "WAITING")

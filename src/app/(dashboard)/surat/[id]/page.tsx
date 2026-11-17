@@ -8,6 +8,7 @@ import {
   finalizeLetterAction,
 } from "@/server/actions/workflow";
 import { issueLetterNumberAction } from "@/server/actions/approvals";
+import { cancellationAction } from "@/server/actions/cancellations";
 import { workflowLabel } from "@/domain/workflow";
 import { PageHeader } from "@/components/ui/page-header";
 import { Card } from "@/components/ui/card";
@@ -323,6 +324,81 @@ export default function Page() {
           >
             Finalisasi dan Kunci Dokumen
           </Button>
+        </Card>
+      )}
+      {(editable || l.status === "NUMBERED") && (
+        <Card className="p-5 space-y-3">
+          <h2 className="font-bold">Pembatalan Surat</h2>
+          <p className="text-sm">
+            Nomor resmi tetap disimpan dan tidak dipakai ulang. Surat bernomor
+            memerlukan otorisasi kepala unit/delegasi (internal), penandatangan
+            (eksternal), atau SM Finance dan Direktur (tagihan).
+          </p>
+          <label className="text-sm block" htmlFor="cancel-reason">
+            Alasan / catatan pembatalan
+          </label>
+          <textarea
+            id="cancel-reason"
+            className="w-full border rounded-xl p-3"
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+          />
+          {data.isCreator && (
+            <Button
+              variant="secondary"
+              isLoading={busy}
+              onClick={() =>
+                act(
+                  () =>
+                    cancellationAction(
+                      id,
+                      editable ? "CANCEL_DRAFT" : "REQUEST",
+                      note,
+                    ),
+                  "Permohonan pembatalan diproses sesuai kewenangan.",
+                )
+              }
+            >
+              {editable ? "Batalkan Draft" : "Ajukan Pembatalan Resmi"}
+            </Button>
+          )}
+          {data.cancellations.map((r: any) => (
+            <div className="text-sm space-y-2" key={r.id}>
+              <p>
+                {r.status} — {r.reason}
+              </p>
+              {r.status === "PENDING" &&
+                r.cancellation_authorizations?.some(
+                  (a: any) => a.authorizer_id === data.userId && !a.decision,
+                ) && (
+                  <div className="flex gap-3">
+                    <Button
+                      isLoading={busy}
+                      onClick={() =>
+                        act(
+                          () => cancellationAction(id, "APPROVE", note),
+                          "Keputusan otorisasi tersimpan.",
+                        )
+                      }
+                    >
+                      Setujui Pembatalan
+                    </Button>
+                    <Button
+                      variant="secondary"
+                      isLoading={busy}
+                      onClick={() =>
+                        act(
+                          () => cancellationAction(id, "DECLINE", note),
+                          "Penolakan pembatalan tersimpan.",
+                        )
+                      }
+                    >
+                      Tolak Pembatalan
+                    </Button>
+                  </div>
+                )}
+            </div>
+          ))}
         </Card>
       )}
       <Card className="p-5 space-y-3">

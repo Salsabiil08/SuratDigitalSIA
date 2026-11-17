@@ -619,7 +619,7 @@ export function LetterEditor({
                     (p) =>
                       !isBill ||
                       (index === 0
-                        ? p.position === "SM" && p.unit === "FIN"
+                        ? p.position === "SM" && p.unitId === options?.financeUnitId
                         : p.position === "DIR"),
                   )
                   .map((p) => (

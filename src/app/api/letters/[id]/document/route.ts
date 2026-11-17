@@ -1,5 +1,5 @@
 import { PDFDocument, rgb } from "pdf-lib";
-import { createClient } from '@/lib/supabase/server';
+import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 import { readLetter, downloadVersion } from "@/server/letter-workflow";
 import { fillOfficialNumber, DOCUMENT_MIME } from "@/lib/letter-document";
@@ -10,9 +10,19 @@ export async function GET(
   try {
     const letter = await readLetter(params.id);
     const blank = new URL(request.url).searchParams.get("blank") === "1";
-    let sourceLetter=letter;
-    if(blank){const {data:version}=await createClient().from('letter_versions').select('id').eq('letter_id',letter.id).eq('version_kind','NUMBERED').order('version_no',{ascending:false}).limit(1).maybeSingle();if(version)sourceLetter={...letter,current_version_id:version.id};}
-    const doc=await downloadVersion(sourceLetter);
+    let sourceLetter = letter;
+    if (blank) {
+      const { data: version } = await createClient()
+        .from("letter_versions")
+        .select("id")
+        .eq("letter_id", letter.id)
+        .eq("version_kind", "NUMBERED")
+        .order("version_no", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (version) sourceLetter = { ...letter, current_version_id: version.id };
+    }
+    const doc = await downloadVersion(sourceLetter);
     let bytes = await fillOfficialNumber(
       doc.bytes,
       doc.format,

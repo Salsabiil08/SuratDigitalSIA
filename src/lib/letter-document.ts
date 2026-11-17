@@ -74,8 +74,16 @@ export async function applyDocumentImages(
       image.bytes.length > 512 * 1024
     )
       throw new Error("Gambar TTD/stempel wajib PNG, maksimal 512 KB.");
-    const width=Buffer.from(image.bytes).readUInt32BE(16),height=Buffer.from(image.bytes).readUInt32BE(20);
-    if(!width||!height||width>4096||height>4096||width*height>8000000)throw new Error('Resolusi gambar TTD/stempel terlalu besar.');
+    const width = Buffer.from(image.bytes).readUInt32BE(16),
+      height = Buffer.from(image.bytes).readUInt32BE(20);
+    if (
+      !width ||
+      !height ||
+      width > 4096 ||
+      height > 4096 ||
+      width * height > 8000000
+    )
+      throw new Error("Resolusi gambar TTD/stempel terlalu besar.");
     const probe = await PDFDocument.create();
     await probe.embedPng(image.bytes);
   }
@@ -89,14 +97,12 @@ export async function applyDocumentImages(
       const { page, x, y, width, height } = image.area;
       const png = await pdf.embedPng(image.bytes);
       const fit = png.scaleToFit(width, height);
-      pdf
-        .getPage(page - 1)
-        .drawImage(png, {
-          x: x + (width - fit.width) / 2,
-          y: sizes[page - 1]!.height - y - height + (height - fit.height) / 2,
-          width: fit.width,
-          height: fit.height,
-        });
+      pdf.getPage(page - 1).drawImage(png, {
+        x: x + (width - fit.width) / 2,
+        y: sizes[page - 1]!.height - y - height + (height - fit.height) / 2,
+        width: fit.width,
+        height: fit.height,
+      });
     }
     return Buffer.from(await pdf.save());
   }
@@ -151,7 +157,8 @@ export async function applyDocumentImages(
     date: zip.file("[Content_Types].xml")!.date,
   });
   // JSZip may create parent directory entries. Normalize ZIP metadata so preview and commit are byte-identical.
-  for (const entry of Object.values(zip.files)) entry.date = new Date("2000-01-01T00:00:00Z");
+  for (const entry of Object.values(zip.files))
+    entry.date = new Date("2000-01-01T00:00:00Z");
   return zip.generateAsync({ type: "nodebuffer", compression: "DEFLATE" });
 }
 export async function fillOfficialNumber(
@@ -172,18 +179,16 @@ export async function fillOfficialNumber(
       numberArea.width / font.widthOfTextAtSize(number, 1),
     );
     if (size < 7) throw new Error("Area nomor PDF terlalu sempit.");
-    pdf
-      .getPage(numberArea.page - 1)
-      .drawText(number, {
-        x: numberArea.x,
-        y:
-          sizes[numberArea.page - 1]!.height -
-          numberArea.y -
-          numberArea.height / 2,
-        size,
-        font,
-        color: rgb(0, 0, 0),
-      });
+    pdf.getPage(numberArea.page - 1).drawText(number, {
+      x: numberArea.x,
+      y:
+        sizes[numberArea.page - 1]!.height -
+        numberArea.y -
+        numberArea.height / 2,
+      size,
+      font,
+      color: rgb(0, 0, 0),
+    });
     return Buffer.from(await pdf.save());
   }
   const zip = await JSZip.loadAsync(bytes);

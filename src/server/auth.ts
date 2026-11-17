@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server';
+import { jakartaDate } from '@/domain/workflow';
 import { cookies } from 'next/headers';
 
 export interface UserProfile {
@@ -58,7 +59,8 @@ export async function getCurrentUser(): Promise<UserProfile | null> {
             `)
             .eq('profile_id', user.id)
             .eq('is_active', true)
-            .or('end_date.is.null,end_date.gte.'+new Date().toISOString().slice(0,10))
+            .or('end_date.is.null,end_date.gte.'+jakartaDate())
+            .or('start_date.is.null,start_date.lte.'+jakartaDate())
             .order('start_date', { ascending: false })
             .limit(1)
             .maybeSingle();

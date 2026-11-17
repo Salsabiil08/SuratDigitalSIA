@@ -54,3 +54,5 @@ it("memisahkan bernomor, bertanda tangan, dan selesai", () => {
     workflowLabel({ status: "NUMBERED", finalized_at: "2026-11-18" }),
   ).toBe("Selesai");
 });
+
+it('surat final yang dibatalkan tetap ditampilkan Dibatalkan',()=>{expect(workflowLabel({status:'CANCELLED',finalized_at:'2026-11-18'})).toBe('Dibatalkan');});
