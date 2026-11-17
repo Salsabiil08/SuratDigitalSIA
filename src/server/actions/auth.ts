@@ -94,9 +94,11 @@ export async function getCurrentUserRoleAction(): Promise<UserRoleInfo> {
 }
 
 export async function demoLoginAction(_prev: {error?:string}|null, form: FormData) {
- const roles: Record<string,string>={staff:'staff',finance:'finance',gm:'gm',sm:'sm',director:'director',admin:'admin'};
- const role=roles[String(form.get('demoRole')||'')];
- if(!role)return {error:'Pilih peran demo yang tersedia.'};
- const credentials=new FormData();credentials.set('email',`qa.rev18.${role}@siadocs.test`);credentials.set('password',String(form.get('demoPassword')||''));
+ const role=String(form.get('demoRole')||'');
+ let accounts:Array<{key:string;email:string;password:string}>=[];
+ try {accounts=JSON.parse(process.env.SIADOCS_DEMO_ACCOUNTS||'[]');} catch {}
+ const account=accounts.find(a=>a.key===role);
+ if(!account)return {error:'Mode demo sementara tidak tersedia untuk peran ini.'};
+ const credentials=new FormData();credentials.set('email',account.email);credentials.set('password',account.password);
  return loginAction(null,credentials);
 }
