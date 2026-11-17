@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { redirect } from 'next/navigation';
 import { getCurrentUser } from '@/server/auth';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { DashboardShell } from '@/components/layout/dashboard-shell';
@@ -9,6 +10,10 @@ export default async function DashboardLayout({
   children: React.ReactNode;
 }) {
   const user = await getCurrentUser();
+
+  if (!user) {
+    redirect('/login');
+  }
 
   let unreadNotificationsCount = 0;
 

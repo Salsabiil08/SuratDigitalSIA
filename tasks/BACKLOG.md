@@ -40,3 +40,6 @@ Kerjakan berurutan. Tugas selesai bila kriteria terpenuhi dan `npm run check` lu
 
 ## M8 Penerimaan
 - [x] Uji terhadap 11 kriteria Bab 10 Blueprint R.04, laporan temuan
+
+## Perbaikan akses awal
+- [x] Pengunjung tanpa sesi diarahkan ke `/login` dari seluruh halaman dashboard; hapus akun demo otomatis saat tidak ada sesi.

@@ -132,27 +132,8 @@ export async function getCurrentUser(): Promise<UserProfile | null> {
     // Supabase auth check fallback
   }
 
-  // 3. Default fallback demo user (Ahmad Fauzi) agar dashboard tidak blank
-  return {
-    id: 'a0000000-0000-0000-0000-000000000004',
-    fullName: 'Ahmad Fauzi (GM Accounting)',
-    email: 'gm.accounting@sia.co.id',
-    systemRole: 'USER',
-    isActive: true,
-    position: {
-      id: 'p-003',
-      code: 'GM',
-      name: 'GM/Kepala Unit atau Departemen',
-      level: 2,
-    },
-    unit: {
-      id: 'u-001',
-      code: 'ACH',
-      name: 'Accounting',
-    },
-    isOfficialSigner: false,
-    isSuperAdmin: false,
-  };
+  // Pengunjung tanpa sesi harus masuk melalui halaman login.
+  return null;
 }
 
 /**
