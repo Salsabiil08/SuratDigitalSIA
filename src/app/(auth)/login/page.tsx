@@ -3,7 +3,7 @@
 import * as React from 'react';
 import Link from 'next/link';
 import { useFormState, useFormStatus } from 'react-dom';
-import { loginAction, quickLoginAction } from '@/server/actions/auth';
+import { loginAction } from '@/server/actions/auth';
 import { Button } from '@/components/ui/button';
 
 function SubmitButton() {
@@ -23,17 +23,6 @@ function SubmitButton() {
 
 export default function LoginPage() {
   const [state, formAction] = useFormState(loginAction, null);
-  const [isQuickLoggingIn, setIsQuickLoggingIn] = React.useState(false);
-  const [selectedDemoRole, setSelectedDemoRole] = React.useState('staff_ach');
-
-  const handleQuickLogin = async (roleKey: string) => {
-    setIsQuickLoggingIn(true);
-    try {
-      await quickLoginAction(roleKey);
-    } catch {
-      setIsQuickLoggingIn(false);
-    }
-  };
 
   return (
     <div className="min-h-screen w-full flex flex-col items-center justify-center p-3 sm:p-5 login-animated-bg font-sans relative overflow-x-hidden overflow-y-auto">
@@ -142,41 +131,7 @@ export default function LoginPage() {
             </div>
           </form>
 
-          {/* Opsi Masuk Cepat (Dropdown Peran Akun) */}
-          <div className="mt-3 pt-3 border-t border-[#EEEEEA] space-y-1.5">
-            <label
-              htmlFor="quick-role-select"
-              className="text-[10px] font-semibold text-neutral-500 block uppercase tracking-wider"
-            >
-              Atau masuk cepat sebagai:
-            </label>
-            <div className="flex gap-2">
-              <select
-                id="quick-role-select"
-                value={selectedDemoRole}
-                onChange={(e) => setSelectedDemoRole(e.target.value)}
-                className="flex-1 min-h-[34px] px-2.5 py-1 text-xs bg-neutral-50 border border-[#C9C9C3] rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-red/20 font-medium text-neutral-800"
-              >
-                <option value="staff_ach">Staff Accounting (Rina Dewi)</option>
-                <option value="staff_fin">Staff Finance (Doni Pratama)</option>
-                <option value="gm_ach">GM Accounting (Ahmad Fauzi)</option>
-                <option value="sm_fin">SM Finance (Siti Rahma)</option>
-                <option value="dirut">Direktur Utama (Budi Hartono)</option>
-                <option value="admin">Super Admin (Admin Sistem)</option>
-              </select>
-              <Button
-                type="button"
-                variant="secondary"
-                size="sm"
-                disabled={isQuickLoggingIn}
-                isLoading={isQuickLoggingIn}
-                onClick={() => handleQuickLogin(selectedDemoRole)}
-                className="shrink-0 font-semibold px-3 h-[34px] min-h-[34px] text-xs"
-              >
-                Masuk
-              </Button>
-            </div>
-          </div>
+
         </div>
 
         {/* Footer Info Perusahaan */}

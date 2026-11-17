@@ -241,16 +241,10 @@ describe('Uji Penerimaan 11 Kriteria Bab 10 Blueprint R.04', () => {
   });
 
   // -------------------------------------------------------------
-  // Kriteria 11: Tidak ada editor isi, distribusi, arsip, atau penyisipan nomor otomatis
-  // -------------------------------------------------------------
-  it('Kriteria 11: Sistem tidak memiliki modul editor isi, distribusi, pengarsipan, atau stempel otomatis', () => {
-    // Batasan ruang lingkup Blueprint R.04
-    const forbiddenModules = ['WYSIWYG_EDITOR', 'OCR_ENGINE', 'AUTO_STAMP', 'DISTRIBUTION_TRACKING', 'ARCHIVE_VAULT'];
-    const activeModules = ['NUMBERING', 'APPROVAL_WORKFLOW', 'SIGNATURE_TRACKING', 'DISPOSITION'];
-
-    for (const mod of forbiddenModules) {
-      expect(activeModules).not.toContain(mod);
-    }
+  // REV-01..07 menggantikan batasan editor/TTD/stempel pada R.04.
+  it('Kriteria 11 revisi: status final dipisah dari sudah bernomor dan TTD', async () => {
+    const {workflowLabel}=await import('../src/domain/workflow');
+    expect(workflowLabel({status:'NUMBERED',signature_status:'UPLOADED'})).toBe('Menunggu Finalisasi');
+    expect(workflowLabel({status:'NUMBERED',signature_status:'UPLOADED',finalized_at:'2026-11-18'})).toBe('Selesai');
   });
 });
-

@@ -1,0 +1,345 @@
+import { beforeAll, afterAll, describe, it, expect } from "vitest";
+import { jakartaDate } from "../src/domain/workflow";
+import { PGlite } from "@electric-sql/pglite";
+import { readdirSync, readFileSync } from "node:fs";
+const db = new PGlite();
+const actor = (n: number) =>
+  `a0000000-0000-0000-0000-${String(n).padStart(12, "0")}`;
+let letterId: string;
+let extId: string;
+let billingId: string;
+const rows = async (sql: string, params: any[] = []) =>
+  (await db.query<any>(sql, params)).rows;
+const run = async (sql: string, params: any[] = []) => {
+  await db.query(sql, params);
+};
+const get = async (id: string) => {
+  const l = (await rows("select * from letters where id=$1", [id]))[0];
+  if (l?.letter_date instanceof Date)
+    l.letter_date = l.letter_date.toISOString().slice(0, 10);
+  return l;
+};
+const act = async (id: string, n: number, action: string, note?: string) => {
+  const l = await get(id);
+  return run("select review_letter($1,$2,$3,$4,$5)", [
+    actor(n),
+    id,
+    action,
+    l.revision,
+    note || null,
+  ]);
+};
+const draft = async (
+  n: number,
+  type: string,
+  signers: number[] = [],
+  extra: any = {},
+) => {
+  const p = {
+    source: "CREATE",
+    letterTypeCode: type,
+    subject: "Uji revisi",
+    letterDate: jakartaDate(),
+    recipientUserId: actor(3),
+    recipientName: "Penerima Uji",
+    recipientOrg: "Instansi Uji",
+    recipientAddress: "Alamat Uji",
+    content: "Naskah uji",
+    signatureMode: "IN_APP",
+    signerIds: signers.map(actor),
+    areas: [],
+    ...extra,
+  };
+  return (
+    await rows("select save_letter_draft($1,$2::jsonb,$3::jsonb) id", [
+      actor(n),
+      JSON.stringify(p),
+      JSON.stringify({
+        path: actor(n) + "/test.docx",
+        format: "DOCX",
+        hash: "hash",
+      }),
+    ])
+  )[0].id as string;
+};
+const issue = async (id: string, n: number, key: string) => {
+  await run("select issue_letter_number($1,$2,$3)", [id, actor(n), key]);
+  const l = await get(id);
+  await run("select record_numbered_document($1,$2,$3,$4::jsonb)", [
+    actor(n),
+    id,
+    l.current_version_id,
+    JSON.stringify({
+      path: "numbered.docx",
+      format: "DOCX",
+      hash: "numbered-hash",
+    }),
+  ]);
+};
+beforeAll(async () => {
+  await db.exec(readFileSync("supabase/tests/00_stub_supabase.sql", "utf8"));
+  for (const file of readdirSync("supabase/migrations")
+    .filter((f) => f.endsWith(".sql"))
+    .sort())
+    await db.exec(readFileSync("supabase/migrations/" + file, "utf8"));
+  await db.exec(readFileSync("supabase/seed.sql", "utf8"));
+  await db.exec(
+    "insert into master_bank(name,is_active) values('Bank Uji',true)",
+  );
+}, 30000);
+afterAll(() => db.close());
+describe.sequential("Database: alur nyata dengan akun berbeda", () => {
+  it('RPC sensitif tidak dapat dipanggil anon atau authenticated',async()=>{
+    for(const fn of ['save_letter_draft(uuid,jsonb,jsonb)','review_letter(uuid,uuid,text,integer,text)','issue_letter_number(uuid,uuid,text)','record_signature(uuid,uuid,integer,uuid,jsonb,text,text,text)','finalize_letter(uuid,uuid,integer,boolean)','record_numbered_document(uuid,uuid,uuid,jsonb)']){
+      const r=(await rows("select has_function_privilege('anon',$1,'execute') a,has_function_privilege('authenticated',$1,'execute') u",[fn]))[0];expect(r.a).toBe(false);expect(r.u).toBe(false);
+    }
+  });
+  it("membuat draft tanpa nomor, tanpa preview pengajuan ditolak", async () => {
+    letterId = await draft(5, "IN");
+    expect((await get(letterId)).official_number).toBeNull();
+    await expect(act(letterId, 5, "SUBMIT")).rejects.toThrow(/preview/i);
+  });
+  it("membatasi pengeditan, tanggal mundur, dan perubahan oleh akun lain", async () => {
+    await expect(
+      draft(5, "IN", [], { letterDate: "2026-01-01", dateReason: "Koreksi" }),
+    ).rejects.toThrow(/kewenangan/);
+    const id = await draft(4, "IN", [], {
+      letterDate: "2026-01-01",
+      dateReason: "Koreksi pejabat",
+    });
+    const l = await get(id);
+    expect(l.letter_date).toBe("2026-01-01");
+    await expect(
+      draft(5, "IN", [], { id, revision: l.revision }),
+    ).rejects.toThrow(/diubah/);
+  });
+  it("internal tanpa TTD dapat siap, nomor atomik idempoten dan final", async () => {
+    await act(letterId, 5, "PREVIEW");
+    await act(letterId, 5, "SUBMIT");
+    await expect(
+      run("select issue_letter_number($1,$2,$3)", [
+        letterId,
+        actor(4),
+        "unauthorized",
+      ]),
+    ).rejects.toThrow(/pembuat/);
+    await issue(letterId, 5, "internal");
+    const num = (await get(letterId)).official_number;
+    await run("select issue_letter_number($1,$2,$3)", [
+      letterId,
+      actor(5),
+      "retry",
+    ]);
+    expect((await get(letterId)).official_number).toBe(num);
+    await run("select finalize_letter($1,$2,$3,false)", [
+      actor(5),
+      letterId,
+      (await get(letterId)).revision,
+    ]);
+    await expect(
+      run("update letters set subject='ubah' where id=$1", [letterId]),
+    ).rejects.toThrow(/terkunci/);
+  });
+  it("eksternal wajib penandatangan sah dan field penerima", async () => {
+    await expect(draft(5, "KRE", [4])).rejects.toThrow(/SM\/Direktur/);
+    await expect(draft(5, "KRE", [])).rejects.toThrow(/satu penandatangan/);
+    await expect(
+      draft(5, "KRE", [2], { recipientAddress: "" }),
+    ).rejects.toThrow(/alamat/);
+    extId = await draft(5, "KRE", [2]);
+    await act(extId, 5, "PREVIEW");
+    await act(extId, 5, "SUBMIT");
+    expect((await get(extId)).status).toBe("IN_REVIEW");
+  });
+  it("hanya penyetuju aktif dapat menyetujui; approval tidak menerbitkan nomor", async () => {
+    await expect(act(extId, 3, "APPROVE")).rejects.toThrow(/penyetuju/);
+    await act(extId, 2, "APPROVE");
+    expect((await get(extId)).status).toBe("READY_TO_ISSUE");
+    expect((await get(extId)).official_number).toBeNull();
+    await issue(extId, 5, "external");
+    expect(
+      (
+        await rows(
+          "select * from signature_requests where letter_id=$1 and status='PENDING'",
+          [extId],
+        )
+      ).length,
+    ).toBe(1);
+  });
+  it("menolak finalisasi sebelum TTD, aktor salah, dan preview versi kedaluwarsa", async () => {
+    let l = await get(extId);
+    await expect(
+      run("select finalize_letter($1,$2,$3,false)", [
+        actor(5),
+        extId,
+        l.revision,
+      ]),
+    ).rejects.toThrow(/TTD/);
+    const s = (
+      await rows("select * from signature_requests where letter_id=$1", [extId])
+    )[0];
+    const params = [
+      actor(2),
+      s.id,
+      l.revision,
+      l.current_version_id,
+      JSON.stringify({ path: "signed.docx", hash: "h2", format: "DOCX" }),
+      "IMAGE",
+      "image.png",
+      null,
+    ];
+    await expect(
+      run("select record_signature($1,$2,$3,$4,$5::jsonb,$6,$7,$8)", [
+        actor(3),
+        ...params.slice(1),
+      ]),
+    ).rejects.toThrow(/penandatangan/);
+    await expect(
+      run("select record_signature($1,$2,$3,$4,$5::jsonb,$6,$7,$8)", [
+        actor(2),
+        s.id,
+        999,
+        ...params.slice(3),
+      ]),
+    ).rejects.toThrow(/berubah/);
+    await run(
+      "select record_signature($1,$2,$3,$4,$5::jsonb,$6,$7,$8)",
+      params,
+    );
+    l = await get(extId);
+    expect(l.signature_status).toBe("UPLOADED");
+    await run("select finalize_letter($1,$2,$3,false)", [
+      actor(5),
+      extId,
+      l.revision,
+    ]);
+  });
+  it("tagihan: Finance, lampiran wajib, SM Finance lalu Direktur", async () => {
+    const bank = (await rows("select id from master_bank limit 1"))[0]?.id;
+    const billing = {
+      bankId: bank,
+      accountNumber: "000000",
+      accountHolder: "UJI",
+      items: [
+        { description: "Uji 1", amount: 1 },
+        { description: "Uji 2", amount: 2 },
+      ],
+    };
+    await expect(draft(5, "Tag", [3, 2], { billing })).rejects.toThrow(
+      /Finance/,
+    );
+    billingId = await draft(6, "Tag", [3, 2], { billing });
+    await act(billingId, 6, "PREVIEW");
+    await expect(act(billingId, 6, "SUBMIT")).rejects.toThrow(/lampiran/i);
+    await run(
+      "insert into letter_attachments(letter_id,file_name,storage_path,mime_type,size_bytes,uploaded_by) values($1,'bukti.pdf','bukti','application/pdf',100,$2)",
+      [billingId, actor(6)],
+    );
+    await act(billingId, 6, "SUBMIT");
+    await expect(act(billingId, 2, "APPROVE")).rejects.toThrow(/penyetuju/);
+    await act(billingId, 3, "APPROVE");
+    await act(billingId, 2, "APPROVE");
+    await issue(billingId, 6, "bill");
+    const reqs = await rows(
+      "select * from signature_requests where letter_id=$1 order by sign_order",
+      [billingId],
+    );
+    let l = await get(billingId);
+    await expect(
+      run("select record_signature($1,$2,$3,$4,$5::jsonb,$6,$7,$8)", [
+        actor(2),
+        reqs[1].id,
+        l.revision,
+        l.current_version_id,
+        JSON.stringify({ path: "b2.docx", hash: "x", format: "DOCX" }),
+        "IMAGE",
+        "sig.png",
+        null,
+      ]),
+    ).rejects.toThrow(/penandatangan/);
+    await run("select record_signature($1,$2,$3,$4,$5::jsonb,$6,$7,$8)", [
+      actor(3),
+      reqs[0].id,
+      l.revision,
+      l.current_version_id,
+      JSON.stringify({ path: "b1.docx", hash: "x", format: "DOCX" }),
+      "IMAGE",
+      "sig.png",
+      "stamp.png",
+    ]);
+    l = await get(billingId);
+    expect(l.signature_status).toBe("WAITING");
+    await run("select record_signature($1,$2,$3,$4,$5::jsonb,$6,$7,$8)", [
+      actor(2),
+      reqs[1].id,
+      l.revision,
+      l.current_version_id,
+      JSON.stringify({ path: "b2.docx", hash: "y", format: "DOCX" }),
+      "IMAGE",
+      "sig.png",
+      null,
+    ]);
+    expect((await get(billingId)).signature_status).toBe("UPLOADED");
+    expect(
+      (
+        await rows(
+          "select * from audit_logs where letter_id=$1 and action='STAMP_APPLIED'",
+          [billingId],
+        )
+      ).length,
+    ).toBe(1);
+  });
+  it("revisi menjaga approval lama dan tanggal surat saat edit", async () => {
+    const id = await draft(4, "IN", [3], {
+      letterDate: "2026-01-01",
+      dateReason: "Koreksi",
+    });
+    await act(id, 4, "PREVIEW");
+    await act(id, 4, "SUBMIT");
+    await expect(act(id, 3, "REQUEST_REVISION")).rejects.toThrow(/Alasan/);
+    await act(id, 3, "REQUEST_REVISION", "Koreksi isi");
+    const l = await get(id);
+    await draft(4, "IN", [3], {
+      id,
+      revision: l.revision,
+      letterDate: l.letter_date,
+      subject: "Dikoreksi",
+    });
+    expect((await get(id)).letter_date).toBe("2026-01-01");
+    await act(id, 4, "PREVIEW");
+    await act(id, 4, "SUBMIT");
+    const steps = await rows(
+      "select cycle,status from approval_steps where letter_id=$1 order by cycle",
+      [id],
+    );
+    expect(steps.map((s) => s.status)).toEqual([
+      "REVISION_REQUESTED",
+      "PENDING",
+    ]);
+  });
+  it("penolakan terminal dan jalur luar memerlukan konfirmasi terpisah", async () => {
+    const reject = await draft(5, "KRE", [2]);
+    await act(reject, 5, "PREVIEW");
+    await act(reject, 5, "SUBMIT");
+    await act(reject, 2, "REJECT", "Tidak sesuai");
+    await expect(act(reject, 5, "SUBMIT")).rejects.toThrow();
+    const id = await draft(5, "KRE", [2], { signatureMode: "EXTERNAL" });
+    await act(id, 5, "PREVIEW");
+    await act(id, 5, "SUBMIT");
+    await act(id, 2, "APPROVE");
+    await issue(id, 5, "wet");
+    expect(
+      (await rows("select * from signature_requests where letter_id=$1", [id]))
+        .length,
+    ).toBe(0);
+    const l = await get(id);
+    await expect(
+      run("select finalize_letter($1,$2,$3,false)", [actor(5), id, l.revision]),
+    ).rejects.toThrow(/Konfirmasi/);
+    await run("select finalize_letter($1,$2,$3,true)", [
+      actor(5),
+      id,
+      l.revision,
+    ]);
+  });
+});

@@ -1,4 +1,5 @@
 import * as React from 'react';
+export const dynamic = 'force-dynamic';
 import { redirect } from 'next/navigation';
 import { getCurrentUser } from '@/server/auth';
 import { createAdminClient } from '@/lib/supabase/admin';

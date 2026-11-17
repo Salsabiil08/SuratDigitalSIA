@@ -196,7 +196,7 @@ export default function SuratSayaPage() {
                   </TableCell>
                   <TableCell>
                     <Chip variant={getStatusChipVariant(letter.status)}>
-                      {STATUS_LABEL[letter.status as LetterStatus] || letter.status}
+                      {letter.workflowStatus || STATUS_LABEL[letter.status as LetterStatus] || letter.status}
                     </Chip>
                   </TableCell>
                   <TableCell>

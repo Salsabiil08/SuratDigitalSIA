@@ -203,9 +203,8 @@ export default function PersetujuanPage() {
                 </Link>
               </div>
 
-              {/* Tinjauan Isi Dokumen */}
-              <div className="p-4 bg-neutral-50 rounded-xl border border-[#EEEEEA] text-xs font-mono text-neutral-700 whitespace-pre-wrap leading-relaxed max-h-56 overflow-y-auto">
-                {selectedItem.previewContent}
+              <div className="text-sm text-neutral-600">
+                <Link className="text-brand-red underline" href={`/surat/${selectedItem.letterId}`}>Preview dokumen dan berikan keputusan pada versi terkini →</Link>
               </div>
 
               {/* Input Catatan / Alasan */}
@@ -252,10 +251,10 @@ export default function PersetujuanPage() {
                   variant="primary"
                   size="md"
                   isLoading={isSubmitting}
-                  onClick={handleApprove}
+                  onClick={() => { window.location.href = `/surat/${selectedItem.letterId}`; }}
                   className="bg-emerald-700 hover:bg-emerald-800 font-bold"
                 >
-                  ✓ Setujui Surat
+                  Preview dan Setujui
                 </Button>
               </div>
             </Card>

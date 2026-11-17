@@ -22,61 +22,12 @@ export interface UserProfile {
   isSuperAdmin: boolean;
 }
 
-const SESSION_COOKIE_NAME = 'siadocs_session';
-
-/**
- * Menyimpan data sesi lokal di cookie (Fallback saat Supabase Cloud belum dihubungkan).
- */
-export async function setLocalSession(profile: UserProfile) {
-  try {
-    const cookieStore = cookies();
-    const serialized = Buffer.from(JSON.stringify(profile)).toString('base64');
-    cookieStore.set(SESSION_COOKIE_NAME, serialized, {
-      path: '/',
-      httpOnly: true,
-      sameSite: 'lax',
-      maxAge: 60 * 60 * 24 * 7, // 7 hari
-    });
-  } catch (err) {
-    console.warn('setLocalSession error:', err);
-  }
-}
-
-/**
- * Menghapus sesi lokal dari cookie.
- */
+/** Hapus cookie demo lama. Identitas hanya diverifikasi melalui Supabase Auth. */
 export async function clearLocalSession() {
-  try {
-    const cookieStore = cookies();
-    cookieStore.set(SESSION_COOKIE_NAME, '', {
-      path: '/',
-      maxAge: 0,
-    });
-  } catch (err) {
-    console.warn('clearLocalSession error:', err);
-  }
+  cookies().set('siadocs_session', '', { path: '/', maxAge: 0 });
 }
 
-/**
- * Mendapatkan data profil dan penugasan pengguna aktif.
- * Mendukung Supabase Auth resmi serta sesi fallback lokal agar pengguna tetap
- * dapat menggunakan aplikasi saat database cloud sedang dalam proses setup.
- */
 export async function getCurrentUser(): Promise<UserProfile | null> {
-  // 1. Cek sesi lokal dari cookie (Diperbarui saat login demo cepat atau login resmi)
-  try {
-    const cookieStore = cookies();
-    const sessionCookie = cookieStore.get(SESSION_COOKIE_NAME)?.value;
-    if (sessionCookie) {
-      const decoded = JSON.parse(Buffer.from(sessionCookie, 'base64').toString('utf-8'));
-      if (decoded && decoded.email) {
-        return decoded as UserProfile;
-      }
-    }
-  } catch {
-    // Abaikan jika cookie corrupt
-  }
-
   // 2. Cek sesi resmi dari Supabase Auth (hanya jika ada cookie auth, menghindari lag jaringan)
   try {
     const cookieStore = cookies();
@@ -107,6 +58,7 @@ export async function getCurrentUser(): Promise<UserProfile | null> {
             `)
             .eq('profile_id', user.id)
             .eq('is_active', true)
+            .or('end_date.is.null,end_date.gte.'+new Date().toISOString().slice(0,10))
             .order('start_date', { ascending: false })
             .limit(1)
             .maybeSingle();
@@ -144,5 +96,11 @@ export async function requireSuperAdmin(): Promise<UserProfile> {
   if (!user || !user.isSuperAdmin) {
     throw new Error('UNAUTHORIZED: Akses hanya diperuntukkan bagi Super Admin.');
   }
+  return user;
+}
+
+export async function requireUser(): Promise<UserProfile> {
+  const user = await getCurrentUser();
+  if (!user?.isActive) throw new Error('Silakan masuk menggunakan akun aktif.');
   return user;
 }

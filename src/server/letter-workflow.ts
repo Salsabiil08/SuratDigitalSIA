@@ -1,0 +1,288 @@
+import { randomUUID, createHash } from "node:crypto";
+import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { requireUser } from "@/server/auth";
+import { DraftInput, validateLetterDate, jakartaDate } from "@/domain/workflow";
+import { generateLetterDocx } from "@/lib/docx-generator";
+import {
+  inspectDocument,
+  fillOfficialNumber,
+  DocumentFormat,
+  DOCUMENT_MIME,
+} from "@/lib/letter-document";
+import { terbilangRupiah } from "@/domain/terbilang";
+export const DOCUMENT_BUCKET = "letter-documents";
+export const ASSET_BUCKET = "signature-assets";
+export async function readLetter(id: string) {
+  await requireUser();
+  const db = createClient();
+  const { data, error } = await db
+    .from("letters")
+    .select(
+      "*, type:letter_types!letters_letter_type_id_fkey(code,name,category), creator:profiles!letters_creator_id_fkey(full_name), recipient:profiles!letters_recipient_user_id_fkey(full_name), unit:organizational_units!letters_creator_unit_id_fkey(name,code)",
+    )
+    .eq("id", id)
+    .single();
+  if (error || !data)
+    throw new Error(
+      "Surat tidak ditemukan atau Anda tidak berwenang melihatnya.",
+    );
+  return data;
+}
+export async function readVersion(letter: any) {
+  const { data, error } = await createClient()
+    .from("letter_versions")
+    .select("*")
+    .eq("id", letter.current_version_id)
+    .eq("letter_id", letter.id)
+    .single();
+  if (error || !data?.storage_path)
+    throw new Error(
+      "Versi dokumen belum tersedia. Dokumen lama perlu ditinjau pengelola.",
+    );
+  return data;
+}
+export async function downloadVersion(letter: any, materialize = true) {
+  const version = await readVersion(letter);
+  const { data, error } = await createAdminClient()
+    .storage.from(DOCUMENT_BUCKET)
+    .download(version.storage_path);
+  if (error || !data)
+    throw new Error("Dokumen tidak tersedia di Supabase Storage.");
+  const bytes = Buffer.from(await data.arrayBuffer());
+  if (version.file_hash && hashBytes(bytes) !== version.file_hash)
+    throw new Error("Hash dokumen berbeda dari catatan versi.");
+  return {
+    bytes: materialize
+      ? await fillOfficialNumber(
+          bytes,
+          version.file_format,
+          letter.official_number,
+          false,
+          version.version_kind === "DRAFT" ? letter.number_area : undefined,
+        )
+      : bytes,
+    format: version.file_format as DocumentFormat,
+    version,
+  };
+}
+export function hashBytes(bytes: Uint8Array) {
+  return createHash("sha256").update(bytes).digest("hex");
+}
+export async function storeBytes(
+  actor: string,
+  bytes: Uint8Array,
+  format: DocumentFormat,
+  bucket = DOCUMENT_BUCKET,
+) {
+  const path = `${actor}/${randomUUID()}.${format.toLowerCase()}`;
+  const { error } = await createAdminClient()
+    .storage.from(bucket)
+    .upload(path, bytes, { contentType: DOCUMENT_MIME[format], upsert: false });
+  if (error)
+    throw new Error("Gagal menyimpan dokumen ke Supabase: " + error.message);
+  return { path, hash: hashBytes(bytes), format };
+}
+export async function peopleOptions() {
+  const user = await requireUser();
+  const db = createClient();
+  const [
+    { data: profiles, error },
+    { data: assignments, error: ae },
+    { data: banks, error: be },
+  ] = await Promise.all([
+    db.from("profiles").select("id,full_name").eq("is_active", true),
+    db
+      .from("user_assignments")
+      .select(
+        "profile_id,is_official_signer,start_date,end_date,position:positions!user_assignments_position_id_fkey(code,name),unit:organizational_units!user_assignments_unit_id_fkey(code,name)",
+      )
+      .eq("is_active", true)
+      .order("start_date", { ascending: false }),
+    db.from("master_bank").select("id,name").eq("is_active", true),
+  ]);
+  if (error || ae || be)
+    throw new Error(
+      "Gagal memuat struktur organisasi: " + (error || ae || be)?.message,
+    );
+  const today = jakartaDate();
+  const seen = new Set<string>();
+  const active = (assignments || [])
+    .filter(
+      (a) =>
+        (!a.start_date || a.start_date <= today) &&
+        (!a.end_date || a.end_date >= today),
+    )
+    .filter((a) => {
+      if (seen.has(a.profile_id)) return false;
+      seen.add(a.profile_id);
+      return true;
+    });
+  const people = (profiles || [])
+    .map((p) => {
+      const a = active.find((a) => a.profile_id === p.id) as any;
+      return {
+        id: p.id,
+        name: p.full_name,
+        title: a?.position?.name || "",
+        position: a?.position?.code || "",
+        unit: a?.unit?.code || "",
+        unitName: a?.unit?.name || "",
+        signer:
+          !!a?.is_official_signer && ["SM", "DIR"].includes(a?.position?.code),
+      };
+    })
+    .filter((p) => p.position);
+  return { user, people, banks: banks || [] };
+}
+export async function saveDraft(
+  input: DraftInput,
+  file?: File | null,
+  attachment?: File | null,
+) {
+  const user = await requireUser();
+  let old: any = null;
+  if (input.id) {
+    old = await readLetter(input.id);
+    if (
+      old.creator_id !== user.id ||
+      !["DRAFT", "REVISION_REQUESTED"].includes(old.status) ||
+      old.finalized_at
+    )
+      throw new Error("Draft tidak dapat diubah.");
+  }
+  if (!old || input.letterDate !== old.letter_date)
+    validateLetterDate(
+      input.letterDate,
+      ["GM", "SM", "DIR"].includes(user.position?.code || ""),
+      input.dateReason,
+    );
+  if (input.source !== "CREATE" && input.source !== "UPLOAD")
+    throw new Error("Sumber surat tidak valid.");
+  if (old && input.source !== old.source)
+    throw new Error("Sumber dokumen tidak dapat diganti.");
+  const { people, banks } = await peopleOptions();
+  const signers = input.signerIds.map((id) =>
+    people.find((p) => p.id === id && p.signer),
+  );
+  if (signers.some((s) => !s))
+    throw new Error("Pilih pejabat penandatangan aktif.");
+  let bytes: Uint8Array, format: DocumentFormat;
+  let name = "Surat.docx";
+  if (input.source === "UPLOAD") {
+    if (file?.size) {
+      format = file.name.toLowerCase().endsWith(".pdf") ? "PDF" : "DOCX";
+      name = file.name;
+      if (!/\.(pdf|docx)$/i.test(name))
+        throw new Error("Format impor hanya PDF/DOCX.");
+      bytes = new Uint8Array(await file.arrayBuffer());
+    } else if (old) {
+      const v = await readVersion(old);
+      const { data, error } = await createAdminClient()
+        .storage.from(DOCUMENT_BUCKET)
+        .download(v.storage_path);
+      if (error || !data) throw new Error("Gagal membaca dokumen impor.");
+      bytes = new Uint8Array(await data.arrayBuffer());
+      format = v.file_format;
+      name = v.original_name || "Dokumen";
+    } else throw new Error("Unggah dokumen PDF/DOCX terlebih dahulu.");
+  } else {
+    if (!input.content?.trim()) throw new Error("Isi surat wajib diisi.");
+    // Store plain text and escape in the DOCX generator. Never render user HTML into the application.
+    const escaped = input.content;
+    const rec = people.find((p) => p.id === input.recipientUserId);
+    let billing = "";
+    if (input.billing) {
+      const b = input.billing;
+      const total = b.items.reduce((s, i) => s + Number(i.amount), 0);
+      billing =
+        "\n\nRincian tagihan:\n" +
+        b.items
+          .map(
+            (i, j) =>
+              `${j + 1}. ${i.description}: Rp ${i.amount.toLocaleString("id-ID")}`,
+          )
+          .join("\n") +
+        `\nTotal: Rp ${total.toLocaleString("id-ID")} (${terbilangRupiah(total)})\nBank: ${banks.find((x) => x.id === b.bankId)?.name || b.bankName || ""}\nRekening: ${b.accountNumber} a.n. ${b.accountHolder}`;
+    }
+    bytes = await generateLetterDocx({
+      officialNumber: "{{OFFICIAL_NUMBER}}",
+      letterDate:
+        "Aceh Besar, " +
+        new Date(input.letterDate + "T12:00:00+07:00").toLocaleDateString(
+          "id-ID",
+          {
+            timeZone: "Asia/Jakarta",
+            day: "numeric",
+            month: "long",
+            year: "numeric",
+          },
+        ),
+      subject: input.subject,
+      recipientName: rec ? `${rec.name} — ${rec.title}` : input.recipientName,
+      recipientOrg: rec
+        ? rec.unitName
+        : [input.recipientOrg, input.recipientAddress]
+            .filter(Boolean)
+            .join("\n"),
+      contentText: escaped + billing,
+      signatureCount: signers.length,
+      signers: signers.map((s) => ({ name: s!.name, title: s!.title })),
+      signerName: signers[0]?.name || user.fullName,
+      signerTitle: signers[0]?.title || user.unit?.name,
+      signaturePlaceholders: true,
+    });
+    format = "DOCX";
+  }
+  await inspectDocument(bytes, format, input.signerIds.length, [
+    ...input.areas,
+    ...(input.stampArea ? [input.stampArea] : []),
+    ...(input.numberArea ? [input.numberArea] : []),
+  ]);
+  const attachments: any[] = [];
+  if (attachment?.size) {
+    if (
+      attachment.size > 1024 * 1024 ||
+      !/\.(pdf|docx)$/i.test(attachment.name)
+    )
+      throw new Error("Lampiran PDF/DOCX maksimal 1 MB.");
+    const attBytes = new Uint8Array(await attachment.arrayBuffer());
+    const attFormat = attachment.name.toLowerCase().endsWith(".pdf")
+      ? "PDF"
+      : "DOCX";
+    await inspectDocument(attBytes, attFormat);
+    const att = await storeBytes(user.id, attBytes, attFormat);
+    attachments.push({
+      ...att,
+      name: attachment.name,
+      mime: DOCUMENT_MIME[attFormat],
+      size: attachment.size,
+    });
+  }
+  const document = await storeBytes(user.id, bytes, format);
+  const data = structuredClone(input) as DraftInput & { billing?: any };
+  if (data.billing)
+    data.billing.totalInWords = terbilangRupiah(
+      data.billing.items.reduce((s: any, i: any) => s + Number(i.amount), 0),
+    );
+  const { data: id, error } = await createAdminClient().rpc(
+    "save_letter_draft",
+    {
+      p_actor: user.id,
+      p_data: data,
+      p_document: { ...document, name, attachments },
+    },
+  );
+  if (error) {
+    await createAdminClient()
+      .storage.from(DOCUMENT_BUCKET)
+      .remove([document.path]);
+    throw new Error(error.message);
+  }
+  return id as string;
+}
+export function assertSameOrigin(request: Request) {
+  const origin = request.headers.get("origin");
+  if (!origin || origin !== new URL(request.url).origin)
+    throw new Error("Permintaan lintas situs ditolak.");
+}

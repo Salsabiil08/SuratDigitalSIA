@@ -143,6 +143,7 @@ export async function getMasterSeri() {
  * Mengambil Log History khusus Super Admin.
  */
 export async function getAuditLogs(limit = 50): Promise<AuditLogData[]> {
+  await requireSuperAdmin();
   try {
     const supabase = createAdminClient();
 

@@ -15,11 +15,13 @@ export interface LetterDocxData {
   recipientName?: string;
   recipientOrg?: string;
   contentHtml?: string;
+  contentText?: string;
   signerName?: string;
   signerTitle?: string;
   fromUnit?: string;
   signatureCount?: number; // 0 = Internal, 1 = Eksternal (1 ttd), 2 = Tagihan (2 ttd)
   signers?: SignerInfo[];
+  signaturePlaceholders?: boolean;
 }
 
 function escapeXml(str = ''): string {
@@ -211,7 +213,9 @@ export async function generateLetterDocx(data: LetterDocxData): Promise<Buffer> 
   const signerName = data.signerName || '[Nama Penandatangan Sah]';
   const signerTitle = data.signerTitle || (data.fromUnit ? `Senior Manager / Pejabat ${data.fromUnit}` : 'Senior Manager / Direktur Utama');
 
-  const contentBodyXml = data.contentHtml
+  const contentBodyXml = data.contentText !== undefined
+    ? data.contentText.split('\n').map(line=>`<w:p><w:pPr><w:spacing w:after="140"/></w:pPr><w:r><w:rPr><w:rFonts w:ascii="${fontName}" w:hAnsi="${fontName}"/><w:sz w:val="22"/></w:rPr><w:t xml:space="preserve">${escapeXml(line)}</w:t></w:r></w:p>`).join('')
+    : data.contentHtml
     ? parseHtmlToDocx(data.contentHtml, fontName)
     : `
       <w:p>
@@ -474,7 +478,16 @@ export async function generateLetterDocx(data: LetterDocxData): Promise<Buffer> 
     </w:body>`;
 
   // Rekonstruksi document.xml dengan w:body baru
-  const newDocXml = originalDocXml.replace(/<w:body>[\s\S]*?<\/w:body>/i, bodyXml);
+  let finalBody = bodyXml;
+  if (data.signaturePlaceholders && data.signatureCount) {
+    let slot = 0;
+    finalBody = finalBody.replace(/(<w:p><w:pPr><w:jc w:val="center"\/><w:spacing w:after="720"\/>[\s\S]*?<\/w:p>)/g, (block) => {
+      slot++;
+      return block.replace('w:after="720"', 'w:after="80"') + `<w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:t>{{SIGNATURE_${slot}}}</w:t></w:r></w:p>`;
+    });
+    finalBody = finalBody.replace(sectPrXml, `<w:p><w:r><w:t>{{STAMP}}</w:t></w:r></w:p>${sectPrXml}`);
+  }
+  const newDocXml = originalDocXml.replace(/<w:body>[\s\S]*?<\/w:body>/i, finalBody);
   zip.file('word/document.xml', newDocXml);
 
   // Buat berkas DOCX terkompresi

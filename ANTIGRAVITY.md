@@ -1,3 +1,5 @@
+> Revisi aktif: instruksi pengguna REV-01–07 tanggal 18 November 2026 pada `docs/spec/00-revisi-alur.md` berlaku di atas batasan lama yang bertentangan di dokumen ini.
+
 # ANTIGRAVITY.md: Membangun SIADocs R.04
 
 File ini adalah instruksi utama untuk agen di Google Antigravity (atau agen lain) agar membangun aplikasi **SIADocs** PT Semen Indonesia Aceh dengan **Next.js, TypeScript, dan Supabase**. Baca seluruh file sebelum menulis kode.

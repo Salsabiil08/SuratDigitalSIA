@@ -2,6 +2,10 @@
 
 Petunjuk untuk agen AI pengembang (Codex, Claude Code, atau agen lain). Baca file ini sebelum mengerjakan apa pun.
 
+## Revisi aktif (18 November 2026)
+
+Instruksi pengguna REV-01 sampai REV-07 pada `docs/spec/00-revisi-alur.md` menggantikan larangan editor isi, gambar TTD, stempel, dan batasan tanggal pada R.04. Blueprint R.03 tetap menjadi acuan penomoran dan kewenangan; perubahan mekanisme gambar TTD/stempel merupakan revisi eksplisit pengguna, bukan klaim isi R.03. Kerjakan alur ini dengan Auth, database, dan Storage Supabase yang nyata, tanpa fallback akun demo.
+
 ## Tujuan
 
 SIADocs adalah sistem penomoran dan disposisi surat digital PT Semen Indonesia Aceh (Blueprint R.04): Buat Surat, Ambil Nomor, persetujuan, penerbitan nomor resmi, pengesahan tanda tangan, dan disposisi. Stack: Next.js (App Router), TypeScript, Supabase (PostgreSQL, Auth, Storage, Realtime). Instruksi pembangunan lengkap: `ANTIGRAVITY.md`.

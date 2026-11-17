@@ -43,3 +43,13 @@ Kerjakan berurutan. Tugas selesai bila kriteria terpenuhi dan `npm run check` lu
 
 ## Perbaikan akses awal
 - [x] Pengunjung tanpa sesi diarahkan ke `/login` dari seluruh halaman dashboard; hapus akun demo otomatis saat tidak ada sesi.
+
+## REV-01–07 — Revisi pengguna 18 November 2026
+- [ ] REV-01: tanggal surat lampau menurut kewenangan, alasan, audit, tanggal stabil saat edit.
+- [ ] REV-02: approval riil per akun/versi, status tersimpan, pengujian antarperan.
+- [ ] REV-03: area TTD DOCX/PDF tervalidasi dan terlihat pada preview.
+- [ ] REV-04: draft, preview, koreksi, pengajuan, nomor, TTD, finalisasi terkunci.
+- [ ] REV-05: gambar TTD/unggahan basah tersimpan di Supabase, identitas/waktu/hash/audit, tanpa klaim TTE tersertifikasi.
+- [ ] REV-06: stempel opsional oleh penandatangan sah, preview dan audit.
+- [ ] REV-07: penerima, field, template dan validasi internal/eksternal berbeda; tagihan tetap Finance dan dua tahap.
+- [ ] Verifikasi migration, RLS, Storage, login nyata, production dan laporan tes.

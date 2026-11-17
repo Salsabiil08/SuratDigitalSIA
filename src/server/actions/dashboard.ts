@@ -1,7 +1,7 @@
 'use server';
 
-import { createAdminClient } from '@/lib/supabase/admin';
-import { getCurrentUser } from '@/server/auth';
+import { createClient } from '@/lib/supabase/server';
+import { requireUser } from '@/server/auth';
 
 export interface ActionItem {
   id: string;
@@ -29,9 +29,9 @@ export interface DashboardMetrics {
 }
 
 export async function getDashboardDataAction(): Promise<DashboardMetrics> {
-  const supabase = createAdminClient();
-  const user = await getCurrentUser();
-  const currentUserId = user?.id || 'a0000000-0000-0000-0000-000000000005';
+  const supabase = createClient();
+  const user = await requireUser();
+  const currentUserId = user.id;
 
   try {
     // 1. Ambil hitungan status surat

@@ -5,3 +5,8 @@ node_modules/
 *.log
 .DS_Store
 coverage/
+
+supabase/.temp/
+.qa-*
+test-results/
+playwright-report/

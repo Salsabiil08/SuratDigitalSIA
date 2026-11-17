@@ -27,3 +27,10 @@ Seluruh 11 kriteria penerimaan telah diuji secara otomatis pada file [tests/acce
 9. **Disposisi yang menuntut surat tidak Selesai sebelum surat NUMBERED** $\rightarrow$ **LULUS** (Trigger SQL dan domain menolak penyelesaian disposisi jika surat belum bernomor).
 10. **Log History hanya Super Admin** $\rightarrow$ **LULUS** (Hak akses RLS dan Server Guard khusus peran Super Admin, tanpa isi dokumen).
 11. **Tidak ada editor isi, distribusi, arsip, atau penyisipan nomor otomatis** $\rightarrow$ **LULUS** (Aplikasi murni berfungsi sebagai sistem penomoran dan disposisi persuratan digital sesuai batasan Blueprint R.04).
+
+## Revisi pengguna 18 November 2026
+
+- Form pembuatan sebelumnya langsung menulis NUMBERED dan merangkai nomor di server JavaScript, tanpa transaksi counter resmi dan tanpa approval; 13 nomor lama tidak memiliki number_issuances. Nomor tersebut dipertahankan dan counter baru menghindari penggunaan ulang.
+- Daftar approval sebelumnya membaca step_number, padahal skema menggunakan step_order; pengajuan menulis PENDING tetapi daftar membaca WAITING. Beberapa penulisan tidak memeriksa error.
+- Production belum memiliki bucket Storage. Akun contoh auth.users belum memiliki kata sandi/konfirmasi email; fallback cookie berisi profil dan login dengan password arbitrer tidak membuktikan identitas.
+- Instruksi eksplisit REV-01..07 menggantikan batasan R.04 yang melarang editor/gambar TTD/stempel; perbedaan terhadap R.03 dijelaskan pada docs/spec/00-revisi-alur.md.
