@@ -12,6 +12,8 @@ export interface DraftInput {
   categoryCode?: string;
   reviewerId?: string;
   dispositionId?: string;
+  replyToDispatchId?: string;
+  replyKey?: string;
   id?: string;
   revision?: number;
   source: "CREATE" | "UPLOAD";

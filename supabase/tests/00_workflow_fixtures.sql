@@ -30,3 +30,11 @@ begin
  perform record_numbered_document(p_actor,p_letter,v,jsonb_build_object('path',p_actor::text||'/numbered.docx','format','DOCX','hash','numbered-fixture-hash'));end if;
  return iss;
 end $$;
+
+-- PR-06 helper tambahan, selalu melalui RPC draf nyata.
+create function test_support.reply_draft(p_actor uuid,p_origin uuid,p_key uuid,p_category text default 'PEMBERITAHUAN',p_reviewer uuid default null,p_signers uuid[] default '{}') returns uuid language plpgsql as $$
+begin
+ return save_letter_draft(p_actor,jsonb_build_object('source','CREATE','letterTypeCode','IN','categoryCode',p_category,'reviewerId',p_reviewer,'subject','Balasan fixture','letterDate',(now() at time zone 'Asia/Jakarta')::date,
+ 'recipientUserId',(select sender_id from internal_dispatches where id=p_origin),'signatureMode','IN_APP','signerIds',to_jsonb(p_signers),'areas','[]'::jsonb,'content','Isi balasan fixture','replyToDispatchId',p_origin,'replyKey',p_key),
+ jsonb_build_object('path',p_actor::text||'/reply-'||p_key::text||'.docx','format','DOCX','hash','reply-fixture-hash'));
+end $$;

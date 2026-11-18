@@ -1,4 +1,5 @@
 "use server";
+import {readReplyContext} from "@/server/official-replies";
 import { requireUser } from "@/server/auth";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -66,7 +67,9 @@ export async function getWorkflowLetter(id: string) {
   if(de)throw new Error('Informasi pengiriman belum dapat diambil.');
   let ccOptions: {id:string;full_name:string}[]=[];
   if(delivery?.ccEnabled&&delivery?.canDispatch){const {data:ccPeople,error:cce}=await db.from('profiles').select('id,full_name').eq('is_active',true);if(cce)throw new Error('Penerima tembusan belum dapat diambil.');ccOptions=ccPeople||[];}
+  const replyContext=await readReplyContext(id);
   return {
+    replyContext,
     ccOptions,
     delivery,
     letter: l,

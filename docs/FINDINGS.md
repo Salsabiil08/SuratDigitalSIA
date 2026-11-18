@@ -1,3 +1,15 @@
+# Pembaruan PR-06 — 18 November 2026
+
+PR-06 diizinkan setelah penerimaan PR-05; [laporan](plans/PR06_VALIDATION.md), [Draft PR #7](https://github.com/Salsabiil08/SuratDigitalSIA/pull/7). CI #37 check 217/217 dan PostgreSQL/konkurensi lulus; build lokal lulus. Production belum berubah; UAT staging masih diperlukan.
+
+- Balasan dibuat penerima utama pengiriman resmi sebagai draf/surat baru. Kategori awal diwarisi untuk ditinjau di editor; pengirim resmi snapshot menjadi penerima yang dikunci. Tidak menyalin approval/TTD/nomor asal.
+- Relasi tidak memberi akses dokumen. RLS relasi memerlukan hak baca kedua endpoint, sehingga pengirim asal tidak melihat draf balasan kecuali punya peran independen yang sah.
+- Status Sudah Dibalas hanya melalui record pengiriman atomik; CC tidak mempunyai kewajiban baru. Status penerima yang boleh dilihat dapat tampil tanpa membuka metadata/ID balasan privat.
+- Kewajiban/tenggat, delegasi pengirim dan konfigurasi reviewer tetap pending perusahaan. Tidak dibuat tanggal jatuh tempo atau perluasan ke disposisi PR-07.
+- Metadata production read-only: history tetap 8; tabel dispatch/reply belum ada. Advisor baseline menyebut leaked-password protection belum aktif; pengaturan tidak diubah. UAT staging Auth/Storage/browser serta rekonsiliasi migrasi tetap diperlukan sebelum production.
+
+## Snapshot PR-05 (historis)
+
 # Pembaruan PR-05 — 18 November 2026
 
 PR-05 diizinkan setelah penerimaan PR-04; [laporan](plans/PR05_VALIDATION.md), [Draft PR #6](https://github.com/Salsabiil08/SuratDigitalSIA/pull/6). CI run #33 lulus: 202 tes/typecheck serta PostgreSQL/konkurensi nyata. Build lokal lulus. Production belum berubah; UAT staging masih diperlukan.
