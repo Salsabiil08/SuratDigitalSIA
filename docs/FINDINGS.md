@@ -1,6 +1,6 @@
 # Pembaruan PR-07 — 18 November 2026
 
-PR-07 diizinkan setelah penerimaan PR-06; [laporan](plans/PR07_VALIDATION.md). Production belum diubah.
+PR-07 diizinkan setelah penerimaan PR-06; [laporan](plans/PR07_VALIDATION.md), [Draft PR #8](https://github.com/Salsabiil08/SuratDigitalSIA/pull/8). CI #41 check 234/234 dan PostgreSQL/konkurensi lulus; build lokal lulus. Production belum diubah, UAT staging masih diperlukan.
 
 - Disposisi internal baru memerlukan pengiriman resmi, PRIMARY berwenang, hierarki/penugasan dan unit sesuai baseline. CC/baca/admin bukan mandat otomatis.
 - Workflow existing tetap menangani CREATE/START/SUBMIT/RETURN/ACCEPT. Bukti hasil, operasi idempoten, relasi surat dan riwayat ditambah secara aditif. Surat hasil final harus dikirim resmi sebelum pengajuan hasil.

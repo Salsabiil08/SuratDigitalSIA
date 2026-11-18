@@ -45,7 +45,7 @@ Satu migrasi baru dibuat dengan CLI `supabase@2.58.5 migration new disposition_i
 - Fixture SQL melalui PGlite: PRIMARY GM sah, CC SM/admin/staf ditolak, GM lintas unit ditolak, source dan hasil privat tidak bocor lewat surat/versi/relasi/Storage; draf/final tanpa kirim menahan submit; nomor hasil baru; upload privat sebelum submit, pilih lampiran dan akses sesudah submit; catatan-only sah tanpa tenggat otomatis; pelaksana/admin tidak ACCEPT; RETURN → hasil baru → SUBMIT → ACCEPT, riwayat dua pengajuan/keputusan/relasi tetap ada.
 - Fault injection pada notifications/audit/operasi CREATE, snapshot/file/notifikasi/audit/operasi SUBMIT, dan keputusan ACCEPT membuktikan rollback tanpa status/audit palsu. Retry key sama tidak menggandakan kejadian; payload key berbeda ditolak.
 - API: auth/aktor/RLS sebelum Storage, format/ukuran, retry tanpa upload baru, cleanup saat RPC gagal, proxy download hash/ukuran/no-store tanpa signed URL atau mutasi status. UI: tindakan hanya dari konteks sah, query error terpisah dari sukses kosong, sumber privat tanpa tautan, draf menahan hasil, riwayat perbaikan tetap tampil.
-- Suite PostgreSQL nyata ditambah fixture 07 dan konkurensi 20 retry CREATE/SUBMIT/ACCEPT dan 20 retry draf hasil (satu surat/versi/relasi, tugas belum selesai). Konkurensi nomor, pengiriman/receipt dan balasan PR-06 tetap berjalan. Hasil CI dicatat setelah publikasi, bukan menganggap PGlite sebagai PostgreSQL nyata.
+- Suite PostgreSQL nyata ditambah fixture 07 dan konkurensi 20 retry CREATE/SUBMIT/ACCEPT dan 20 retry draf hasil (satu surat/versi/relasi, tugas belum selesai). Konkurensi nomor, pengiriman/receipt dan balasan PR-06 tetap berjalan. PostgreSQL nyata juga lulus di CI run #41 (bukti di bawah).
 - `npm run build` lulus kompilasi/typecheck dan pembangkitan 23 halaman, termasuk dua endpoint lampiran baru. Sintaks shell, tautan Markdown dan diff diperiksa sebelum publikasi. Build bukan deployment. UAT browser/Supabase staging belum dijalankan.
 
 ## Risiko dan keputusan pending
@@ -58,3 +58,12 @@ Satu migrasi baru dibuat dengan CLI `supabase@2.58.5 migration new disposition_i
 6. Sebelum production: izin terpisah, backup dan staging yang disanitasi, pemeriksaan selisih history/schema (baseline historis production 8 versus file migrasi branch). Jangan replay baseline, repair/reset atau backfill otomatis. 13 surat lama dan nomor/counter/audit lama dipertahankan.
 
 Berhenti setelah Draft PR dan bukti pengujian untuk tinjauan pengguna. Tidak merge, mengubah database production atau deploy. PR-08 tidak dimulai.
+
+## Bukti publikasi dan CI
+
+- [Draft PR #8](https://github.com/Salsabiil08/SuratDigitalSIA/pull/8), base PR-06 `54279cee429f611dee257246c6bc96ada664e0fc`; commit implementasi `edb3d4f12b661a564f75f84370f3e12b3fbd673f`. 35 berkas berubah termasuk dokumentasi/pengaman.
+- [CI run #41](https://github.com/Salsabiil08/SuratDigitalSIA/actions/runs/44303723466): **success**, job check dan db lulus. Check 234/234 tes/typecheck. PostgreSQL nyata menjalankan 21 migrasi dan fixture 01–07, kemudian seluruh konkurensi. Log: `konkurensi: 40|40|1|40`, `PENGIRIMAN/PEMBACAAN/PENERIMAAN KONKUREN LULUS`, `BALASAN KONKUREN LULUS`, `DISPOSISI KONKUREN LULUS: 20 retry buat/ajukan/terima, satu tugas/pengajuan/keputusan/event`, `DRAF HASIL KONKUREN LULUS: 20 retry, satu surat/versi/relasi; tugas belum selesai`, `UJI DATABASE LULUS`.
+- Seluruh 20 blob migrasi baseline identik, dependensi/lockfile/CI tidak diubah. Build lokal lulus; tautan Markdown, sintaks shell dan diff valid. tsconfig.tsbuildinfo lokal tidak dimasukkan ke PR.
+- Pemeriksaan metadata Supabase read-only: tabel disposition_submissions/disposition_operations belum ada di production, history tetap 8 entri. Tidak ada apply_migration, seed, DML, repair/reset atau perubahan Auth/Storage production.
+- Vercel branch PR-07 **0 deployment**. Production tetap READY `dpl_4aVP7FGF4i9eJhqARNu65dZtckZc` pada main `4e0c0c661af58dd6db729c202643cd6629f7eb07`; main tidak diubah. PR tetap draft dan belum di-merge.
+- Commit penutup hanya memperbarui dokumentasi bukti. UAT Supabase Auth/Storage/browser staging tetap belum dijalankan; CI bukan pengganti UAT perusahaan. Berhenti sebelum PR-08.

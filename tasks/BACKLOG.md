@@ -71,7 +71,7 @@ Status: PR-00–06 selesai dalam draft; implementasi PR-07 disetujui pada 18 Nov
 - [x] Catatan/lampiran/surat hasil, snapshot pengajuan dan riwayat RETURN/ACCEPT; surat hasil wajib dikirim resmi.
 - [x] Retry/idempotensi/rollback dan konkurensi buat/ajukan/terima; balasan PR-06 terpisah.
 - [x] Tes lokal server/API/UI dan fixture PostgreSQL, regresi serta build.
-- [ ] Buka Draft PR berbasis PR-06, verifikasi CI/production dan laporkan; berhenti sebelum PR-08.
+- [x] Buka [Draft PR #8](https://github.com/Salsabiil08/SuratDigitalSIA/pull/8) berbasis PR-06; CI #41 check 234/234 dan PostgreSQL/konkurensi lulus, production tidak berubah; laporkan dan berhenti sebelum PR-08.
 
 ## Tahap berikutnya — belum diizinkan
 - [ ] PR-08: UAT lintas peran dan regresi lengkap.
