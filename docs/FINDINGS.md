@@ -1,3 +1,15 @@
+# Pembaruan PR-07 — 18 November 2026
+
+PR-07 diizinkan setelah penerimaan PR-06; [laporan](plans/PR07_VALIDATION.md). Production belum diubah.
+
+- Disposisi internal baru memerlukan pengiriman resmi, PRIMARY berwenang, hierarki/penugasan dan unit sesuai baseline. CC/baca/admin bukan mandat otomatis.
+- Workflow existing tetap menangani CREATE/START/SUBMIT/RETURN/ACCEPT. Bukti hasil, operasi idempoten, relasi surat dan riwayat ditambah secara aditif. Surat hasil final harus dikirim resmi sebelum pengajuan hasil.
+- Tugas baru bertanda source_dispatch_id tidak memberi akses dokumen acuan/arsip atau hasil melalui relasi. Akses dokumen tetap peran independen/pengiriman. Tugas lama tidak dibackfill atau diberi status/relasi historis baru.
+- Lampiran PDF/DOCX memakai bucket privat dan proxy Auth/RLS/hash; pemberi baru membacanya sesudah dimasukkan ke pengajuan. Catatan tetap wajib. Pembuktian kewajiban surat ditentukan eksplisit pemberi, bukan default perusahaan yang dikarang.
+- Delegasi pemeriksa tidak diaktifkan: hanya pemberi menerima. Tenggat opsional manual, tanpa jadwal/kewajiban otomatis. UAT staging dan kebijakan perusahaan tetap pending; PR-08 tidak dimulai.
+
+## Snapshot PR-06 (historis)
+
 # Pembaruan PR-06 — 18 November 2026
 
 PR-06 diizinkan setelah penerimaan PR-05; [laporan](plans/PR06_VALIDATION.md), [Draft PR #7](https://github.com/Salsabiil08/SuratDigitalSIA/pull/7). CI #37 check 217/217 dan PostgreSQL/konkurensi lulus; build lokal lulus. Production belum berubah; UAT staging masih diperlukan.

@@ -7,6 +7,7 @@ import { workflowLabel } from "@/domain/workflow";
 import { revalidatePath } from "next/cache";
 
 export interface CreateDispositionInput {
+  operationKey?: string;
   recipientId: string;
   letterId?: string;
   subject: string;
@@ -29,6 +30,11 @@ export interface DispositionItem {
   responseLabel?: string;
   responseEditable: boolean;
   responseFinal: boolean;
+  integrated: boolean;
+  sourceAccessible: boolean;
+  files: Array<{id:string;file_name:string;created_at:string}>;
+  submissions: Array<{id:string;note:string;created_at:string;result_letter_id:string|null;decision?:{decision:string;note:string|null;created_at:string}}>;
+
   giverName: string;
   recipientName: string;
   dueDate?: string;
@@ -55,7 +61,7 @@ export interface DispositionsData {
   canCreateDisposition: boolean;
   canReceiveDisposition: boolean;
 }
-export async function getDispositionsAction(): Promise<{
+export async function getDispositionsAction(sourceLetterId?:string): Promise<{
   success: boolean;
   data: DispositionsData;
   error?: string;
@@ -82,17 +88,18 @@ export async function getDispositionsAction(): Promise<{
           )
           .or(`giver_id.eq.${user.id},recipient_id.eq.${user.id}`)
           .order("created_at", { ascending: false }),
-        db
-          .from("letters")
-          .select(
-            "id,official_number,subject,status,signature_status,finalized_at",
-          )
-          .eq("status", "NUMBERED")
-          .order("created_at", { ascending: false })
-          .limit(100),
+        db.rpc('list_disposition_sources',{p_letter:sourceLetterId||null}),
       ]);
     if (error || le)
       throw new Error("Gagal memuat disposisi. Silakan coba lagi.");
+    const [{data:files,error:fe},{data:submissions,error:se}]=await Promise.all([
+      db.from('disposition_result_files').select('id,disposition_id,file_name,created_at').order('created_at'),
+      db.from('disposition_submissions').select('id,disposition_id,note,created_at,result_letter_id,decisions:disposition_decisions(decision,note,created_at)').order('created_at'),
+    ]);
+    if(fe||se)throw new Error('Riwayat hasil disposisi belum dapat diambil.');
+    const resultIds=(disps||[]).map((d:any)=>d.response_letter_id).filter(Boolean);
+    const {data:sentResults,error:sre}=resultIds.length?await db.from('internal_dispatches').select('letter_id,primary_recipient_id').in('letter_id',resultIds):{data:[],error:null};
+    if(sre)throw new Error('Bukti pengiriman surat hasil belum dapat diambil.');
     const items = (disps || []).map(
       (d: any): DispositionItem => ({
         id: d.id,
@@ -102,15 +109,19 @@ export async function getDispositionsAction(): Promise<{
         priority: d.priority,
         status: d.status,
         requiresLetter: d.requires_letter,
-        letterId: d.letter_id,
+        letterId: d.letter?.official_number?d.letter_id:undefined,
+        sourceAccessible:!!d.letter,
+        integrated:!!d.source_dispatch_id,
+        files:(files||[]).filter(f=>f.disposition_id===d.id),
+        submissions:(submissions||[]).filter(s=>s.disposition_id===d.id).map(s=>({...s,decision:(s.decisions as any[])?.[0]})),
         letterNumber: d.letter?.official_number,
-        responseLetterId: d.response_letter_id,
+        responseLetterId: d.response?.id,
         responseLabel: d.response ? workflowLabel(d.response) : undefined,
         responseEditable:
           !!d.response &&
           ["DRAFT", "REVISION_REQUESTED"].includes(d.response.status),
         responseFinal:
-          !!d.response?.finalized_at && d.response?.status === "NUMBERED",
+          !!d.response?.finalized_at && d.response?.status === "NUMBERED" && (!d.source_dispatch_id||!!sentResults?.some(s=>s.letter_id===d.response_letter_id&&s.primary_recipient_id===d.giver_id)),
         giverName: d.giver?.full_name || "Pemberi",
         recipientName: d.recipient?.full_name || "Penerima",
         dueDate: d.due_date,
@@ -130,7 +141,7 @@ export async function getDispositionsAction(): Promise<{
       data: {
         inbox: items.filter((_, i) => disps![i].recipient_id === user.id),
         outbox: items.filter((_, i) => disps![i].giver_id === user.id),
-        availableLetters: (letters || []).map((l) => ({
+        availableLetters: (letters || []).map((l:any) => ({
           id: l.id,
           officialNumber: l.official_number || "Belum bernomor",
           subject: l.subject,
@@ -164,7 +175,7 @@ export async function createDispositionAction(input: CreateDispositionInput) {
       { p_actor: user.id, p_action: "CREATE", p_data: input },
     );
     if (error) throw new Error(error.message);
-    revalidatePath("/disposisi");
+    revalidatePath("/disposisi");revalidatePath("/surat/[id]","page");
     return { success: true, dispositionId: data as string };
   } catch (e) {
     return {
@@ -178,6 +189,8 @@ export async function updateDispositionStatusAction(input: {
   revision: number;
   action: "START" | "SUBMIT" | "ACCEPT" | "RETURN";
   note?: string;
+  operationKey?:string;
+  attachmentIds?:string[];
 }) {
   try {
     const user = await requireUser();
@@ -186,10 +199,10 @@ export async function updateDispositionStatusAction(input: {
       p_action: input.action,
       p_id: input.dispositionId,
       p_revision: input.revision,
-      p_data: { note: input.note || "" },
+      p_data: { note: input.note || "",operationKey:input.operationKey,attachmentIds:input.attachmentIds||[] },
     });
     if (error) throw new Error(error.message);
-    revalidatePath("/disposisi");
+    revalidatePath("/disposisi");revalidatePath("/surat/[id]","page");
     return { success: true };
   } catch (e) {
     return {

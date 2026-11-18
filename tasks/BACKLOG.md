@@ -1,6 +1,6 @@
 # Backlog aktif — R.04 adaptasi NDO
 
-Status: PR-00–05 selesai dalam draft; implementasi PR-06 disetujui pada 18 November 2026. Basis `Salsabiil08/SuratDigitalSIA`, baseline `4e0c0c661af58dd6db729c202643cd6629f7eb07`. Jangan merekonsiliasi `SIAdocs`.
+Status: PR-00–06 selesai dalam draft; implementasi PR-07 disetujui pada 18 November 2026. Basis `Salsabiil08/SuratDigitalSIA`, baseline `4e0c0c661af58dd6db729c202643cd6629f7eb07`. Jangan merekonsiliasi `SIAdocs`.
 
 ## PR-00 — dokumentasi baseline dan rencana (selesai; menunggu tinjauan)
 - [x] Tetapkan repo/SHA/deployment dan manifest baseline tanpa secret.
@@ -65,11 +65,18 @@ Status: PR-00–05 selesai dalam draft; implementasi PR-06 disetujui pada 18 Nov
 - [x] Migrasi aditif, fixture lintas akun/rollback/RLS serta uji retry/konkurensi.
 - [x] Buka [Draft PR #7](https://github.com/Salsabiil08/SuratDigitalSIA/pull/7) berbasis PR-05; CI #37 check 217/217 dan PostgreSQL/konkurensi lulus, production tidak berubah; laporkan dan berhenti sebelum PR-07.
 
+## PR-07 — Disposisi dari Inbox dan surat hasil
+- [x] Navigasi detail surat → disposisi existing; PRIMARY dan hierarki/penugasan diperiksa database.
+- [x] Draf surat hasil melalui editor/gate biasa, tujuan pemberi, relasi permanen tanpa hak baca otomatis.
+- [x] Catatan/lampiran/surat hasil, snapshot pengajuan dan riwayat RETURN/ACCEPT; surat hasil wajib dikirim resmi.
+- [x] Retry/idempotensi/rollback dan konkurensi buat/ajukan/terima; balasan PR-06 terpisah.
+- [x] Tes lokal server/API/UI dan fixture PostgreSQL, regresi serta build.
+- [ ] Buka Draft PR berbasis PR-06, verifikasi CI/production dan laporkan; berhenti sebelum PR-08.
+
 ## Tahap berikutnya — belum diizinkan
-- [ ] PR-07: integrasi disposisi dari Inbox dan hasil berelasi.
 - [ ] PR-08: UAT lintas peran dan regresi lengkap.
 
-Rincian: [spesifikasi target](../docs/spec/08-alur-ndo-r04.md), [rencana migrasi](../docs/plans/R04_NDO_MIGRATION_PLAN.md), [validasi PR-00](../docs/plans/PR00_VALIDATION.md), [validasi PR-01](../docs/plans/PR01_VALIDATION.md), [validasi PR-02](../docs/plans/PR02_VALIDATION.md), [validasi PR-03](../docs/plans/PR03_VALIDATION.md), [validasi PR-04](../docs/plans/PR04_VALIDATION.md), [validasi PR-05](../docs/plans/PR05_VALIDATION.md), [validasi PR-06](../docs/plans/PR06_VALIDATION.md).
+Rincian: [spesifikasi target](../docs/spec/08-alur-ndo-r04.md), [rencana migrasi](../docs/plans/R04_NDO_MIGRATION_PLAN.md), [validasi PR-00](../docs/plans/PR00_VALIDATION.md), [validasi PR-01](../docs/plans/PR01_VALIDATION.md), [validasi PR-02](../docs/plans/PR02_VALIDATION.md), [validasi PR-03](../docs/plans/PR03_VALIDATION.md), [validasi PR-04](../docs/plans/PR04_VALIDATION.md), [validasi PR-05](../docs/plans/PR05_VALIDATION.md), [validasi PR-06](../docs/plans/PR06_VALIDATION.md), [validasi PR-07](../docs/plans/PR07_VALIDATION.md).
 
 ## Riwayat backlog sebelum adaptasi NDO
 

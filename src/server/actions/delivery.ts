@@ -9,7 +9,7 @@ export async function sendInternalLetterAction(id:string,cc:string[]=[]){
   const doc=await downloadVersion(l,false);
   const {data,error}=await createAdminClient().rpc('dispatch_internal_letter',{p_actor:user.id,p_letter:id,p_version:doc.version.id,p_hash:doc.version.file_hash,p_key:`internal-send-${id}`,p_cc:cc});
   if(error)throw new Error(error.message);
-  for(const p of [`/surat/${id}`,'/surat','/notifikasi','/kotak-masuk','/kotak-keluar'])revalidatePath(p);
+  for(const p of [`/surat/${id}`,'/surat','/notifikasi','/kotak-masuk','/kotak-keluar','/disposisi'])revalidatePath(p);
   revalidatePath('/surat/[id]','page');
   return{success:true,dispatchId:data as string};
  }catch(e){return{success:false,error:e instanceof Error?e.message:'Pengiriman belum dapat disimpan.'};}
