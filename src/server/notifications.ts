@@ -1,3 +1,4 @@
+import { notificationPresentation } from "@/domain/notification-events";
 import { cache } from "react";
 import { requireUser } from "@/server/auth";
 import { createClient } from "@/lib/supabase/server";
@@ -21,5 +22,5 @@ export const readNotifications = cache(async () => {
   ]);
   if (error || ce)
     throw new Error("Gagal mengambil pemberitahuan. Coba kembali.");
-  return { data: data || [], unreadCount: count || 0 };
+  return { data: (data || []).map(item => ({ ...item, title: notificationPresentation(item.event_type, item.title).title })), unreadCount: count || 0 };
 });

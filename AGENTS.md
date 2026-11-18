@@ -4,7 +4,7 @@
 
 Basis implementasi yang disetujui adalah **Salsabiil08/SuratDigitalSIA**. Jangan merekonsiliasi ke `Salsabiil08/SIAdocs` atau mengganti stack.
 
-Saat ini hanya **PR-00: baseline, spesifikasi R.04 adaptasi NDO, dan rencana migrasi** yang disetujui. Kerjakan pada branch baru. Berhenti setelah PR-00 dilaporkan; PR-01 dan seterusnya menunggu persetujuan baru. Jangan mengubah database production, menjalankan migrasi production, merge PR, atau melakukan deployment tanpa persetujuan eksplisit. Persetujuan dokumen bukan persetujuan tindakan production. Cegah juga deployment otomatis branch yang belum diizinkan.
+PR-00 sudah tersedia pada draft PR #1. Pengguna menyetujui **PR-01: otorisasi notifikasi/event dan kerangka status** pada 18 November 2026. Kerjakan pada branch `fix/pr-01-notifications-status` berbasis branch PR-00 selama PR #1 belum di-merge. Berhenti setelah PR-01 dilaporkan; PR-02 dan seterusnya menunggu persetujuan baru. Jangan mengubah database production, menjalankan migrasi production, merge PR, atau melakukan deployment tanpa persetujuan eksplisit. Persetujuan implementasi bukan persetujuan tindakan production. Cegah juga deployment otomatis branch yang belum diizinkan.
 
 ## Acuan dan cara membaca
 
@@ -34,6 +34,6 @@ Mulai dari [docs/INDEX.md](docs/INDEX.md) dan tugas aktif di [tasks/BACKLOG.md](
 
 - Satu PR kecil sesuai persetujuan. Perubahan database lewat migrasi aditif baru setelah pengujian lokal/staging; jangan mengubah migrasi terpakai atau memperlebar grant untuk mengatasi RLS.
 - Jangan menganggap target baru sudah diimplementasikan. Pisahkan baseline teruji, GAP, rencana, dan hasil UAT.
-- PR-00 tidak mengubah `src/`, `supabase/`, dependensi, CI, atau PDF/DOCX blueprint. Satu pengecualian konfigurasi: `vercel.json` boleh mencegah auto-deploy **hanya branch PR-00**, tanpa mengubah main/project production.
+- Batas historis PR-00: tidak mengubah `src/`, `supabase/`, dependensi, CI, atau PDF/DOCX blueprint. Satu pengecualian konfigurasi: `vercel.json` boleh mencegah auto-deploy **hanya branch PR-00**, tanpa mengubah main/project production. PR-01 dapat memperketat notifikasi melalui migrasi baru, tes dan label finalitas; pengaman deployment diperluas hanya ke branch PR-01.
 - Jalankan `npm run check` (typecheck + Vitest, termasuk PGlite). `npm run test:db` adalah suite PostgreSQL terpisah; jangan mengklaimnya dijalankan oleh `check`. Build lokal bukan deployment. Untuk dokumentasi, periksa tautan, konsistensi keputusan, dan diff runtime/migrasi.
-- Perbarui status tugas dan laporkan bukti yang benar-benar dijalankan. Jangan menandai PR-01/UAT target selesai karena baseline 69 tes lulus.
+- Perbarui status tugas dan laporkan bukti yang benar-benar dijalankan. Jangan menandai UAT seluruh target selesai karena tes PR-01 lulus.

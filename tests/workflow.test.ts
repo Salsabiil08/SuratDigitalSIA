@@ -52,7 +52,7 @@ it("memisahkan bernomor, bertanda tangan, dan selesai", () => {
   ).toBe("Menunggu Finalisasi");
   expect(
     workflowLabel({ status: "NUMBERED", finalized_at: "2026-11-18" }),
-  ).toBe("Selesai");
+  ).toBe("Dokumen final");
 });
 
 it('surat final yang dibatalkan tetap ditampilkan Dibatalkan',()=>{expect(workflowLabel({status:'CANCELLED',finalized_at:'2026-11-18'})).toBe('Dibatalkan');});

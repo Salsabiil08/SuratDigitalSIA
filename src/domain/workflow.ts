@@ -1,3 +1,4 @@
+import { documentFinality, DOCUMENT_FINALITY_LABEL } from "./status";
 export interface SignatureArea {
   page: number;
   x: number;
@@ -82,7 +83,7 @@ export function workflowLabel(letter: {
   finalized_at?: string | null;
 }) {
   if (letter.status === "CANCELLED") return "Dibatalkan";
-  if (letter.finalized_at) return "Selesai";
+  if (documentFinality(letter.finalized_at) === "FINAL") return DOCUMENT_FINALITY_LABEL.FINAL;
   if (letter.status === "READY_TO_ISSUE") return "Disetujui";
   if (letter.status === "NUMBERED" && letter.signature_status === "WAITING")
     return "Menunggu TTD";

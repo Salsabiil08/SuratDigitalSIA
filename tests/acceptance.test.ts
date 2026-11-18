@@ -245,6 +245,6 @@ describe('Uji Penerimaan 11 Kriteria Bab 10 Blueprint R.04', () => {
   it('Kriteria 11 revisi: status final dipisah dari sudah bernomor dan TTD', async () => {
     const {workflowLabel}=await import('../src/domain/workflow');
     expect(workflowLabel({status:'NUMBERED',signature_status:'UPLOADED'})).toBe('Menunggu Finalisasi');
-    expect(workflowLabel({status:'NUMBERED',signature_status:'UPLOADED',finalized_at:'2026-11-18'})).toBe('Selesai');
+    expect(workflowLabel({status:'NUMBERED',signature_status:'UPLOADED',finalized_at:'2026-11-18'})).toBe('Dokumen final');
   });
 });

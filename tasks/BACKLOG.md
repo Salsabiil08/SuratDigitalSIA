@@ -1,6 +1,6 @@
 # Backlog aktif — R.04 adaptasi NDO
 
-Status: hanya PR-00 disetujui pada 18 November 2026. Basis `Salsabiil08/SuratDigitalSIA`, baseline `4e0c0c661af58dd6db729c202643cd6629f7eb07`. Jangan merekonsiliasi `SIAdocs`.
+Status: PR-00 selesai; implementasi PR-01 disetujui pada 18 November 2026. Basis `Salsabiil08/SuratDigitalSIA`, baseline `4e0c0c661af58dd6db729c202643cd6629f7eb07`. Jangan merekonsiliasi `SIAdocs`.
 
 ## PR-00 — dokumentasi baseline dan rencana (selesai; menunggu tinjauan)
 - [x] Tetapkan repo/SHA/deployment dan manifest baseline tanpa secret.
@@ -13,8 +13,15 @@ Status: hanya PR-00 disetujui pada 18 November 2026. Basis `Salsabiil08/SuratDig
 - [x] Verifikasi tautan, batas diff, manifest dan `npm run check`; catat laporan PR-00.
 - [x] Buka draft PR #1 untuk ditinjau tanpa merge/deployment; laporkan dan berhenti. CI check lulus; kegagalan tes PostgreSQL baseline dicatat pada laporan validasi.
 
+## PR-01 — notifikasi/event dan kerangka status
+- [x] Hapus helper service-role publik yang tidak digunakan; pertahankan event transaksi RPC.
+- [x] Tangani write gagal dan ID asing tanpa sukses palsu.
+- [x] Tambahkan migrasi baru ACL/RLS/trigger notifikasi tanpa mengubah data lama.
+- [x] Normalisasi label event Indonesia dan bedakan Dokumen final dari selesai alur.
+- [x] Uji negatif server action, ACL/RLS dan rollback status/audit/event.
+- [ ] Buka draft PR bertumpuk di atas PR-00, laporkan hasil dan berhenti.
+
 ## Tahap berikutnya — belum diizinkan
-- [ ] PR-01: otorisasi notifikasi/event dan kerangka status — **menunggu persetujuan baru; jangan mulai**.
 - [ ] PR-02: kategori dan reviewer independen.
 - [ ] PR-03: persetujuan pilihan/pejabat wajib dan self-signer.
 - [ ] PR-04: pengiriman/penerimaan transaksi dan RLS snapshot.
@@ -23,7 +30,7 @@ Status: hanya PR-00 disetujui pada 18 November 2026. Basis `Salsabiil08/SuratDig
 - [ ] PR-07: integrasi disposisi dari Inbox dan hasil berelasi.
 - [ ] PR-08: UAT lintas peran dan regresi lengkap.
 
-Rincian: [spesifikasi target](../docs/spec/08-alur-ndo-r04.md), [rencana migrasi](../docs/plans/R04_NDO_MIGRATION_PLAN.md), [validasi PR-00](../docs/plans/PR00_VALIDATION.md).
+Rincian: [spesifikasi target](../docs/spec/08-alur-ndo-r04.md), [rencana migrasi](../docs/plans/R04_NDO_MIGRATION_PLAN.md), [validasi PR-00](../docs/plans/PR00_VALIDATION.md), [validasi PR-01](../docs/plans/PR01_VALIDATION.md).
 
 ## Riwayat backlog sebelum adaptasi NDO
 
