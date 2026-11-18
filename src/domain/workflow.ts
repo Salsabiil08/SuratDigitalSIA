@@ -19,6 +19,7 @@ export interface DraftInput {
   recipientOrg?: string;
   recipientAddress?: string;
   content?: string;
+  contentFormat?: "TEXT" | "HTML";
   signatureMode: "IN_APP" | "EXTERNAL";
   signerIds: string[];
   areas: SignatureArea[];

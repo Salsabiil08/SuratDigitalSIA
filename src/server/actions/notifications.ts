@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { requireUser } from '@/server/auth';
+import { readNotifications } from '@/server/notifications';
 import { revalidatePath } from 'next/cache';
 
 export interface NotificationItem {
@@ -36,13 +37,8 @@ export async function getNotificationsAction(): Promise<{
   error?: string;
 }> {
   try {
-    const user = await requireUser();
-    const { data, error } = await createClient().from('notifications')
-      .select('id,recipient_id,letter_id,disposition_id,event_type,title,is_read,read_at,created_at')
-      .eq('recipient_id',user.id).order('created_at',{ascending:false}).limit(50);
-    if(error) throw new Error('Gagal memuat pemberitahuan.');
-    const items=(data||[]) as NotificationItem[];
-    return {success:true,data:items,unreadCount:items.filter(n=>!n.is_read).length};
+    const result=await readNotifications();
+    return {success:true,...result};
   } catch {
     return {success:false,data:[],unreadCount:0,error:'Gagal memuat pemberitahuan.'};
   }

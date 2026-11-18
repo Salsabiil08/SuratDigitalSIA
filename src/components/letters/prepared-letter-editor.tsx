@@ -1,0 +1,33 @@
+import { LetterEditor } from "./letter-editor";
+import {
+  getWorkflowOptions,
+  getWorkflowLetter,
+} from "@/server/actions/workflow";
+export async function PreparedLetterEditor(props: {
+  id?: string;
+  source?: "CREATE" | "UPLOAD";
+  billing?: boolean;
+  dispositionId?: string;
+}) {
+  try {
+    const [options, data] = await Promise.all([
+      getWorkflowOptions(),
+      props.id ? getWorkflowLetter(props.id) : Promise.resolve(undefined),
+    ]);
+    if (
+      data &&
+      (!data.isCreator ||
+        !["DRAFT", "REVISION_REQUESTED"].includes(data.letter.status))
+    )
+      throw new Error("Surat ini sudah terkunci untuk pengeditan.");
+    return (
+      <LetterEditor {...props} initialOptions={options} initialData={data} />
+    );
+  } catch (e) {
+    return (
+      <p role="alert" className="text-sm text-red-700">
+        {e instanceof Error ? e.message : "Formulir tidak dapat dibuka."}
+      </p>
+    );
+  }
+}

@@ -1,2 +1,8 @@
-import { LetterEditor } from "@/components/letters/letter-editor";
-export default function Page({searchParams}:{searchParams:{disposisi?:string}}){return <LetterEditor dispositionId={searchParams.disposisi}/>;}
+import { PreparedLetterEditor } from "@/components/letters/prepared-letter-editor";
+export default function Page({
+  searchParams,
+}: {
+  searchParams: { disposisi?: string };
+}) {
+  return <PreparedLetterEditor dispositionId={searchParams.disposisi} />;
+}

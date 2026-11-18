@@ -1,3 +1,4 @@
+import {sanitizeLetterHtml,plainTextHtml,letterText} from '@/domain/rich-text';
 import { randomUUID, createHash } from "node:crypto";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -144,6 +145,12 @@ export async function saveDraft(
   file?: File | null,
   attachment?: File | null,
 ) {
+  input={...input};
+  if(input.source === "CREATE") {
+    input.content=sanitizeLetterHtml(input.contentFormat === "HTML" ? input.content||"" : plainTextHtml(input.content||""));
+    input.contentFormat="HTML";
+    if(!letterText(input.content).trim())throw new Error("Isi surat wajib diisi.");
+  }
   const user = await requireUser();
   let old: any = null;
   if (input.id) {
@@ -192,7 +199,7 @@ export async function saveDraft(
     } else throw new Error("Unggah dokumen PDF/DOCX terlebih dahulu.");
   } else {
     if (!input.content?.trim()) throw new Error("Isi surat wajib diisi.");
-    // Store plain text and escape in the DOCX generator. Never render user HTML into the application.
+    // Only canonical, allow-listed rich text reaches DOCX and storage.
     const escaped = input.content;
     const rec = people.find((p) => p.id === input.recipientUserId);
     let billing = "";
@@ -229,7 +236,7 @@ export async function saveDraft(
         : [input.recipientOrg, input.recipientAddress]
             .filter(Boolean)
             .join("\n"),
-      contentText: escaped + billing,
+      contentHtml: escaped + (billing ? plainTextHtml(billing) : ""),
       signatureCount: signers.length,
       signers: signers.map((s) => ({ name: s!.name, title: s!.title })),
       signerName: signers[0]?.name || user.fullName,

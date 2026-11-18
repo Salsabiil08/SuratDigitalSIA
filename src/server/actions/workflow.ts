@@ -28,7 +28,7 @@ export async function getWorkflowLetter(id: string) {
     db
       .from("letter_versions")
       .select(
-        "id,version_no,version_kind,file_format,file_hash,content_html,created_at,created_by,original_name",
+        "id,version_no,version_kind,file_format,file_hash,content_html,content_format,created_at,created_by,original_name",
       )
       .eq("letter_id", id)
       .order("version_no", { ascending: false }),

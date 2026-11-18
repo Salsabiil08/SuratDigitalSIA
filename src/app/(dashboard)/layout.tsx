@@ -2,7 +2,7 @@ import * as React from 'react';
 export const dynamic = 'force-dynamic';
 import { redirect } from 'next/navigation';
 import { getCurrentUser } from '@/server/auth';
-import { createAdminClient } from '@/lib/supabase/admin';
+import { getNotificationsAction } from '@/server/actions/notifications';
 import { DashboardShell } from '@/components/layout/dashboard-shell';
 
 export default async function DashboardLayout({
@@ -16,26 +16,7 @@ export default async function DashboardLayout({
     redirect('/login');
   }
 
-  let unreadNotificationsCount = 0;
-
-  if (user) {
-    try {
-      const supabase = createAdminClient();
-      let query = supabase
-        .from('notifications')
-        .select('*', { count: 'exact', head: true })
-        .eq('is_read', false);
-
-      if (!user.isSuperAdmin) {
-        query = query.eq('recipient_id', user.id);
-      }
-
-      const { count: notifCount } = await query;
-      unreadNotificationsCount = notifCount || 0;
-    } catch {
-      // safe fallback
-    }
-  }
+  const notifications=await getNotificationsAction();
 
   const sidebarUser = user
     ? {
@@ -65,7 +46,9 @@ export default async function DashboardLayout({
   return (
     <DashboardShell
       sidebarUser={sidebarUser}
-      unreadNotificationsCount={unreadNotificationsCount}
+      unreadNotificationsCount={notifications.unreadCount}
+      initialNotifications={notifications.data}
+      initialNotificationError={notifications.error}
     >
       {children}
     </DashboardShell>

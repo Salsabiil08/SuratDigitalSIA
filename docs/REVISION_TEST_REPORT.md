@@ -40,3 +40,7 @@ Data uji diberi label [UJI REV-18]. Lima surat uji telah final dan satu ditolak.
 - Migrasi Supabase `20261118012449_disposition_review_flow` terverifikasi; RPC hanya server; advisor tidak menemukan masalah database baru. Peringatan lama perlindungan kata sandi bocor belum aktif tetap ada.
 
 - Pengujian production mengungkap rekursi kebijakan baca riwayat pembatalan lama. Diperbaiki melalui lookup identitas sesi terbatasi pada migrasi `cancellation_read_scope`, dengan uji RLS pemilik dan akun lain. Tidak menambah hak pembatalan.
+
+## Revisi lanjutan — editor, data awal dan akun
+
+69 uji otomatis lulus. Tambahan: penyaringan HTML berbahaya; kompatibilitas teks lama; font/ukuran/alignment/bold/italic/underline/list dalam bytes DOCX; font bersarang; format HTML/TEXT tercatat di versi database. Enam akun organisasi bernama berhasil masuk melalui Supabase Auth. Akun QA dinonaktifkan, sesi dicabut, dan login dropdown dihapus. Data halaman utama disiapkan di server; autentikasi diverifikasi dan profil/penugasan dibaca bersamaan. Tidak ada kredensial pada kode atau laporan ini.

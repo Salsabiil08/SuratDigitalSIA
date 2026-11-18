@@ -3,7 +3,7 @@
 import * as React from 'react';
 import Link from 'next/link';
 import { useFormState, useFormStatus } from 'react-dom';
-import { loginAction, demoLoginAction } from '@/server/actions/auth';
+import { loginAction } from '@/server/actions/auth';
 import { Button } from '@/components/ui/button';
 
 function SubmitButton() {
@@ -23,7 +23,6 @@ function SubmitButton() {
 
 export default function LoginPage() {
   const [state, formAction] = useFormState(loginAction, null);
-  const [demoState, demoAction] = useFormState(demoLoginAction, null);
 
   return (
     <div className="min-h-screen w-full flex flex-col items-center justify-center p-3 sm:p-5 login-animated-bg font-sans relative overflow-x-hidden overflow-y-auto">
@@ -69,7 +68,7 @@ export default function LoginPage() {
               Masuk ke akun Anda
             </h1>
             <p className="text-[11px] text-neutral-500 mt-0.5 m-0">
-              Gunakan email kantor atau daftar akun baru
+              Gunakan email dan kata sandi akun Anda
             </p>
           </div>
 
@@ -123,23 +122,9 @@ export default function LoginPage() {
 
             <SubmitButton />
 
-            {/* Link Daftar Akun Baru */}
-            <div className="text-[11px] text-neutral-600 text-center py-0.5">
-              Belum memiliki akun?{' '}
-              <Link href="/register" className="font-bold text-brand-red hover:underline">
-                Daftar Akun Baru &rarr;
-              </Link>
-            </div>
+            <p className="text-[11px] text-center text-neutral-500">Akun dan jabatan dikelola oleh Super Admin.</p>
           </form>
-          <form action={demoAction} className="mt-4 pt-4 border-t space-y-2">
-            <label htmlFor="demo-role" className="block text-xs font-semibold">Masuk akun demo sementara</label>
-            <p className="text-xs text-neutral-500">Mode demo sementara: pilih peran lalu masuk tanpa sandi. Khusus pengujian dengan data UJI.</p>
-            <select id="demo-role" name="demoRole" className="w-full rounded-lg border p-2 text-xs">
-              <option value="staff">Staff Accounting</option><option value="finance">Staff Finance</option><option value="gm">GM Accounting</option><option value="sm">Senior Manager (SM)</option><option value="director">Direktur Utama</option><option value="admin">Super Admin</option>
-            </select>
-            {demoState?.error&&<p role="alert" className="text-xs text-red-700">{demoState.error}</p>}
-            <SubmitButton />
-          </form>
+
 
 
         </div>

@@ -70,7 +70,7 @@ export function Sidebar({ user, unreadNotificationsCount, className }: SidebarPr
   const groups: NavGroup[] = [
     {
       items: [
-        { label: 'Beranda', href: '/' },
+        { label: 'Dashboard', href: '/' },
       ],
     },
     {
@@ -102,7 +102,7 @@ export function Sidebar({ user, unreadNotificationsCount, className }: SidebarPr
       <Link
         href="/"
         className="flex items-center gap-2.5 px-1 py-3 mb-2 hover:opacity-90 transition-opacity"
-        title="SIADocs - Beranda Dashboard"
+        title="SIADocs - Dashboard"
       >
         <img
           src="/images/logo.png"

@@ -510,7 +510,14 @@ describe.sequential("Disposisi: surat kembali untuk diperiksa pemberi", () => {
       dispositionId: id,
       subject: "Perbaikan hasil disposisi",
     });
-    expect((await rows('select app.can_read_letter_for($1,$2) yes',[actor(4),corrected]))[0].yes).toBe(false);
+    expect(
+      (
+        await rows("select app.can_read_letter_for($1,$2) yes", [
+          actor(4),
+          corrected,
+        ])
+      )[0].yes,
+    ).toBe(false);
     await act(corrected, 5, "PREVIEW");
     await act(corrected, 5, "SUBMIT");
     await issue(corrected, 5, "disposition-correction");
@@ -572,30 +579,77 @@ describe.sequential("Disposisi: surat kembali untuk diperiksa pemberi", () => {
   });
 });
 
-
-it('Senior Manager tetap berwenang mengesahkan tagihan ketika penugasannya di unit lain',async()=>{
- await db.exec('begin');
- try {
- await run("update user_assignments set unit_id=(select id from organizational_units where code='ACH') where profile_id=$1",[actor(3)]);
- const bank=(await rows('select id from master_bank limit 1'))[0].id;
- const id=await draft(6,'Tag',[3,2],{billing:{bankId:bank,accountNumber:'UJI',accountHolder:'UJI',items:[{description:'A',amount:1},{description:'B',amount:2}]}});
- expect((await get(id)).signer_ids).toEqual([actor(3),actor(2)]);
- } finally {await db.exec('rollback');}
+it("Senior Manager tetap berwenang mengesahkan tagihan ketika penugasannya di unit lain", async () => {
+  await db.exec("begin");
+  try {
+    await run(
+      "update user_assignments set unit_id=(select id from organizational_units where code='ACH') where profile_id=$1",
+      [actor(3)],
+    );
+    const bank = (await rows("select id from master_bank limit 1"))[0].id;
+    const id = await draft(6, "Tag", [3, 2], {
+      billing: {
+        bankId: bank,
+        accountNumber: "UJI",
+        accountHolder: "UJI",
+        items: [
+          { description: "A", amount: 1 },
+          { description: "B", amount: 2 },
+        ],
+      },
+    });
+    expect((await get(id)).signer_ids).toEqual([actor(3), actor(2)]);
+  } finally {
+    await db.exec("rollback");
+  }
 });
 
+it("riwayat pembatalan dapat dibaca tanpa rekursi RLS dan tetap dibatasi akun", async () => {
+  await db.exec(
+    "grant select on cancellation_requests,cancellation_authorizations to authenticated",
+  );
+  await run("select set_config('request.jwt.claim.sub',$1,false)", [actor(5)]);
+  await db.exec("set role authenticated");
+  try {
+    expect(
+      (await rows("select id from cancellation_requests")).length,
+    ).toBeGreaterThan(0);
+    expect(
+      (await rows("select id from cancellation_authorizations")).length,
+    ).toBeGreaterThan(0);
+  } finally {
+    await db.exec("reset role");
+  }
+  await run("select set_config('request.jwt.claim.sub',$1,false)", [actor(6)]);
+  await db.exec("set role authenticated");
+  try {
+    expect((await rows("select id from cancellation_requests")).length).toBe(0);
+    expect(
+      (await rows("select id from cancellation_authorizations")).length,
+    ).toBe(0);
+  } finally {
+    await db.exec("reset role");
+  }
+});
 
-it('riwayat pembatalan dapat dibaca tanpa rekursi RLS dan tetap dibatasi akun',async()=>{
- await db.exec('grant select on cancellation_requests,cancellation_authorizations to authenticated');
- await run("select set_config('request.jwt.claim.sub',$1,false)",[actor(5)]);
- await db.exec('set role authenticated');
- try {
- expect((await rows('select id from cancellation_requests')).length).toBeGreaterThan(0);
- expect((await rows('select id from cancellation_authorizations')).length).toBeGreaterThan(0);
- } finally {await db.exec('reset role');}
- await run("select set_config('request.jwt.claim.sub',$1,false)",[actor(6)]);
- await db.exec('set role authenticated');
- try {
- expect((await rows('select id from cancellation_requests')).length).toBe(0);
- expect((await rows('select id from cancellation_authorizations')).length).toBe(0);
- } finally {await db.exec('reset role');}
+it("versi draft menyimpan format HTML secara eksplisit, teks lama tetap TEXT", async () => {
+  const html = '<p style="text-align:right"><b>Isi berformat</b></p>';
+  const id = await draft(5, "IN", [], { content: html, contentFormat: "HTML" });
+  const v = (
+    await rows(
+      "select content_html,content_format from letter_versions where letter_id=$1",
+      [id],
+    )
+  )[0];
+  expect(v.content_format).toBe("HTML");
+  expect(v.content_html).toBe(html);
+  const old = await draft(5, "IN");
+  expect(
+    (
+      await rows(
+        "select content_format from letter_versions where letter_id=$1",
+        [old],
+      )
+    )[0].content_format,
+  ).toBe("TEXT");
 });

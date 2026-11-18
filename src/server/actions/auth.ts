@@ -92,13 +92,3 @@ export async function getCurrentUserRoleAction(): Promise<UserRoleInfo> {
     canCreateDisposition,
   };
 }
-
-export async function demoLoginAction(_prev: {error?:string}|null, form: FormData) {
- const role=String(form.get('demoRole')||'');
- let accounts:Array<{key:string;email:string;password:string}>=[];
- try {accounts=JSON.parse(process.env.SIADOCS_DEMO_ACCOUNTS||'[]');} catch {}
- const account=accounts.find(a=>a.key===role);
- if(!account)return {error:'Mode demo sementara tidak tersedia untuk peran ini.'};
- const credentials=new FormData();credentials.set('email',account.email);credentials.set('password',account.password);
- return loginAction(null,credentials);
-}

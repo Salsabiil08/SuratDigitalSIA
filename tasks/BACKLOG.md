@@ -59,3 +59,10 @@ Kerjakan berurutan. Tugas selesai bila kriteria terpenuhi dan `npm run check` lu
 - [x] Disposisi → buat surat tindak lanjut → kirim hasil → pemeriksaan pemberi → perbaikan/penerimaan.
 - [x] Otorisasi database, akses dokumen peserta, audit dan notifikasi transaksi, pencegahan penyelesaian sepihak.
 - [x] Uji database akun berbeda dan proses perbaikan tanpa mengubah nomor lama.
+
+### Revisi lanjutan 18 November — Dashboard, editor, pembukaan halaman, akun
+- [x] Nama Dashboard dipulihkan.
+- [x] Data awal server untuk surat, persetujuan, notifikasi, detail dan formulir; hapus tampilan/animasi memuat; deduplikasi autentikasi per render.
+- [x] Sambungkan editor format dan pertahankan format dalam DOCX serta penyimpanan draft; HTML aman dan kompatibilitas teks lama.
+- [x] Hapus login demo tanpa sandi; aktifkan enam akun bernama; nonaktifkan akun QA dan cabut sesi lama.
+- [x] 69 uji otomatis dan login keenam akun melalui Auth nyata.

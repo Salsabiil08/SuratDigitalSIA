@@ -1,28 +1,37 @@
-'use client';
+"use client";
 
-import * as React from 'react';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { Sidebar, SidebarProps } from '@/components/ui/sidebar';
-import { LiveClock } from '@/components/ui/live-clock';
-import { Menu, X, Search, Bell, LogOut } from 'lucide-react';
-import { logoutAction } from '@/server/actions/auth';
+import * as React from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { Sidebar, SidebarProps } from "@/components/ui/sidebar";
+import { LiveClock } from "@/components/ui/live-clock";
+import { Menu, X, Search, Bell, LogOut } from "lucide-react";
+import type { NotificationItem } from "@/server/actions/notifications";
+import { logoutAction } from "@/server/actions/auth";
 
 interface DashboardShellProps {
-  sidebarUser: SidebarProps['user'];
+  sidebarUser: SidebarProps["user"];
   unreadNotificationsCount: number;
   children: React.ReactNode;
+  initialNotifications: NotificationItem[];
+  initialNotificationError?: string;
 }
 
 export function DashboardShell({
   sidebarUser,
   unreadNotificationsCount,
   children,
+  initialNotifications,
+  initialNotificationError,
 }: DashboardShellProps) {
   const [isMobileOpen, setIsMobileOpen] = React.useState(false);
   const [isNotifOpen, setIsNotifOpen] = React.useState(false);
-  const [quickNotifs, setQuickNotifs] = React.useState<any[]>([]);
-  const [loadingNotifs, setLoadingNotifs] = React.useState(false);
+  const [quickNotifs, setQuickNotifs] =
+    React.useState<NotificationItem[]>(initialNotifications);
+  const [notificationError, setNotificationError] = React.useState(
+    initialNotificationError || "",
+  );
+  const [unread, setUnread] = React.useState(unreadNotificationsCount);
   const pathname = usePathname();
 
   // Tutup menu drawer dan popup otomatis saat rute berubah
@@ -34,16 +43,21 @@ export function DashboardShell({
   // Muat notifikasi riil saat popover dibuka
   React.useEffect(() => {
     if (isNotifOpen) {
-      setLoadingNotifs(true);
-      import('@/server/actions/notifications')
+      import("@/server/actions/notifications")
         .then(({ getNotificationsAction }) => getNotificationsAction())
         .then((res) => {
           if (res.success && res.data) {
-            setQuickNotifs(res.data.slice(0, 4));
-          }
+            setQuickNotifs(res.data);
+            setUnread(res.unreadCount);
+            setNotificationError("");
+          } else
+            setNotificationError(
+              res.error || "Pemberitahuan belum dapat diperbarui.",
+            );
         })
-        .catch(() => {})
-        .finally(() => setLoadingNotifs(false));
+        .catch(() =>
+          setNotificationError("Pemberitahuan belum dapat diperbarui."),
+        );
     }
   }, [isNotifOpen]);
 
@@ -108,7 +122,10 @@ export function DashboardShell({
               <Menu className="w-5 h-5" />
             </button>
 
-            <Link href="/" className="flex items-center gap-2 hover:opacity-90 transition-opacity">
+            <Link
+              href="/"
+              className="flex items-center gap-2 hover:opacity-90 transition-opacity"
+            >
               {/* Pada mobile: tampilkan judul SIADocs karena sidebar tersembunyi */}
               <span className="md:hidden font-extrabold text-sm sm:text-base tracking-wide text-white">
                 SIADocs
@@ -163,10 +180,10 @@ export function DashboardShell({
                 aria-label="Buka notifikasi"
               >
                 <Bell className="w-5 h-5" />
-                {unreadNotificationsCount > 0 && (
+                {unread > 0 && (
                   <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-yellow-300 rounded-full ring-2 ring-[#B30B0B] animate-ping" />
                 )}
-                {unreadNotificationsCount > 0 && (
+                {unread > 0 && (
                   <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-yellow-300 rounded-full ring-2 ring-[#B30B0B]" />
                 )}
               </button>
@@ -175,38 +192,54 @@ export function DashboardShell({
               {isNotifOpen && (
                 <div className="fixed inset-x-3 top-16 sm:absolute sm:inset-x-auto sm:right-0 sm:top-auto sm:mt-2 w-auto sm:w-96 bg-white rounded-2xl shadow-2xl border border-neutral-200 text-neutral-900 z-50 overflow-hidden animate-in fade-in zoom-in-95">
                   <div className="p-3.5 bg-neutral-50 border-b border-neutral-200 flex items-center justify-between">
-                    <span className="font-bold text-xs text-neutral-900">Pusat Notifikasi</span>
+                    <span className="font-bold text-xs text-neutral-900">
+                      Pusat Notifikasi
+                    </span>
                     <span className="text-[10px] font-semibold bg-brand-red text-white px-2 py-0.5 rounded-full">
-                      {unreadNotificationsCount} Baru
+                      {unread} Baru
                     </span>
                   </div>
                   <div className="p-2 text-xs text-neutral-600 space-y-1 max-h-72 overflow-y-auto divide-y divide-neutral-100">
-                    {loadingNotifs ? (
-                      <div className="p-4 text-center text-neutral-400 text-xs">
-                        Memuat notifikasi...
-                      </div>
-                    ) : quickNotifs.length > 0 ? (
-                      quickNotifs.map((item) => (
+                    {notificationError && (
+                      <p role="alert" className="p-3 text-red-700">
+                        {notificationError}
+                      </p>
+                    )}
+                    {quickNotifs.length > 0 ? (
+                      quickNotifs.slice(0, 4).map((item) => (
                         <Link
                           key={item.id}
-                          href={item.letter_id ? `/surat/${item.letter_id}` : '/notifikasi'}
+                          href={
+                            item.disposition_id
+                              ? "/disposisi"
+                              : item.letter_id
+                                ? `/surat/${item.letter_id}`
+                                : "/notifikasi"
+                          }
                           onClick={() => setIsNotifOpen(false)}
                           className="p-2.5 hover:bg-neutral-50 rounded-lg flex items-start gap-2.5 transition-colors block text-left"
                         >
                           <span className="text-base shrink-0 mt-0.5">
-                            {item.event_type === 'APPROVAL_REQUEST' ? '🖋️' : item.event_type === 'NUMBER_ISSUED' ? '📄' : '🔔'}
+                            {item.event_type === "APPROVAL_REQUEST"
+                              ? "🖋️"
+                              : item.event_type === "NUMBER_ISSUED"
+                                ? "📄"
+                                : "🔔"}
                           </span>
                           <div className="min-w-0 flex-1">
                             <p className="text-xs font-medium text-neutral-800 m-0 line-clamp-2 leading-tight">
                               {item.title}
                             </p>
                             <span className="text-[10px] text-neutral-400 mt-1 block">
-                              {new Date(item.created_at).toLocaleDateString('id-ID', {
-                                day: 'numeric',
-                                month: 'short',
-                                hour: '2-digit',
-                                minute: '2-digit',
-                              })}
+                              {new Date(item.created_at).toLocaleDateString(
+                                "id-ID",
+                                {
+                                  day: "numeric",
+                                  month: "short",
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                },
+                              )}
                             </span>
                           </div>
                           {!item.is_read && (
@@ -245,14 +278,16 @@ export function DashboardShell({
               >
                 <div className="hidden sm:flex flex-col text-right">
                   <span className="text-xs font-bold text-white leading-tight truncate max-w-[130px]">
-                    {sidebarUser?.name || 'Pengguna SIA'}
+                    {sidebarUser?.name || "Pengguna SIA"}
                   </span>
                   <span className="text-[9px] font-semibold text-white/80 uppercase tracking-wider">
-                    {sidebarUser?.isSuperAdmin ? 'SUPER ADMIN' : sidebarUser?.position || 'STAFF'}
+                    {sidebarUser?.isSuperAdmin
+                      ? "SUPER ADMIN"
+                      : sidebarUser?.position || "STAFF"}
                   </span>
                 </div>
                 <div className="w-8 h-8 rounded-full bg-white text-[#B30B0B] font-bold text-xs flex items-center justify-center shadow-xs ring-2 ring-white/30 shrink-0">
-                  {sidebarUser?.initials || 'SIA'}
+                  {sidebarUser?.initials || "SIA"}
                 </div>
               </Link>
 
@@ -278,4 +313,3 @@ export function DashboardShell({
     </div>
   );
 }
-

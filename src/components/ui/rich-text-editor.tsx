@@ -1,6 +1,7 @@
-'use client';
+"use client";
 
-import * as React from 'react';
+import * as React from "react";
+import { sanitizeLetterHtml, plainTextHtml } from "@/domain/rich-text";
 import {
   Bold,
   Italic,
@@ -18,7 +19,7 @@ import {
   Outdent,
   Quote,
   RemoveFormatting,
-} from 'lucide-react';
+} from "lucide-react";
 
 interface RichTextEditorProps {
   value: string;
@@ -30,32 +31,47 @@ interface RichTextEditorProps {
 export function RichTextEditor({
   value,
   onChange,
-  placeholder = 'Ketik isi naskah surat resmi di sini...',
-  minHeight = '280px',
+  placeholder = "Ketik isi naskah surat resmi di sini...",
+  minHeight = "280px",
 }: RichTextEditorProps) {
   const editorRef = React.useRef<HTMLDivElement>(null);
-  const [selectedFont, setSelectedFont] = React.useState("'SIG Text', sans-serif");
-  const [selectedSize, setSelectedSize] = React.useState('3'); // 3 = normal in execCommand
+  const [selectedFont, setSelectedFont] = React.useState("SIG Text");
+  const [selectedSize, setSelectedSize] = React.useState("3"); // 3 = normal in execCommand
 
-  // Inisialisasi konten pertama kali
+  const selection = React.useRef<Range | null>(null);
+  const initialHtml = React.useRef(sanitizeLetterHtml(value));
+  const remember = React.useCallback(() => {
+    const current = window.getSelection();
+    if (current?.rangeCount && editorRef.current?.contains(current.anchorNode))
+      selection.current = current.getRangeAt(0).cloneRange();
+  }, []);
   React.useEffect(() => {
-    if (editorRef.current && editorRef.current.innerHTML !== value) {
-      if (!value) {
-        editorRef.current.innerHTML = '';
-      } else if (!editorRef.current.innerHTML) {
-        editorRef.current.innerHTML = value;
-      }
+    document.addEventListener("selectionchange", remember);
+    return () => document.removeEventListener("selectionchange", remember);
+  }, [remember]);
+  React.useEffect(() => {
+    const editor = editorRef.current;
+    if (editor && document.activeElement !== editor) {
+      const safe = sanitizeLetterHtml(value);
+      if (editor.innerHTML !== safe) editor.innerHTML = safe;
     }
   }, [value]);
-
-  const exec = (command: string, arg: string | undefined = undefined) => {
+  const exec = (command: string, arg?: string) => {
+    editorRef.current?.focus();
+    const current = window.getSelection();
+    if (
+      selection.current &&
+      editorRef.current?.contains(selection.current.commonAncestorContainer)
+    ) {
+      current?.removeAllRanges();
+      current?.addRange(selection.current);
+    }
     document.execCommand(command, false, arg);
     if (editorRef.current) {
+      remember();
       onChange(editorRef.current.innerHTML);
-      editorRef.current.focus();
     }
   };
-
   const handleInput = () => {
     if (editorRef.current) {
       onChange(editorRef.current.innerHTML);
@@ -65,24 +81,32 @@ export function RichTextEditor({
   const handleFontChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const font = e.target.value;
     setSelectedFont(font);
-    exec('fontName', font);
+    exec("fontName", font);
   };
 
   const handleSizeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const size = e.target.value;
     setSelectedSize(size);
-    exec('fontSize', size);
+    exec("fontSize", size);
   };
 
   return (
     <div className="w-full border border-[#C9C9C3] rounded-xl overflow-hidden bg-white shadow-xs focus-within:ring-2 focus-within:ring-brand-red/25 focus-within:border-brand-red transition-all">
       {/* Toolbar Gaya Gmail */}
-      <div className="flex flex-wrap items-center gap-1 p-2 bg-[#F6F6F4] border-b border-[#E4E4E0] select-none text-neutral-700">
+      <div
+        role="toolbar"
+        aria-label="Format isi surat"
+        onMouseDown={(e) => {
+          if ((e.target as HTMLElement).closest("button")) e.preventDefault();
+          else remember();
+        }}
+        className="flex flex-wrap items-center gap-1 p-2 bg-[#F6F6F4] border-b border-[#E4E4E0] select-none text-neutral-700"
+      >
         {/* Undo & Redo */}
         <div className="flex items-center gap-0.5 pr-1 border-r border-neutral-300">
           <button
             type="button"
-            onClick={() => exec('undo')}
+            onClick={() => exec("undo")}
             className="p-1.5 rounded hover:bg-neutral-200/80 text-neutral-600 hover:text-neutral-900 transition-colors"
             title="Urungkan (Undo)"
           >
@@ -90,7 +114,7 @@ export function RichTextEditor({
           </button>
           <button
             type="button"
-            onClick={() => exec('redo')}
+            onClick={() => exec("redo")}
             className="p-1.5 rounded hover:bg-neutral-200/80 text-neutral-600 hover:text-neutral-900 transition-colors"
             title="Ulangi (Redo)"
           >
@@ -105,11 +129,11 @@ export function RichTextEditor({
           className="h-7 px-2 text-xs bg-white border border-[#D5D5CF] rounded hover:bg-neutral-50 text-neutral-800 focus:outline-none cursor-pointer font-medium"
           title="Jenis Font"
         >
-          <option value="'SIG Text', sans-serif">SIG Text (Resmi SIG)</option>
-          <option value="Arial, sans-serif">Sans Serif (Arial)</option>
-          <option value="'Times New Roman', serif">Serif (Times New Roman)</option>
-          <option value="'Courier New', monospace">Monospace (Courier)</option>
-          <option value="Georgia, serif">Georgia</option>
+          <option value="SIG Text">SIG Text (Resmi SIG)</option>
+          <option value="Arial">Sans Serif (Arial)</option>
+          <option value="Times New Roman">Serif (Times New Roman)</option>
+          <option value="Courier New">Monospace (Courier)</option>
+          <option value="Georgia">Georgia</option>
         </select>
 
         {/* Ukuran Font */}
@@ -132,7 +156,7 @@ export function RichTextEditor({
         <div className="flex items-center gap-0.5">
           <button
             type="button"
-            onClick={() => exec('bold')}
+            onClick={() => exec("bold")}
             className="p-1.5 rounded hover:bg-neutral-200/80 text-neutral-800 font-bold transition-colors"
             title="Tebal (Ctrl+B)"
           >
@@ -140,7 +164,7 @@ export function RichTextEditor({
           </button>
           <button
             type="button"
-            onClick={() => exec('italic')}
+            onClick={() => exec("italic")}
             className="p-1.5 rounded hover:bg-neutral-200/80 text-neutral-800 italic transition-colors"
             title="Miring (Ctrl+I)"
           >
@@ -148,7 +172,7 @@ export function RichTextEditor({
           </button>
           <button
             type="button"
-            onClick={() => exec('underline')}
+            onClick={() => exec("underline")}
             className="p-1.5 rounded hover:bg-neutral-200/80 text-neutral-800 underline transition-colors"
             title="Garis Bawah (Ctrl+U)"
           >
@@ -156,7 +180,7 @@ export function RichTextEditor({
           </button>
           <button
             type="button"
-            onClick={() => exec('strikeThrough')}
+            onClick={() => exec("strikeThrough")}
             className="p-1.5 rounded hover:bg-neutral-200/80 text-neutral-800 transition-colors"
             title="Coret"
           >
@@ -171,7 +195,7 @@ export function RichTextEditor({
         <div className="flex items-center gap-0.5">
           <button
             type="button"
-            onClick={() => exec('justifyLeft')}
+            onClick={() => exec("justifyLeft")}
             className="p-1.5 rounded hover:bg-neutral-200/80 text-neutral-800 transition-colors"
             title="Rata Kiri"
           >
@@ -179,7 +203,7 @@ export function RichTextEditor({
           </button>
           <button
             type="button"
-            onClick={() => exec('justifyCenter')}
+            onClick={() => exec("justifyCenter")}
             className="p-1.5 rounded hover:bg-neutral-200/80 text-neutral-800 transition-colors"
             title="Rata Tengah"
           >
@@ -187,7 +211,7 @@ export function RichTextEditor({
           </button>
           <button
             type="button"
-            onClick={() => exec('justifyRight')}
+            onClick={() => exec("justifyRight")}
             className="p-1.5 rounded hover:bg-neutral-200/80 text-neutral-800 transition-colors"
             title="Rata Kanan"
           >
@@ -195,7 +219,7 @@ export function RichTextEditor({
           </button>
           <button
             type="button"
-            onClick={() => exec('justifyFull')}
+            onClick={() => exec("justifyFull")}
             className="p-1.5 rounded hover:bg-neutral-200/80 text-neutral-800 transition-colors"
             title="Rata Kanan-Kiri (Justify)"
           >
@@ -210,7 +234,7 @@ export function RichTextEditor({
         <div className="flex items-center gap-0.5">
           <button
             type="button"
-            onClick={() => exec('insertOrderedList')}
+            onClick={() => exec("insertOrderedList")}
             className="p-1.5 rounded hover:bg-neutral-200/80 text-neutral-800 transition-colors"
             title="Daftar Bernomor (1, 2, 3)"
           >
@@ -218,7 +242,7 @@ export function RichTextEditor({
           </button>
           <button
             type="button"
-            onClick={() => exec('insertUnorderedList')}
+            onClick={() => exec("insertUnorderedList")}
             className="p-1.5 rounded hover:bg-neutral-200/80 text-neutral-800 transition-colors"
             title="Daftar Poin (Bullet)"
           >
@@ -226,7 +250,7 @@ export function RichTextEditor({
           </button>
           <button
             type="button"
-            onClick={() => exec('outdent')}
+            onClick={() => exec("outdent")}
             className="p-1.5 rounded hover:bg-neutral-200/80 text-neutral-800 transition-colors"
             title="Kurangi Indentasi"
           >
@@ -234,7 +258,7 @@ export function RichTextEditor({
           </button>
           <button
             type="button"
-            onClick={() => exec('indent')}
+            onClick={() => exec("indent")}
             className="p-1.5 rounded hover:bg-neutral-200/80 text-neutral-800 transition-colors"
             title="Tambah Indentasi"
           >
@@ -246,7 +270,7 @@ export function RichTextEditor({
         <div className="ml-auto pl-1">
           <button
             type="button"
-            onClick={() => exec('removeFormat')}
+            onClick={() => exec("removeFormat")}
             className="p-1.5 rounded hover:bg-neutral-200/80 text-neutral-500 hover:text-neutral-800 transition-colors"
             title="Hapus Pemformatan"
           >
@@ -258,9 +282,35 @@ export function RichTextEditor({
       {/* Area Naskah Dokumen Luas (Editable Canvas) */}
       <div
         ref={editorRef}
+        id="letter-content"
+        role="textbox"
+        aria-label="Isi surat"
+        aria-multiline="true"
         contentEditable
+        suppressContentEditableWarning
+        dangerouslySetInnerHTML={{ __html: initialHtml.current }}
+        onPaste={(e) => {
+          e.preventDefault();
+          const html = e.clipboardData.getData("text/html");
+          exec(
+            "insertHTML",
+            html
+              ? sanitizeLetterHtml(html)
+              : plainTextHtml(e.clipboardData.getData("text/plain")),
+          );
+        }}
+        onDrop={(e) => {
+          e.preventDefault();
+          exec(
+            "insertHTML",
+            plainTextHtml(e.dataTransfer.getData("text/plain")),
+          );
+        }}
         onInput={handleInput}
-        style={{ minHeight, fontFamily: "'SIG Text', var(--font-inter), sans-serif" }}
+        style={{
+          minHeight,
+          fontFamily: "'SIG Text', var(--font-inter), sans-serif",
+        }}
         className="p-4 sm:p-5 outline-none text-neutral-900 text-sm sm:text-base leading-relaxed overflow-y-auto max-h-[550px] font-sans focus:outline-none"
         data-placeholder={placeholder}
       />

@@ -1,5 +1,9 @@
 /** Kode tetap dipakai di database; hanya label ini yang ditampilkan. */
 const labels: Record<string, string> = {
+  ACCOUNT_ACCESS_UPDATED: "Akses akun diperbarui",
+  LETTER_DATE_SET: "Tanggal surat ditetapkan",
+  SIGNATURE_REQUESTED: "Pengesahan tanda tangan diajukan",
+  EXECUTED: "Pembatalan selesai",
   DRAFT: "Draft",
   IN_REVIEW: "Menunggu pemeriksaan",
   REVISION_REQUESTED: "Perlu perbaikan",

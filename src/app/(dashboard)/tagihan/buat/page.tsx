@@ -1,2 +1,2 @@
-import { LetterEditor } from '@/components/letters/letter-editor';
-export default function Page(){return <LetterEditor billing/>;}
+import { PreparedLetterEditor } from '@/components/letters/prepared-letter-editor';
+export default function Page(){return <PreparedLetterEditor billing/>;}

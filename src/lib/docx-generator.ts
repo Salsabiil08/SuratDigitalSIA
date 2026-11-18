@@ -1,3 +1,4 @@
+import {richTextDocx} from './rich-docx';
 import fs from 'node:fs';
 import path from 'node:path';
 import JSZip from 'jszip';
@@ -31,134 +32,6 @@ function escapeXml(str = ''): string {
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&apos;');
-}
-
-function parseHtmlToDocx(html = '', fontName = 'SIG Text'): string {
-  if (!html) return '';
-
-  // Normalisasi spasi dan line break
-  const clean = html
-    .replace(/&nbsp;/g, ' ')
-    .replace(/<br\s*\/?>/gi, '\n');
-
-  // Bila teks polos tanpa tag blok paragraf
-  if (!/<p|div|li/i.test(clean)) {
-    const lines = clean.split('\n').map((l) => l.trim()).filter(Boolean);
-    return lines
-      .map(
-        (line) => `
-        <w:p>
-          <w:pPr>
-            <w:spacing w:after="140" w:line="276" w:lineRule="auto"/>
-            <w:rPr>
-              <w:rFonts w:ascii="${fontName}" w:hAnsi="${fontName}" w:cs="${fontName}"/>
-              <w:sz w:val="22"/><w:szCs w:val="22"/>
-            </w:rPr>
-          </w:pPr>
-          <w:r>
-            <w:rPr>
-              <w:rFonts w:ascii="${fontName}" w:hAnsi="${fontName}" w:cs="${fontName}"/>
-              <w:sz w:val="22"/><w:szCs w:val="22"/>
-            </w:rPr>
-            <w:t xml:space="preserve">${escapeXml(line)}</w:t>
-          </w:r>
-        </w:p>`
-      )
-      .join('');
-  }
-
-  // Pecah berdasarkan tag penutup paragraf/div/li
-  const blocks = clean.split(/<\/(?:p|div|li)>/i);
-  const paragraphs: string[] = [];
-
-  for (const block of blocks) {
-    if (!block.trim()) continue;
-
-    let jc = '';
-    if (/text-align:\s*center/i.test(block)) jc = '<w:jc w:val="center"/>';
-    else if (/text-align:\s*right/i.test(block)) jc = '<w:jc w:val="right"/>';
-    else if (/text-align:\s*justify/i.test(block)) jc = '<w:jc w:val="both"/>';
-
-    const isList = /<li/i.test(block);
-    const inner = block.replace(/^[\s\S]*?<(?:p|div|li)[^>]*>/i, '');
-
-    const tokens = inner.split(/(<\/?[a-z0-9_-]+(?:(?:\s+[^>]*)|)>)/gi);
-
-    let isBold = false;
-    let isItalic = false;
-    let isUnderline = false;
-    let isStrike = false;
-
-    const runs: string[] = [];
-
-    for (const token of tokens) {
-      if (!token) continue;
-      const lower = token.toLowerCase();
-
-      if (lower.startsWith('<b') || lower.startsWith('<strong')) {
-        isBold = true;
-      } else if (lower.startsWith('</b') || lower.startsWith('</strong')) {
-        isBold = false;
-      } else if (lower.startsWith('<i') || lower.startsWith('<em')) {
-        isItalic = true;
-      } else if (lower.startsWith('</i') || lower.startsWith('</em')) {
-        isItalic = false;
-      } else if (lower.startsWith('<u')) {
-        isUnderline = true;
-      } else if (lower.startsWith('</u')) {
-        isUnderline = false;
-      } else if (lower.startsWith('<s') || lower.startsWith('<strike')) {
-        isStrike = true;
-      } else if (lower.startsWith('</s') || lower.startsWith('</strike')) {
-        isStrike = false;
-      } else if (token.startsWith('<')) {
-        // Tag lainnya diabaikan
-      } else {
-        const rawText = token.replace(/<[^>]+>/g, '');
-        if (rawText) {
-          const rPr = [
-            `<w:rFonts w:ascii="${fontName}" w:hAnsi="${fontName}" w:cs="${fontName}"/>`,
-            `<w:sz w:val="22"/><w:szCs w:val="22"/>`,
-            isBold ? '<w:b/><w:bCs/>' : '',
-            isItalic ? '<w:i/><w:iCs/>' : '',
-            isUnderline ? '<w:u w:val="single"/>' : '',
-            isStrike ? '<w:strike/>' : '',
-          ]
-            .filter(Boolean)
-            .join('');
-
-          runs.push(`
-            <w:r>
-              <w:rPr>${rPr}</w:rPr>
-              <w:t xml:space="preserve">${escapeXml(rawText)}</w:t>
-            </w:r>`);
-        }
-      }
-    }
-
-    if (runs.length > 0) {
-      paragraphs.push(`
-        <w:p>
-          <w:pPr>
-            ${jc}
-            ${isList ? '<w:ind w:left="400"/>' : ''}
-            <w:spacing w:after="140" w:line="276" w:lineRule="auto"/>
-            <w:rPr>
-              <w:rFonts w:ascii="${fontName}" w:hAnsi="${fontName}" w:cs="${fontName}"/>
-              <w:sz w:val="22"/><w:szCs w:val="22"/>
-            </w:rPr>
-          </w:pPr>
-          ${
-            isList
-              ? `<w:r><w:rPr><w:rFonts w:ascii="${fontName}" w:hAnsi="${fontName}"/><w:sz w:val="22"/></w:rPr><w:t xml:space="preserve">&#x2022; </w:t></w:r>`
-              : ''
-          }
-          ${runs.join('')}
-        </w:p>`);
-    }
-  }
-
-  return paragraphs.join('');
 }
 
 /**
@@ -216,7 +89,7 @@ export async function generateLetterDocx(data: LetterDocxData): Promise<Buffer> 
   const contentBodyXml = data.contentText !== undefined
     ? data.contentText.split('\n').map(line=>`<w:p><w:pPr><w:spacing w:after="140"/></w:pPr><w:r><w:rPr><w:rFonts w:ascii="${fontName}" w:hAnsi="${fontName}"/><w:sz w:val="22"/></w:rPr><w:t xml:space="preserve">${escapeXml(line)}</w:t></w:r></w:p>`).join('')
     : data.contentHtml
-    ? parseHtmlToDocx(data.contentHtml, fontName)
+    ? richTextDocx(data.contentHtml, fontName)
     : `
       <w:p>
         <w:pPr>

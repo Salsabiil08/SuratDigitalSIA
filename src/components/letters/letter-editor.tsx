@@ -1,7 +1,9 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { RichTextEditor } from "@/components/ui/rich-text-editor";
+import { plainTextHtml, sanitizeLetterHtml } from "@/domain/rich-text";
 import { DraftInput, SignatureArea, jakartaDate } from "@/domain/workflow";
 import {
   getWorkflowOptions,
@@ -13,6 +15,43 @@ import { Field, Input, Select, Textarea } from "@/components/ui/field";
 import { Button } from "@/components/ui/button";
 import { terbilangRupiah } from "@/domain/terbilang";
 
+function draftFromData(
+  data: Awaited<ReturnType<typeof getWorkflowLetter>>,
+): DraftInput {
+  const l = data.letter,
+    v = data.versions.find((v) => v.id === l.current_version_id);
+  return {
+    id: l.id,
+    revision: l.revision,
+    source: l.source,
+    letterTypeCode: l.type.code,
+    subject: l.subject,
+    letterDate: l.letter_date || "",
+    dateReason: l.date_change_reason || "",
+    recipientUserId: l.recipient_user_id || "",
+    recipientName: l.recipient_external_name || "",
+    recipientOrg: l.recipient_external_org || "",
+    recipientAddress: l.recipient_external_address || "",
+    content:
+      v?.content_format === "HTML"
+        ? sanitizeLetterHtml(v.content_html || "")
+        : plainTextHtml(v?.content_html || ""),
+    contentFormat: "HTML",
+    signatureMode: l.signature_mode,
+    signerIds: l.signer_ids || [],
+    areas: l.signature_areas || [],
+    stampArea: l.stamp_area || undefined,
+    numberArea: l.number_area || undefined,
+    billing: data.billing
+      ? {
+          bankId: data.billing.bank_id,
+          accountNumber: data.billing.account_number,
+          accountHolder: data.billing.payee_name,
+          items: data.items,
+        }
+      : undefined,
+  };
+}
 const emptyArea = (): SignatureArea => ({
   page: 1,
   x: 340,
@@ -25,111 +64,64 @@ export function LetterEditor({
   billing = false,
   id,
   dispositionId,
+  initialOptions,
+  initialData,
 }: {
   source?: "CREATE" | "UPLOAD";
   billing?: boolean;
   id?: string;
   dispositionId?: string;
+  initialOptions: Awaited<ReturnType<typeof getWorkflowOptions>>;
+  initialData?: Awaited<ReturnType<typeof getWorkflowLetter>>;
 }) {
   const router = useRouter();
-  const [options, setOptions] = useState<Awaited<
-    ReturnType<typeof getWorkflowOptions>
-  > | null>(null);
-  const [ready, setReady] = useState(false);
-  const [input, setInput] = useState<DraftInput>({
-    source,
-    dispositionId,
-    letterTypeCode: billing ? "Tag" : "IN",
-    subject: "",
-    letterDate: jakartaDate(),
-    dateReason: "",
-    recipientUserId: "",
-    recipientName: "",
-    recipientOrg: "",
-    recipientAddress: "",
-    content: "",
-    signatureMode: "IN_APP",
-    signerIds: [],
-    areas: [],
-    billing: billing
-      ? {
-          bankId: "",
-          bankName: "",
-          accountNumber: "",
-          accountHolder: "",
-          items: [
-            { description: "", amount: 0 },
-            { description: "", amount: 0 },
-          ],
-        }
-      : undefined,
-  });
+  const options = initialOptions;
+  const [input, setInput] = useState<DraftInput>(() =>
+    initialData
+      ? draftFromData(initialData)
+      : {
+          source,
+          dispositionId,
+          letterTypeCode: billing ? "Tag" : "IN",
+          subject: "",
+          letterDate: jakartaDate(),
+          dateReason: "",
+          recipientUserId: "",
+          recipientName: "",
+          recipientOrg: "",
+          recipientAddress: "",
+          content: "",
+          contentFormat: "HTML",
+          signatureMode: "IN_APP",
+          signerIds: [],
+          areas: [],
+          billing: billing
+            ? {
+                bankId: "",
+                bankName: "",
+                accountNumber: "",
+                accountHolder: "",
+                items: [
+                  { description: "", amount: 0 },
+                  { description: "", amount: 0 },
+                ],
+              }
+            : undefined,
+        },
+  );
   const [file, setFile] = useState<File | null>(null);
   const [attachment, setAttachment] = useState<File | null>(null);
-  const [currentFormat, setCurrentFormat] = useState("DOCX");
-  const [oldDate, setOldDate] = useState("");
-  const [formal, setFormal] = useState(false);
+  const [currentFormat, setCurrentFormat] = useState(
+    initialData?.versions.find(
+      (v) => v.id === initialData.letter.current_version_id,
+    )?.file_format || "DOCX",
+  );
+  const [oldDate] = useState(initialData?.letter.letter_date || "");
+  const [formal, setFormal] = useState(
+    !!initialData?.letter.signer_ids?.length,
+  );
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
-  useEffect(() => {
-    let live = true;
-    (async () => {
-      try {
-        const opts = await getWorkflowOptions();
-        if (!live) return;
-        setOptions(opts);
-        if (id) {
-          const data = await getWorkflowLetter(id);
-          const l = data.letter;
-          if (
-            !data.isCreator ||
-            !["DRAFT", "REVISION_REQUESTED"].includes(l.status)
-          )
-            throw new Error("Surat ini sudah terkunci untuk pengeditan.");
-          const v = data.versions.find((v) => v.id === l.current_version_id);
-          const draft: DraftInput = {
-            id: l.id,
-            revision: l.revision,
-            source: l.source,
-            letterTypeCode: l.type.code,
-            subject: l.subject,
-            letterDate: l.letter_date || "",
-            dateReason: l.date_change_reason || "",
-            recipientUserId: l.recipient_user_id || "",
-            recipientName: l.recipient_external_name || "",
-            recipientOrg: l.recipient_external_org || "",
-            recipientAddress: l.recipient_external_address || "",
-            content: v?.content_html || "",
-            signatureMode: l.signature_mode,
-            signerIds: l.signer_ids,
-            areas: l.signature_areas || [],
-            stampArea: l.stamp_area || undefined,
-            numberArea: l.number_area || undefined,
-          };
-          if (data.billing)
-            draft.billing = {
-              bankId: data.billing.bank_id,
-              accountNumber: data.billing.account_number,
-              accountHolder: data.billing.payee_name,
-              items: data.items,
-            };
-          if (live) {
-            setInput(draft);
-            setFormal(l.signer_ids.length > 0);
-            setCurrentFormat(v?.file_format || "DOCX");
-            setOldDate(l.letter_date || "");
-          }
-        }
-        if (live) setReady(true);
-      } catch (e) {
-        if (live)
-          setError(e instanceof Error ? e.message : "Gagal memuat formulir.");
-      }
-    })();
-    return () => {
-      live = false;
-    };
-  }, [id]);
   function change<K extends keyof DraftInput>(key: K, value: DraftInput[K]) {
     setInput((x) => ({ ...x, [key]: value }));
   }
@@ -184,14 +176,6 @@ export function LetterEditor({
       setBusy(false);
     }
   }
-  if (!ready)
-    return (
-      <Card className="p-6">
-        <p role={error ? "alert" : undefined}>
-          {error || "Memuat formulir dan struktur organisasi…"}
-        </p>
-      </Card>
-    );
   const canBackdate = ["GM", "SM", "DIR"].includes(
     options?.user.position?.code || "",
   );
@@ -364,12 +348,11 @@ export function LetterEditor({
                 required
                 hint="Naskah pada template berkop. Koreksi dapat dilakukan selama Draft/Perlu Revisi."
               >
-                <Textarea
-                  id="letter-content"
-                  rows={12}
-                  value={input.content}
-                  onChange={(e) => change("content", e.target.value)}
-                  required
+                <RichTextEditor
+                  value={input.content || ""}
+                  onChange={(content) =>
+                    setInput((x) => ({ ...x, content, contentFormat: "HTML" }))
+                  }
                 />
               </Field>
               <a

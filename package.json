@@ -20,6 +20,8 @@
     "@types/jszip": "^3.4.0",
     "clsx": "^2.1.1",
     "docx-preview": "^0.4.1",
+    "domhandler": "5.0.3",
+    "htmlparser2": "10.0.0",
     "jszip": "^3.10.2",
     "lucide-react": "^0.468.0",
     "next": "^14.2.20",
