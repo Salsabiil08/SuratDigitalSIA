@@ -30,6 +30,7 @@ Implementasi awal mendukung satu pemeriksa per versi/siklus. Jumlah/urutan pemer
 | Server Action review, 4 kasus | Identitas dari sesi; tanpa akun aktif; RPC gagal; daftar mengabaikan versi lama/akses tercabut/aktor lain |
 | Investigasi fixture, 2 kasus terpisah | Mereproduksi fixture baseline tanpa PR-02; status READY tanpa versi tetap ditolak tanpa menerbitkan nomor atau menaikkan counter |
 | Regresi baseline | 109 tes PR-01 tetap berjalan; helper draft DB diperbarui memilih Pemberitahuan secara eksplisit, bukan menurunkan guard |
+| Integritas source/dokumen | 15 migrasi baseline, SQL fixture/scripts/dependensi/CI utuh; 28 tautan relatif aktif diperiksa; `git diff --check` lulus |
 | Forward migration lokal | Simulasi 13 surat bernomor tanpa versi dan audit existing identik sebelum/sesudah, selain dua kolom baru NULL; tidak ada bukti pemeriksaan fiktif |
 | Build | Lulus kompilasi, typecheck, dan pembangkitan 21 halaman; bukan deployment |
 
@@ -46,3 +47,9 @@ Schema production diperiksa baca-saja: belum ada tabel review baru, hanya catego
 ## Titik berhenti
 
 Draft PR-02 diajukan di atas PR-01, tanpa merge, migrasi production atau deployment. PR-03 tidak diizinkan dan tidak dimulai. Hasil CI/publikasi terbaru tersedia di halaman PR; laporan tidak menyatakan seluruh CI hijau bila job PostgreSQL baseline gagal.
+
+## Publikasi dan CI terverifikasi
+
+[Draft PR #3](https://github.com/Salsabiil08/SuratDigitalSIA/pull/3) dibuka ke branch PR-01 pada commit implementasi `b9d860bd6081af4f93e4c5d0ffc64c712880578e`, tanpa merge. [CI run 44251004155](https://github.com/Salsabiil08/SuratDigitalSIA/actions/runs/44251004155): job check lulus typecheck/136 tes; job db berhasil menerapkan seluruh 16 migrasi ke PostgreSQL sementara runner, kemudian gagal di `01_numbering_test.sql:106` dengan **Pemeriksaan versi terkini belum selesai atau kewenangan berubah.** Fixture lama tidak menyiapkan kategori/review, sehingga pada PR-02 tertahan guard tambahan sebelum mencapai guard dokumen baseline. Reproduksi terpisah tanpa PR-02 tetap menunjukkan kegagalan awal **Surat belum siap diterbitkan.** karena versi kosong. Ini dua bukti berbeda, bukan klaim pesan CI sama atau suite PostgreSQL/RLS/konkurensi penuh lulus.
+
+Pemeriksaan setelah publikasi: deployment branch PR-02 berjumlah nol; production tetap READY pada deployment `dpl_4aVP7FGF4i9eJhqARNu65dZtckZc`, SHA `4e0c0c661af58dd6db729c202643cd6629f7eb07`; main tetap SHA baseline yang sama. Tidak ada perubahan database production. Commit laporan dapat memicu ulang CI; status terbaru tersedia di PR. Pengaman branch tetap berlaku. PR-03 belum dimulai.

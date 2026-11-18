@@ -28,7 +28,7 @@ Status: PR-00/PR-01 selesai dalam draft; implementasi PR-02 disetujui pada 18 No
 - [x] Halaman Pemeriksaan Surat, detail dan riwayat; pembuat tetap pengedit.
 - [x] Migrasi aditif dan uji 13 surat lama tanpa perubahan otomatis.
 - [x] Pengujian lintas akun/RLS/stale/fault injection dan investigasi fixture baseline terpisah.
-- [ ] Buka draft PR berbasis PR-01, verifikasi hasil dan laporkan; berhenti sebelum PR-03.
+- [x] Buka [Draft PR #3](https://github.com/Salsabiil08/SuratDigitalSIA/pull/3) berbasis PR-01, verifikasi hasil dan laporkan; berhenti sebelum PR-03. Check lulus; job PostgreSQL tertahan fixture lama yang belum memenuhi prasyarat.
 
 ## Tahap berikutnya — belum diizinkan
 - [ ] PR-03: persetujuan pilihan/pejabat wajib dan self-signer.

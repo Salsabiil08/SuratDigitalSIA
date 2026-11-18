@@ -22,3 +22,7 @@ Fixture menyisipkan surat dengan status `READY_TO_ISSUE`, tetapi tanpa `current_
 Gunakan helper fixture yang membuat akun/penugasan sah, menyimpan draft dan versi melalui RPC, melakukan pratinjau/pengajuan, menyelesaikan review bila diwajibkan dan approval, lalu memanggil penerbitan. Pisahkan seri/tahun antar pengujian dan uji idempotensi/konkurensi sesudah semua prasyarat terpenuhi. Pembatalan dan disposisi mengikuti RPC baru, dengan kasus negatif yang memastikan bypass ditolak.
 
 PR-02 mempertahankan SQL test, skrip konkurensi, dan guard penomoran baseline. Wrapper PR-02 hanya menambahkan syarat review; tidak melonggarkan guard. Perbaikan fixture penuh tetap pekerjaan terpisah yang perlu ditinjau; CI PostgreSQL tidak dilaporkan hijau hanya karena reproduksi kegagalan berhasil.
+
+## Perbedaan CI setelah PR-02
+
+CI PR-02 run 44251004155 berhasil menerapkan 16 migrasi. Fixture yang sama lalu tertahan gate kategori/review baru dengan pesan **Pemeriksaan versi terkini belum selesai atau kewenangan berubah.** sebelum guard versi baseline. Karena fixture juga belum menyiapkan kategori/review, penyesuaian fixture pada branch terbaru harus memenuhi kedua prasyarat tersebut. Dua tes reproduksi sengaja dibangun hanya sampai PR-01 agar penyebab baseline tetap terisolasi.
