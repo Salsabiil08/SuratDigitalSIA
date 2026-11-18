@@ -18,3 +18,5 @@ it('fixture approval independen, self-confirmation, tagihan dan review terpisah'
 it('fixture pengiriman/penerimaan/rollback/RLS/Storage',async()=>{await db.exec(sql('supabase/tests/04_internal_delivery_test.sql'));});
 
 it('fixture kotak masuk/keluar, filter/pagination, otorisasi/CC dan error',async()=>{await db.exec(sql('supabase/tests/05_mailbox_test.sql'));});
+
+it('fixture balasan resmi, relasi/RLS, nomor baru, retry dan rollback',async()=>{await db.exec(sql('supabase/tests/06_official_replies_test.sql'));});

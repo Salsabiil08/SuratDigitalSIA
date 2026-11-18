@@ -206,6 +206,7 @@ export function LetterEditor({
                 : "Buat Surat"
         }
       />
+      {initialData?.replyContext.links.filter(r=>r.direction==='ORIGIN').map(r=><p key={r.id} className="text-sm border rounded-xl p-3">Balasan untuk surat {r.officialNumber||r.letterId}. Penerima tetap pengirim resmi surat asal. <Link prefetch={false} className="text-brand-red underline" href={`/surat/${r.letterId}`}>Buka Surat Asal</Link></p>)}
       <p className="text-sm text-neutral-600">
         Buat/Impor → Pratinjau dan Koreksi → Pemeriksaan jika diperlukan → Persetujuan → Nomor Resmi → TTD →
         Finalisasi
@@ -302,6 +303,7 @@ export function LetterEditor({
             >
               <Select
                 id="recipient-user"
+                disabled={!!initialData?.replyContext.links.some(r=>r.direction==='ORIGIN')}
                 value={input.recipientUserId}
                 onChange={(e) => change("recipientUserId", e.target.value)}
                 required

@@ -2,7 +2,7 @@ export type MailboxFolder='INBOX'|'OUTBOX';
 export type MailboxFilter='ALL'|'UNREAD'|'UNRECEIVED'|'RECEIVED';
 export const MAILBOX_FILTERS:Record<MailboxFilter,string>={ALL:'Semua',UNREAD:'Belum Dibaca',UNRECEIVED:'Belum Diterima',RECEIVED:'Sudah Diterima'};
 export interface MailboxQuery{filter:MailboxFilter;q:string;page:number;pageSize:number}
-export interface MailboxRecipient{profile_id:string;name:string;role:'PRIMARY'|'CC';read_at:string|null;received_at:string|null;requires_response:boolean}
+export interface MailboxRecipient{profile_id:string;name:string;role:'PRIMARY'|'CC';read_at:string|null;received_at:string|null;requires_response:boolean;replied_at?:string|null}
 export interface MailboxItem{dispatch_id:string;letter_id:string;sender_id:string;sender_name:string;subject:string;official_number:string;sent_at:string;finalized_at:string|null;letter_status:string;recipients:MailboxRecipient[]}
 export interface MailboxData{items:MailboxItem[];total:number;page:number;pageSize:number;pages:number}
 export function mailboxQuery(raw:Record<string,unknown>={}):MailboxQuery{

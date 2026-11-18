@@ -51,3 +51,32 @@ begin
 end $$;
 SQL
 echo "PENGIRIMAN/PEMBACAAN/PENERIMAAN KONKUREN LULUS: 20 retry masing-masing, satu snapshot dan event"
+# PR-06: satu intent balasan, banyak retry; tidak membuat surat/versi/audit ganda.
+seq 1 20 | xargs -P 20 -I{} $PSQL -c "select test_support.reply_draft('a0000000-0000-0000-0000-000000000006',(select d.id from internal_dispatches d join test_support.delivery_target t on t.letter_id=d.letter_id),'b0000000-0000-0000-0000-000000000006')" >/dev/null
+$PSQL <<'SQL'
+do $$
+declare l letters;
+begin
+ select x.* into l from letters x join official_reply_links r on r.reply_letter_id=x.id where r.idempotency_key='b0000000-0000-0000-0000-000000000006';
+ assert(select count(*)=1 from official_reply_links where reply_letter_id=l.id);
+ assert(select count(*)=1 from letter_versions where letter_id=l.id);
+ assert(select count(*)=1 from audit_logs where letter_id=l.id and action='OFFICIAL_REPLY_CREATED');
+ assert l.status='DRAFT' and l.official_number is null;
+ perform test_support.submit(l.creator_id,l.id);perform test_support.number(l.creator_id,l.id,'concurrent-reply-number');
+ select * into l from letters where id=l.id;perform finalize_letter(l.creator_id,l.id,l.revision,false);
+end $$;
+SQL
+seq 1 20 | xargs -P 20 -I{} $PSQL -c "select dispatch_internal_letter('a0000000-0000-0000-0000-000000000006',l.id,v.id,v.file_hash,'concurrent-reply-send-{}') from letters l join official_reply_links r on r.reply_letter_id=l.id join letter_versions v on v.id=l.current_version_id where r.idempotency_key='b0000000-0000-0000-0000-000000000006'" >/dev/null
+$PSQL <<'SQL'
+do $$
+declare rel uuid;dispatch uuid;
+begin
+ select id into rel from official_reply_links where idempotency_key='b0000000-0000-0000-0000-000000000006';
+ assert(select count(*)=1 from official_reply_sends where relation_id=rel);
+ assert(select count(*)=1 from audit_logs where entity_id=rel::text and action='OFFICIAL_REPLY_SENT');
+ select reply_dispatch_id into dispatch from official_reply_sends where relation_id=rel;
+ assert(select count(*)=1 from dispatch_recipients where dispatch_id=dispatch);
+ assert(select count(*)=1 from notifications where dispatch_id=dispatch and event_type='INTERNAL_SENT');
+end $$;
+SQL
+echo "BALASAN KONKUREN LULUS: 20 retry buat dan kirim, satu surat/relasi/status/audit"

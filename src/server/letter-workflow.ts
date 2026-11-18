@@ -305,6 +305,10 @@ export async function saveDraft(
       .remove([document.path]);
     throw new Error(error.message);
   }
+  if(input.replyToDispatchId){
+    const {data:used,error:checkError}=await createAdminClient().from('letter_versions').select('id').eq('storage_path',document.path).limit(1);
+    if(!checkError&&used?.length===0)await createAdminClient().storage.from(DOCUMENT_BUCKET).remove([document.path,...attachments.map(a=>a.path)]);
+  }
   return id as string;
 }
 export function assertSameOrigin(request: Request) {
