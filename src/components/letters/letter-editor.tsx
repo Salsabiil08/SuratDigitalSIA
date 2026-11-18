@@ -204,12 +204,12 @@ export function LetterEditor({
             : isBill
               ? "Surat Pengantar Tagihan"
               : input.source === "UPLOAD"
-                ? "Import Surat / Ambil Nomor"
+                ? "Impor Surat / Ambil Nomor"
                 : "Buat Surat"
         }
       />
       <p className="text-sm text-neutral-600">
-        Buat/Import → Preview dan Koreksi → Persetujuan → Nomor Resmi → TTD →
+        Buat/Impor → Pratinjau dan Koreksi → Persetujuan → Nomor Resmi → TTD →
         Finalisasi
       </p>
       {error && (
@@ -622,7 +622,7 @@ export function LetterEditor({
                     (p) =>
                       !isBill ||
                       (index === 0
-                        ? p.position === "SM" && p.unitId === options?.financeUnitId
+                        ? p.position === "SM"
                         : p.position === "DIR"),
                   )
                   .map((p) => (

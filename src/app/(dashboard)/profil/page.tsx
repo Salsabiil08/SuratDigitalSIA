@@ -1,4 +1,4 @@
-import { getCurrentUser } from '@/server/auth';
+import { requireUser } from '@/server/auth';
 import { PageHeader } from '@/components/ui/page-header';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -8,19 +8,7 @@ import { logoutAction } from '@/server/actions/auth';
 export const dynamic = 'force-dynamic';
 
 export default async function ProfilePage() {
-  const user = await getCurrentUser();
-
-  const profileData = user || {
-    id: 'demo',
-    fullName: 'Pengguna Contoh SIA',
-    email: 'user@sia.co.id',
-    systemRole: 'USER' as const,
-    isActive: true,
-    position: { id: 'p1', code: 'GM', name: 'GM / Kepala Unit', level: 2 },
-    unit: { id: 'u1', code: 'ACH', name: 'Accounting' },
-    isOfficialSigner: false,
-    isSuperAdmin: false,
-  };
+  const profileData = await requireUser();
 
   return (
     <div className="flex flex-col gap-6 max-w-4xl">
@@ -40,13 +28,13 @@ export default async function ProfilePage() {
             {profileData.isSuperAdmin ? (
               <Chip variant="red">Super Administrator</Chip>
             ) : profileData.position?.level === 4 ? (
-              <Chip variant="red">Direktur Utama (Level 4)</Chip>
+              <Chip variant="red">Direktur Utama</Chip>
             ) : profileData.position?.level === 3 ? (
-              <Chip variant="amber">Senior Manager (Level 3)</Chip>
+              <Chip variant="amber">Senior Manager</Chip>
             ) : profileData.position?.level === 2 ? (
-              <Chip variant="blue">General Manager (Level 2)</Chip>
+              <Chip variant="blue">General Manager</Chip>
             ) : (
-              <Chip variant="gray">Staff Pelaksana (Level 1)</Chip>
+              <Chip variant="gray">Staff Pelaksana</Chip>
             )}
 
             {profileData.isOfficialSigner && (
@@ -70,15 +58,15 @@ export default async function ProfilePage() {
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                 <div>
-                  <span className="text-xs text-neutral-500 font-semibold uppercase tracking-wider block">Unit Kerja</span>
+                  <span className="text-xs text-neutral-500 font-semibold uppercase tracking-wider block">Lingkup Kerja</span>
                   <span className="font-medium text-neutral-900 mt-1 block">
-                    {profileData.unit ? `${profileData.unit.name} (${profileData.unit.code})` : 'Belum Ditugaskan'}
+                    {profileData.position?.code === 'SM' || profileData.position?.code === 'DIR' ? 'Seluruh organisasi' : profileData.unit ? `${profileData.unit.name} (${profileData.unit.code})` : 'Belum ditugaskan'}
                   </span>
                 </div>
                 <div>
-                  <span className="text-xs text-neutral-500 font-semibold uppercase tracking-wider block">Jabatan & Level Hierarki</span>
+                  <span className="text-xs text-neutral-500 font-semibold uppercase tracking-wider block">Jabatan</span>
                   <span className="font-medium text-neutral-900 mt-1 block">
-                    {profileData.position ? `${profileData.position.name} (Level ${profileData.position.level})` : 'Staf'}
+                    {profileData.position ? profileData.position.name : 'Staf'}
                   </span>
                 </div>
                 <div>
@@ -96,7 +84,7 @@ export default async function ProfilePage() {
               </div>
 
               <div className="p-3 bg-neutral-50 rounded-lg border border-[#EEEEEA] text-xs text-neutral-600 mt-4 leading-relaxed">
-                <b>Catatan Sistem:</b> SIADocs tidak menyimpan gambar tanda tangan atau stempel pada profil. Tanda tangan dokumen selalu dilakukan di luar sistem oleh pejabat penandatangan yang sah. Perubahan unit kerja atau jabatan hanya dapat dilakukan oleh Super Admin melalui Master Organisasi.
+                Tanda tangan dapat dilakukan oleh pejabat berwenang melalui SIADocs atau dengan mengunduh surat untuk tanda tangan basah. Gambar tanda tangan dalam aplikasi bukan tanda tangan elektronik tersertifikasi. Stempel bersifat opsional. Perubahan penugasan dikelola melalui Master Organisasi.
               </div>
             </CardContent>
           </Card>
