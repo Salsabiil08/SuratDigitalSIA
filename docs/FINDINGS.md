@@ -2,7 +2,9 @@
 
 Lihat [readiness ringkas](plans/PR08_READINESS.md) dan [runbook](plans/PR08_PRODUCTION_RUNBOOK.md). Production tidak diubah. Blocker nyata: Supabase staging belum ada (branching memerlukan Pro), UAT Auth/Storage lintas akun, keputusan wajib perusahaan dan backup/restore staging.
 
-Perbaikan final: Next 15.5.29/PostCSS 8.5.33 (audit production 0), async request APIs, staging menolak URL production, role UI tanpa persona/mandat admin otomatis, error login jaringan dan cleanup profil nonaktif, serta migrasi aditif grant workflow/TRUNCATE. Delapan migrasi forward diuji pada PostgreSQL 17 dengan 13 surat sintetis, grant mirip production, rollback/fault/replay dan integritas counter/audit.
+Perbaikan final: Next 15.5.29/PostCSS 8.5.33 (audit production 0), async request APIs, staging menolak URL production, role UI tanpa persona/mandat admin otomatis, error login jaringan dan cleanup profil nonaktif, serta migrasi aditif grant workflow/TRUNCATE dan validasi unit/jabatan aktif dengan tanggal WIB. Delapan migrasi forward diuji pada PostgreSQL 17 dengan 13 surat sintetis, grant mirip production, rollback/fault/replay dan integritas counter/audit.
+
+[Draft PR-08 #9](https://github.com/Salsabiil08/SuratDigitalSIA/pull/9); CI integrasi #45 lulus check/db/browser-public. Bukti dan keterbatasan staging tetap dalam readiness; CI hijau tidak membatalkan NO-GO.
 
 ## Snapshot PR-07 (historis)
 

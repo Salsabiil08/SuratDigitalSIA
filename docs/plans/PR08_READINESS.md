@@ -18,6 +18,10 @@
 | UAT nyata lengkap | **BLOCKED/NOT RUN**: login lintas akun, Auth/Storage/API/URL ilegal, seluruh alur privat, mobile/desktop sesudah login, retry dan jaringan gagal pada layanan staging nyata. Tes SQL/mocked/SSR tidak menggantikan UAT ini. |
 | Production | Tetap deployment `dpl_4aVP7FGF4i9eJhqARNu65dZtckZc`, main `4e0c0c661af58dd6db729c202643cd6629f7eb07`. Tidak merge/deploy/apply migration/seed/repair/reset atau mengubah Auth/Storage production. |
 
+## Bukti publikasi
+
+[Draft PR-08 #9](https://github.com/Salsabiil08/SuratDigitalSIA/pull/9) mengintegrasikan stack ke `main`, dengan delta final tetap berbasis PR-07. [CI integrasi #45](https://github.com/Salsabiil08/SuratDigitalSIA/actions/runs/44313059396) lulus ketiga job; [artefak browser desktop/mobile](https://github.com/Salsabiil08/SuratDigitalSIA/actions/runs/44313059396/artifacts/14431147142). Patch tambahan penugasan organisasi/WIB juga lulus ulang lokal 244 tes, PostgreSQL dan forward; status CI head terkini harus hijau pada tab Checks sebelum release. Merge-tree ke main tanpa konflik, seluruh delapan head draft adalah ancestor PR-08.
+
 ## Delta database dan bukti yang dapat diulang
 
 Awal branch 21 file: 6 fondasi sudah ada secara schema tetapi tidak tercatat history, 8 history production, 7 perubahan PR-01–07 belum terpasang. PR-08 menambah **1 migrasi keamanan**, sehingga total **22 file**; forward = **8**. History setelah forward terkontrol = 16, bukan 22: enam fondasi **tidak direplay atau direpair otomatis**. Jalur CLI migration up/db push umum belum aman untuk history ini.

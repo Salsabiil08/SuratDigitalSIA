@@ -149,5 +149,24 @@
     "status": "BLOCKED",
     "reason": "Branching requires Pro; organization choice required for separate project"
   },
-  "decision": "NO_GO"
+  "decision": "NO_GO",
+  "pr08": {
+    "number": 9,
+    "url": "https://github.com/Salsabiil08/SuratDigitalSIA/pull/9",
+    "base": "main",
+    "source_base": "feat/pr-07-disposition-integration",
+    "initial_ci": {
+      "run_id": 44313059396,
+      "commit": "0fc88f954859774be31d4140bb7a480565d24645",
+      "conclusion": "success",
+      "jobs": [
+        "check",
+        "db",
+        "browser-public"
+      ]
+    },
+    "head_checks_required": true,
+    "merge_tree": "no conflict",
+    "production_changed": false
+  }
 }

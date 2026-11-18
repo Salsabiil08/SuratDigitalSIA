@@ -81,7 +81,7 @@ Status: PR-00–07 selesai dalam draft; PR-08 FINAL disetujui pada 18 November 2
 - [x] Vercel staging terpisah tanpa deploy/secret production; template/preflight siap.
 - [ ] Supabase staging: pilihan organisasi/proyek terpisah masih diperlukan; branching ditolak paket.
 - [ ] UAT Auth/Storage lintas akun dan sign-off kebijakan wajib perusahaan.
-- [ ] Draft PR-08 integrasi, CI akhir, laporan NO-GO dan runbook.
+- [x] [Draft PR-08 #9](https://github.com/Salsabiil08/SuratDigitalSIA/pull/9), CI integrasi #45 hijau, laporan NO-GO dan runbook; wajib verifikasi ulang Checks pada head release.
 
 Tidak membuat fase PR-09. Production/merge/deploy menunggu persetujuan baru.
 
