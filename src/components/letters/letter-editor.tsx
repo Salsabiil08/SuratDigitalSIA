@@ -68,6 +68,7 @@ export function LetterEditor({
   billing = false,
   id,
   dispositionId,
+  dispositionSeed,
   initialOptions,
   initialData,
 }: {
@@ -75,6 +76,7 @@ export function LetterEditor({
   billing?: boolean;
   id?: string;
   dispositionId?: string;
+  dispositionSeed?:{dispositionId:string;recipientId:string;subject:string};
   initialOptions: Awaited<ReturnType<typeof getWorkflowOptions>>;
   initialData?: Awaited<ReturnType<typeof getWorkflowLetter>>;
 }) {
@@ -89,10 +91,10 @@ export function LetterEditor({
           reviewerId: "",
           dispositionId,
           letterTypeCode: billing ? "Tag" : "IN",
-          subject: "",
+          subject: dispositionSeed?.subject||"",
           letterDate: jakartaDate(),
           dateReason: "",
-          recipientUserId: "",
+          recipientUserId: dispositionSeed?.recipientId||"",
           recipientName: "",
           recipientOrg: "",
           recipientAddress: "",
@@ -173,6 +175,7 @@ export function LetterEditor({
         mandatoryApproverIds: input.mandatoryApproverIds?.slice(0,count) || ids,
         areas: currentFormat === "PDF" ? input.areas.slice(0, count) : [],
       };
+      if(dispositionSeed&&!input.id){const keyName=`siadocs-disposition-draft-${dispositionSeed.dispositionId}`;let key=sessionStorage.getItem(keyName);if(!key){key=crypto.randomUUID();sessionStorage.setItem(keyName,key);}data.dispositionDraftKey=key;}
       const form = new FormData();
       form.set("data", JSON.stringify(data));
       if (file) form.set("file", file);
@@ -183,6 +186,7 @@ export function LetterEditor({
       });
       const result = await res.json();
       if (!res.ok) throw new Error(result.error);
+      if(dispositionSeed)sessionStorage.removeItem(`siadocs-disposition-draft-${dispositionSeed.dispositionId}`);
       router.push(`/surat/${result.id}${preview ? "?preview=1" : ""}`);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Draft gagal disimpan.");
@@ -206,6 +210,7 @@ export function LetterEditor({
                 : "Buat Surat"
         }
       />
+      {dispositionSeed&&<p className="text-sm border rounded-xl p-3">Surat hasil baru untuk pemberi disposisi. Selesaikan alur surat dan kirim resmi sebelum mengajukan hasil. <Link className="text-brand-red underline" href={`/disposisi?tugas=${dispositionSeed.dispositionId}`}>Kembali ke Disposisi</Link></p>}
       {initialData?.replyContext.links.filter(r=>r.direction==='ORIGIN').map(r=><p key={r.id} className="text-sm border rounded-xl p-3">Balasan untuk surat {r.officialNumber||r.letterId}. Penerima tetap pengirim resmi surat asal. <Link prefetch={false} className="text-brand-red underline" href={`/surat/${r.letterId}`}>Buka Surat Asal</Link></p>)}
       <p className="text-sm text-neutral-600">
         Buat/Impor → Pratinjau dan Koreksi → Pemeriksaan jika diperlukan → Persetujuan → Nomor Resmi → TTD →
@@ -303,7 +308,7 @@ export function LetterEditor({
             >
               <Select
                 id="recipient-user"
-                disabled={!!initialData?.replyContext.links.some(r=>r.direction==='ORIGIN')}
+                disabled={!!dispositionSeed||!!initialData?.dispositionContext.tasks.some(t=>t.isResult)||!!initialData?.replyContext.links.some(r=>r.direction==='ORIGIN')}
                 value={input.recipientUserId}
                 onChange={(e) => change("recipientUserId", e.target.value)}
                 required

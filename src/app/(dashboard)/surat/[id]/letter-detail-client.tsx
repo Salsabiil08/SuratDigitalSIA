@@ -1,4 +1,5 @@
 "use client";
+import {DispositionLetterPanel} from "@/components/letters/disposition-letter-panel";
 import {OfficialReplyPanel} from "@/components/letters/official-reply-panel";
 import { decideReviewAction } from "@/server/actions/reviews";
 import { sendInternalLetterAction,receiveInternalLetterAction } from "@/server/actions/delivery";
@@ -89,6 +90,7 @@ export function LetterDetailClient({
       </Link>
       <PageHeader title={l.subject} actions={<Button variant="secondary" disabled={busy} onClick={reload}>Perbarui</Button>}/>
       <OfficialReplyPanel letterId={id} context={data.replyContext}/>
+      <DispositionLetterPanel letterId={id} context={data.dispositionContext}/>
       {error && (
         <p
           role="alert"

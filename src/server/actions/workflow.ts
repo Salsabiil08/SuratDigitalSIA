@@ -1,4 +1,5 @@
 "use server";
+import {readDispositionLetterContext} from "@/server/disposition-integration";
 import {readReplyContext} from "@/server/official-replies";
 import { requireUser } from "@/server/auth";
 import { createClient } from "@/lib/supabase/server";
@@ -69,6 +70,7 @@ export async function getWorkflowLetter(id: string) {
   if(delivery?.ccEnabled&&delivery?.canDispatch){const {data:ccPeople,error:cce}=await db.from('profiles').select('id,full_name').eq('is_active',true);if(cce)throw new Error('Penerima tembusan belum dapat diambil.');ccOptions=ccPeople||[];}
   const replyContext=await readReplyContext(id);
   return {
+    dispositionContext:await readDispositionLetterContext(id),
     replyContext,
     ccOptions,
     delivery,

@@ -80,3 +80,46 @@ begin
 end $$;
 SQL
 echo "BALASAN KONKUREN LULUS: 20 retry buat dan kirim, satu surat/relasi/status/audit"
+# PR-07: disposisi existing dari pengiriman resmi, kunci sama pada 20 retry.
+$PSQL <<'SQL'
+create table test_support.disposition_target(source_id uuid,task_id uuid);
+do $$ declare ds uuid;begin ds:=test_support.disposition_origin('a0000000-0000-0000-0000-000000000006','a0000000-0000-0000-0000-000000000004');insert into test_support.disposition_target(source_id) select letter_id from internal_dispatches where id=ds;end $$;
+SQL
+seq 1 20 | xargs -P 20 -I{} $PSQL -c "select disposition_workflow('a0000000-0000-0000-0000-000000000004','CREATE',null,null,jsonb_build_object('recipientId','a0000000-0000-0000-0000-000000000005','subject','Konkurensi disposisi','instruction','Catatan hasil','priority','NORMAL','requiresLetter',false,'letterId',source_id,'operationKey','b0000000-0000-0000-0000-000000000007')) from test_support.disposition_target" >/dev/null
+$PSQL <<'SQL'
+update test_support.disposition_target set task_id=(select disposition_id from disposition_operations where operation_key='b0000000-0000-0000-0000-000000000007');
+SQL
+seq 1 20 | xargs -P 20 -I{} $PSQL -c "select disposition_workflow('a0000000-0000-0000-0000-000000000005','SUBMIT',task_id,0,jsonb_build_object('note','Hasil konkuren','operationKey','b0000000-0000-0000-0000-000000000008')) from test_support.disposition_target" >/dev/null
+seq 1 20 | xargs -P 20 -I{} $PSQL -c "select disposition_workflow('a0000000-0000-0000-0000-000000000004','ACCEPT',task_id,1,jsonb_build_object('note','Sesuai','operationKey','b0000000-0000-0000-0000-000000000009')) from test_support.disposition_target" >/dev/null
+$PSQL <<'SQL'
+do $$
+declare t uuid;
+begin
+ select task_id into t from test_support.disposition_target;
+ assert(select status='DONE' from dispositions where id=t);
+ assert(select count(*)=1 from disposition_submissions where disposition_id=t);
+ assert(select count(*)=1 from disposition_decisions d join disposition_submissions s on s.id=d.submission_id where s.disposition_id=t);
+ assert(select count(*)=1 from audit_logs where entity_id=t::text and action='DISPOSITION_CREATE');
+ assert(select count(*)=1 from audit_logs where entity_id=t::text and action='DISPOSITION_SUBMIT');
+ assert(select count(*)=1 from audit_logs where entity_id=t::text and action='DISPOSITION_ACCEPT');
+ assert(select count(*)=3 from notifications where disposition_id=t);
+end $$;
+SQL
+echo "DISPOSISI KONKUREN LULUS: 20 retry buat/ajukan/terima, satu tugas/pengajuan/keputusan/event"
+$PSQL <<'SQL'
+create table test_support.disposition_result_target(task_id uuid);
+insert into test_support.disposition_result_target select disposition_workflow('a0000000-0000-0000-0000-000000000004','CREATE',null,null,jsonb_build_object('recipientId','a0000000-0000-0000-0000-000000000005','subject','Surat hasil konkuren','instruction','Siapkan surat hasil','priority','NORMAL','requiresLetter',true,'letterId',source_id,'operationKey','b0000000-0000-0000-0000-000000000010')) from test_support.disposition_target;
+SQL
+seq 1 20 | xargs -P 20 -I{} $PSQL -c "select test_support.disposition_result('a0000000-0000-0000-0000-000000000005',task_id,'b0000000-0000-0000-0000-000000000011') from test_support.disposition_result_target" >/dev/null
+$PSQL <<'SQL'
+do $$ declare t uuid;l uuid;begin
+ select task_id into t from test_support.disposition_result_target;
+ select response_letter_id into l from dispositions where id=t;
+ assert(select count(*)=1 from disposition_result_links where disposition_id=t);
+ assert(select count(*)=1 from letter_versions where letter_id=l);
+ assert(select count(*)=1 from audit_logs where letter_id=l and action='DISPOSITION_LETTER_SAVED');
+ assert(select status='IN_PROGRESS' from dispositions where id=t);
+ assert not exists(select 1 from disposition_submissions where disposition_id=t);
+end $$;
+SQL
+echo "DRAF HASIL KONKUREN LULUS: 20 retry, satu surat/versi/relasi; tugas belum selesai"

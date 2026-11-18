@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import React,{ useState,useEffect } from "react";
 import Link from "next/link";
 import { PageHeader } from "@/components/ui/page-header";
 import { Card } from "@/components/ui/card";
@@ -24,20 +24,25 @@ const priorities = { NORMAL: "Biasa", IMPORTANT: "Penting", URGENT: "Segera" };
 export function DisposisiClient({
   initialData,
   initialError,
+  sourceLetterId,
+  selectedTaskId,
 }: {
   initialData: DispositionsData;
   initialError?: string;
+  sourceLetterId?:string;
+  selectedTaskId?:string;
 }) {
   const [data, setData] = useState(initialData),
     [tab, setTab] = useState<"INBOX" | "OUTBOX">(
-      initialData.canReceiveDisposition ? "INBOX" : "OUTBOX",
+      selectedTaskId&&initialData.outbox.some(d=>d.id===selectedTaskId)?"OUTBOX":initialData.canReceiveDisposition ? "INBOX" : "OUTBOX",
     );
-  const [show, setShow] = useState(false),
+  const source=initialData.availableLetters.find(l=>l.id===sourceLetterId);
+  const [show, setShow] = useState(!!source),
     [selected, setSelected] = useState<DispositionItem | null>(null),
     [note, setNote] = useState(""),
     [busy, setBusy] = useState(false),
     [message, setMessage] = useState(initialError || "");
-  const [subject, setSubject] = useState(""),
+  const [subject, setSubject] = useState(source?`Tindak lanjut: ${source.subject}`:""),
     [instruction, setInstruction] = useState(""),
     [recipientId, setRecipient] = useState(""),
     [unit, setUnit] = useState(""),
@@ -45,10 +50,14 @@ export function DisposisiClient({
       "NORMAL",
     ),
     [dueDate, setDue] = useState(""),
-    [requiresLetter, setRequires] = useState(true),
-    [letterId, setLetter] = useState("");
+    [requiresLetter, setRequires] = useState(false),
+    [letterId, setLetter] = useState(source?.id||"");
+  const [attachmentIds,setAttachmentIds]=useState<string[]>([]);
+  function intent(scope:string,payload:unknown){const slot=`siadocs-disp-${scope}`;const value=JSON.stringify(payload);const old=JSON.parse(sessionStorage.getItem(slot)||'null');if(old?.value===value&&old?.key)return old.key as string;const key=crypto.randomUUID();sessionStorage.setItem(slot,JSON.stringify({key,value}));return key;}
+  useEffect(()=>{setData(initialData);},[initialData]);
+  useEffect(()=>{if(selectedTaskId)document.getElementById(`disposisi-${selectedTaskId}`)?.scrollIntoView({block:'center'});},[selectedTaskId]);
   async function refresh() {
-    const res = await getDispositionsAction();
+    const res = await getDispositionsAction(sourceLetterId);
     if (!res.success) throw new Error(res.error);
     setData(res.data);
   }
@@ -64,10 +73,12 @@ export function DisposisiClient({
         revision: d.revision,
         action,
         note,
+        operationKey:intent(`action-${d.id}`,{revision:d.revision,action,note,attachmentIds}),
+        attachmentIds,
       });
       if (!r.success) throw new Error(r.error);
       setSelected(null);
-      setNote("");
+      setNote("");setAttachmentIds([]);
       await refresh();
       setMessage(
         action === "SUBMIT"
@@ -89,7 +100,9 @@ export function DisposisiClient({
     setBusy(true);
     setMessage("");
     try {
+      const payload={recipientId,subject,instruction,priority,dueDate:dueDate||undefined,requiresLetter,letterId:letterId||undefined};
       const r = await createDispositionAction({
+        operationKey:intent('create',payload),
         recipientId,
         subject,
         instruction,
@@ -103,7 +116,7 @@ export function DisposisiClient({
       setSubject("");
       setInstruction("");
       setLetter("");
-      setRequires(true);
+      setRequires(false);sessionStorage.removeItem('siadocs-disp-create');
       setTab("OUTBOX");
       await refresh();
       setMessage(
@@ -138,6 +151,8 @@ export function DisposisiClient({
         dikirim kembali kepada pemberi untuk diperiksa, diperbaiki bila perlu,
         lalu diterima.
       </p>
+      {sourceLetterId&&!source&&<p role="alert" className="text-sm text-red-700">Surat ini tidak tersedia untuk dibuatkan disposisi oleh akun Anda.</p>}
+      {selectedTaskId&&![...data.inbox,...data.outbox].some(d=>d.id===selectedTaskId)&&<p role="alert" className="text-sm text-red-700">Disposisi tidak tersedia untuk akun Anda.</p>}
       {message && (
         <div role="status" className="rounded-xl border bg-white p-3 text-sm">
           {message}
@@ -163,13 +178,13 @@ export function DisposisiClient({
           </Button>
         )}
       </div>
-      {!list.length && (
+      {!list.length && !initialError && (
         <Card className="p-8 text-center text-sm text-neutral-500">
           Belum ada disposisi {tab === "INBOX" ? "masuk" : "keluar"}.
         </Card>
       )}
       {list.map((d) => (
-        <Card key={d.id} className="p-5 space-y-3">
+        <Card id={`disposisi-${d.id}`} key={d.id} className="p-5 space-y-3">
           <div className="flex flex-wrap items-center gap-2">
             <b>{d.subject}</b>
             <Chip variant={d.status === "DONE" ? "green" : "blue"}>
@@ -193,6 +208,7 @@ export function DisposisiClient({
               Lihat surat acuan {d.letterNumber}
             </Link>
           )}
+          {!d.sourceAccessible&&d.integrated&&<p className="text-xs text-neutral-500">Akses dokumen acuan diperiksa terpisah; penugasan tidak otomatis membukanya.</p>}
           {d.responseLetterId && (
             <div>
               <Link
@@ -214,6 +230,11 @@ export function DisposisiClient({
               <b>Catatan pemeriksaan:</b> {d.reviewNote}
             </p>
           )}
+          {d.integrated&&<div className="space-y-2 text-sm"><p>Hasil: catatan wajib. {d.requiresLetter||d.responseLetterId?'Surat hasil wajib final dan dikirim resmi kepada pemberi.':'Lampiran dan surat hasil opsional sesuai arahan.'} Draf belum menyelesaikan tugas.</p>
+          {d.files.map(f=><p key={f.id}><a className="text-brand-red underline" href={`/api/dispositions/${d.id}/attachments/${f.id}`}>Unduh lampiran hasil — {f.file_name}</a></p>)}
+          {tab==='INBOX'&&['NEW','IN_PROGRESS','REVISION_REQUESTED'].includes(d.status)&&<label className="block">Tambah lampiran PDF/DOCX (maks. 1 MB)<input type="file" accept=".pdf,.docx" disabled={busy} onChange={async e=>{const f=e.target.files?.[0];if(!f)return;setBusy(true);try{const form=new FormData();form.set('file',f);form.set('key',intent(`upload-${d.id}`,{name:f.name,size:f.size,modified:f.lastModified}));const res=await fetch(`/api/dispositions/${d.id}/attachments`,{method:'POST',body:form});const j=await res.json();if(!res.ok)throw new Error(j.error);await refresh();setMessage('Lampiran hasil tersimpan; belum diajukan untuk pemeriksaan.');}catch(err){setMessage(err instanceof Error?err.message:'Unggah gagal.');}finally{setBusy(false);e.target.value='';}}}/></label>}
+          {d.submissions.map(s=><div key={s.id} className="border rounded-xl p-3"><p>Hasil diajukan: {new Date(s.created_at).toLocaleString('id-ID')} — {s.note}</p>{s.decision&&<p>{s.decision.decision==='RETURN'?'Perlu Perbaikan':'Diterima / Selesai'}: {s.decision.note||'Hasil diterima'} — {new Date(s.decision.created_at).toLocaleString('id-ID')}</p>}</div>)}
+          </div>}
           <div className="flex flex-wrap gap-2">
             {tab === "INBOX" &&
               ["NEW", "IN_PROGRESS", "REVISION_REQUESTED"].includes(
@@ -252,18 +273,18 @@ export function DisposisiClient({
                   )}
                   <Button
                     size="sm"
-                    disabled={busy || (d.requiresLetter && !d.responseFinal)}
+                    disabled={busy || ((d.requiresLetter || (d.integrated&&!!d.responseLetterId)) && !d.responseFinal)}
                     onClick={() => {
                       setSelected(d);
-                      setNote(d.followUpNote || "");
+                      setNote(d.followUpNote || "");setAttachmentIds(d.files.map(f=>f.id));
                     }}
                   >
                     Kirim Hasil untuk Diperiksa
                   </Button>
-                  {d.requiresLetter && !d.responseFinal && (
+                  {(d.requiresLetter||(d.integrated&&!!d.responseLetterId)) && !d.responseFinal && (
                     <p className="w-full text-xs text-neutral-500">
                       Simpan, ajukan, dan selesaikan surat tindak lanjut
-                      terlebih dahulu. Nomor serta pengesahan mengikuti alur
+                      dan kirim resmi kepada pemberi terlebih dahulu. Nomor serta pengesahan mengikuti alur
                       surat biasa.
                     </p>
                   )}
@@ -328,6 +349,7 @@ export function DisposisiClient({
                 maxLength={5000}
               />
             </Field>
+            {tab==='INBOX'&&selected.integrated&&selected.files.length>0&&<fieldset className="text-sm"><legend>Lampiran yang disertakan pada pengajuan ini</legend>{selected.files.map(f=><label key={f.id} className="block"><input type="checkbox" checked={attachmentIds.includes(f.id)} onChange={e=>setAttachmentIds(ids=>e.target.checked?[...ids,f.id]:ids.filter(id=>id!==f.id))}/> {f.file_name}</label>)}</fieldset>}
             <div className="flex flex-wrap justify-end gap-2">
               <Button
                 variant="secondary"

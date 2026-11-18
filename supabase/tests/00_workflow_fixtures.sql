@@ -38,3 +38,16 @@ begin
  'recipientUserId',(select sender_id from internal_dispatches where id=p_origin),'signatureMode','IN_APP','signerIds',to_jsonb(p_signers),'areas','[]'::jsonb,'content','Isi balasan fixture','replyToDispatchId',p_origin,'replyKey',p_key),
  jsonb_build_object('path',p_actor::text||'/reply-'||p_key::text||'.docx','format','DOCX','hash','reply-fixture-hash'));
 end $$;
+-- PR-07 helpers hanya database uji sementara.
+create function test_support.disposition_origin(p_actor uuid,p_recipient uuid,p_cc uuid[] default '{}') returns uuid language plpgsql as $$
+declare l uuid;rev integer;v letter_versions;
+begin
+ l:=save_letter_draft(p_actor,jsonb_build_object('source','CREATE','letterTypeCode','IN','categoryCode','PEMBERITAHUAN','subject','Asal disposisi','letterDate',(now() at time zone 'Asia/Jakarta')::date,'recipientUserId',p_recipient,'signatureMode','IN_APP','signerIds','[]'::jsonb,'areas','[]'::jsonb,'content','Surat sumber'),jsonb_build_object('path',p_actor::text||'/source.docx','format','DOCX','hash','source-test'));
+ perform test_support.submit(p_actor,l);perform test_support.number(p_actor,l,'disposition-number-'||l::text);select revision into rev from letters where id=l;perform finalize_letter(p_actor,l,rev,false);
+ select * into v from letter_versions where id=(select current_version_id from letters where id=l);
+ return dispatch_internal_letter(p_actor,l,v.id,v.file_hash,'disposition-source-send-'||l::text,p_cc);
+end $$;
+create function test_support.disposition_result(p_actor uuid,p_task uuid,p_key uuid) returns uuid language plpgsql as $$
+begin
+ return save_letter_draft(p_actor,jsonb_build_object('source','CREATE','letterTypeCode','IN','categoryCode','PEMBERITAHUAN','subject','Hasil disposisi','letterDate',(now() at time zone 'Asia/Jakarta')::date,'recipientUserId',(select giver_id from dispositions where id=p_task),'signatureMode','IN_APP','signerIds','[]'::jsonb,'areas','[]'::jsonb,'content','Surat hasil','dispositionId',p_task,'dispositionDraftKey',p_key),jsonb_build_object('path',p_actor::text||'/result.docx','format','DOCX','hash','result-test'));
+end $$;

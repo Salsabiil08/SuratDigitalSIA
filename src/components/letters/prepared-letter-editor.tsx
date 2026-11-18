@@ -1,3 +1,4 @@
+import {readDispositionDraftSeed} from "@/server/disposition-integration";
 import { LetterEditor } from "./letter-editor";
 import {
   getWorkflowOptions,
@@ -20,8 +21,9 @@ export async function PreparedLetterEditor(props: {
         !["DRAFT", "REVISION_REQUESTED"].includes(data.letter.status))
     )
       throw new Error("Surat ini sudah terkunci untuk pengeditan.");
+    const dispositionSeed=props.dispositionId?await readDispositionDraftSeed(props.dispositionId):undefined;
     return (
-      <LetterEditor {...props} initialOptions={options} initialData={data} />
+      <LetterEditor {...props} dispositionSeed={dispositionSeed} initialOptions={options} initialData={data} />
     );
   } catch (e) {
     return (
