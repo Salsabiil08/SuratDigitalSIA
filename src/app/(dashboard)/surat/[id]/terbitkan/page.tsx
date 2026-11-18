@@ -7,6 +7,7 @@ import { PageHeader } from "@/components/ui/page-header";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Chip } from "@/components/ui/chip";
+import { getWorkflowLetter } from "@/server/actions/workflow";
 import { issueLetterNumberAction } from "@/server/actions/approvals";
 
 export default function KonfirmasiPenerbitanPage() {
@@ -14,6 +15,14 @@ export default function KonfirmasiPenerbitanPage() {
   const router = useRouter();
   const letterId = params?.id as string;
 
+  const [record,setRecord]=React.useState<Awaited<ReturnType<typeof getWorkflowLetter>>|null>(null);
+  React.useEffect(()=>{let active=true;getWorkflowLetter(letterId).then(v=>{if(active)setRecord(v);}).catch(()=>{if(active)setErrorMsg('Syarat penerbitan belum dapat diambil.');});return()=>{active=false;};},[letterId]);
+  const letter=record?.letter;
+  const currentApprovals=record?.approvals.filter(a=>a.version_id===letter?.approval_plan_version&&a.cycle===letter?.approval_cycle)||[];
+  const approved=currentApprovals.filter(a=>a.status==='APPROVED').length;
+  const needed=letter?.approval_plan?.length;
+  const hasVersion=!!record?.versions.some(v=>v.id===letter?.current_version_id&&!!v.file_hash);
+  const ready=!!record?.isCreator&&hasVersion&&(letter?.status==='READY_TO_ISSUE'&&needed!=null&&approved===needed||letter?.status==='NUMBERED');
   const [isLoading, setIsLoading] = React.useState(false);
   const [errorMsg, setErrorMsg] = React.useState("");
   const [issuedNumber, setIssuedNumber] = React.useState<string | null>(null);
@@ -129,29 +138,19 @@ export default function KonfirmasiPenerbitanPage() {
                 <span className="text-neutral-500 text-xs">
                   Persetujuan Wajib:
                 </span>
-                <span className="font-semibold text-emerald-700 flex items-center gap-1.5 text-xs">
-                  <span className="w-4 h-4 rounded-full bg-emerald-100 flex items-center justify-center font-bold text-[10px]">
-                    ✓
-                  </span>
-                  Lengkap & Disetujui
-                </span>
+                <span className="font-semibold text-xs">{needed==null?'Pengajuan perlu disiapkan':`${approved} dari ${needed} keputusan selesai pada versi pengajuan`}</span>
               </div>
               <div className="flex justify-between py-2 border-b border-[#EEEEEA]">
                 <span className="text-neutral-500 text-xs">
                   Dokumen Bukti Surat:
                 </span>
-                <span className="font-semibold text-emerald-700 flex items-center gap-1.5 text-xs">
-                  <span className="w-4 h-4 rounded-full bg-emerald-100 flex items-center justify-center font-bold text-[10px]">
-                    ✓
-                  </span>
-                  Terunggah & Terverifikasi
-                </span>
+                <span className="font-semibold text-xs">{hasVersion?'Versi dokumen tercatat; integritas diperiksa server saat penerbitan':'Versi dokumen belum tersedia'}</span>
               </div>
               <div className="flex justify-between py-2 border-b border-[#EEEEEA]">
                 <span className="text-neutral-500 text-xs">
                   Status Prasyarat:
                 </span>
-                <Chip variant="blue">Siap Diberi Nomor</Chip>
+                <Chip variant={ready?"blue":"amber"}>{ready?"Prasyarat tercatat":"Belum siap diterbitkan"}</Chip>
               </div>
               <div className="flex justify-between py-2 border-b border-[#EEEEEA]">
                 <span className="text-neutral-500 text-xs">
@@ -166,7 +165,7 @@ export default function KonfirmasiPenerbitanPage() {
 
           <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-900 leading-relaxed">
             <b>Peringatan Integritas Nomor:</b> Penomoran bersifat unik, atomik,
-            dan tidak dapat dibatalkan atau diedit. Sekali diterbitkan, nomor
+            dan nomornya tidak dapat dipakai ulang atau diedit. Sekali diterbitkan, nomor
             surat akan tercatat permanen pada sistem dan tidak akan pernah
             digunakan kembali sekalipun surat dibatalkan.
           </div>
@@ -182,6 +181,7 @@ export default function KonfirmasiPenerbitanPage() {
               variant="primary"
               size="md"
               isLoading={isLoading}
+              disabled={!ready}
               onClick={handleIssueNumber}
             >
               Konfirmasi & Terbitkan Nomor Sekarang

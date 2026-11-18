@@ -7,6 +7,7 @@ import {
   getWorkflowLetter,
   reviewLetterAction,
   finalizeLetterAction,
+  restartApprovalAction,
 } from "@/server/actions/workflow";
 import { issueLetterNumberAction } from "@/server/actions/approvals";
 import { cancellationAction } from "@/server/actions/cancellations";
@@ -30,12 +31,14 @@ export function LetterDetailClient({
   const [busy, setBusy] = useState(false);
   const [external, setExternal] = useState(false);
   const [previewed, setPreviewed] = useState(false);
+  const [confirmSelf,setConfirmSelf]=useState(false);
   const [note, setNote] = useState("");
   const reload = useCallback(async () => {
     try {
       const result = await getWorkflowLetter(id);
       setData(result);
       setPreviewed(false);
+      setConfirmSelf(false);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Surat tidak tersedia.");
     }
@@ -62,9 +65,10 @@ export function LetterDetailClient({
   const v = data.versions.find((v) => v.id === l.current_version_id);
   const editable =
     data.isCreator && ["DRAFT", "REVISION_REQUESTED"].includes(l.status);
+  const creatorApprovalRequired = [...(l.mandatory_approver_ids || l.signer_ids || []),...(l.additional_approver_ids || [])].includes(data.userId);
   const activeReview = data.reviews.find(r => r.reviewer_id === data.userId && r.status === 'PENDING' && r.version_id === l.current_version_id && l.review_status === 'WAITING');
   const activeApproval = data.approvals.find(
-    (a) => a.approver_id === data.userId && a.status === "PENDING",
+    (a) => a.approver_id === data.userId && a.status === "PENDING" && a.version_id===l.current_version_id && a.cycle===l.approval_cycle,
   );
   const signing = data.signatures.find(
     (s) => s.signer_id === data.userId && s.status === "PENDING",
@@ -203,12 +207,13 @@ export function LetterDetailClient({
             >
               Konfirmasi Pratinjau
             </Button>
+            {creatorApprovalRequired && ["PASSED","NOT_REQUIRED"].includes(l.review_status) && <label className="text-sm flex items-start gap-2"><input type="checkbox" checked={confirmSelf} onChange={e=>setConfirmSelf(e.target.checked)}/>Saya mengajukan dan menyetujui versi ini sesuai kewenangan saya. Persetujuan pejabat lain, nomor resmi, dan tanda tangan tetap melalui tahapnya.</label>}
             <Button
               disabled={l.previewed_revision !== l.revision}
               isLoading={busy}
               onClick={() =>
                 act(
-                  () => reviewLetterAction(id, "SUBMIT", l.revision),
+                  () => reviewLetterAction(id, "SUBMIT", l.revision, undefined, confirmSelf),
                   "Surat berhasil diajukan sesuai alur kewenangan.",
                 )
               }
@@ -247,6 +252,8 @@ export function LetterDetailClient({
         <div className="flex gap-3 flex-wrap">{([['COMMENT','Simpan Catatan'],['PASS','Lolos Pemeriksaan'],['REQUEST_REVISION','Minta Perbaikan']] as const).map(([action,label]) =>
           <Button key={action} disabled={!previewed} isLoading={busy} variant={action === 'PASS' ? 'primary' : 'secondary'} onClick={() => act(() => decideReviewAction(activeReview.id, activeReview.version_id, l.revision, action, note), 'Hasil pemeriksaan tersimpan.')}>{label}</Button>)}</div>
       </Card>}
+      {data.approvals.length>0 && <Card className="p-5 space-y-2"><h2 className="font-bold">Riwayat Persetujuan</h2>{data.approvals.map(a=><p key={a.id} className="text-sm">Tahap {a.step_order}: {a.approver?.full_name} — {displayLabel(a.status)}{a.version_id!==l.current_version_id?' (versi sebelumnya)':''}{a.decision_origin==='CREATOR_SUBMISSION'?' — dikonfirmasi pembuat saat pengajuan':''}</p>)}</Card>}
+      {data.isCreator && !l.official_number && !l.finalized_at && ['IN_REVIEW','READY_TO_ISSUE'].includes(l.status) && <Card className="p-5 space-y-3"><h2 className="font-bold">Koreksi Pengajuan</h2><p className="text-sm">Tarik pengajuan untuk menyimpan versi koreksi. Keputusan lama tetap tercatat dan tidak berlaku untuk versi baru.</p><textarea aria-label="Alasan koreksi" className="border rounded-xl p-3 w-full" value={note} onChange={e=>setNote(e.target.value)}/><Button variant="secondary" isLoading={busy} onClick={()=>act(()=>restartApprovalAction(id,l.revision,note),'Pengajuan ditarik. Edit dan simpan versi baru sebelum mengajukan kembali.')}>Tarik untuk Koreksi</Button></Card>}
       {activeApproval && (
         <Card className="p-5 space-y-4">
           <h2 className="font-bold">

@@ -4,7 +4,10 @@
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 PGBIN="$(ls -d /usr/lib/postgresql/*/bin 2>/dev/null | sort -V | tail -1 || true)"
-[ -n "$PGBIN" ] || PGBIN="$(dirname "$(command -v postgres)")"
+if [ -z "$PGBIN" ]; then
+  if command -v postgres >/dev/null 2>&1; then PGBIN="$(dirname "$(command -v postgres)")";
+  else echo "PostgreSQL 15+ (initdb/pg_ctl/psql) belum tersedia untuk suite database lokal." >&2; exit 1; fi
+fi
 DIR="$(mktemp -d)"; PORT="${PGPORT:-54329}"
 RUN=""; if [ "$(id -u)" = 0 ]; then chown postgres "$DIR"; RUN="su postgres -c"; fi
 run() { if [ -n "$RUN" ]; then su postgres -c "$*"; else bash -c "$*"; fi; }
@@ -18,7 +21,9 @@ export PGOPTIONS='--client-min-messages=notice'
 $PSQL -d siadocs_test -f "$ROOT/supabase/tests/00_stub_supabase.sql"
 for f in "$ROOT"/supabase/migrations/*.sql; do echo "migrasi: $(basename "$f")"; $PSQL -d siadocs_test -f "$f"; done
 $PSQL -d siadocs_test -f "$ROOT/supabase/seed.sql"
+$PSQL -d siadocs_test -f "$ROOT/supabase/tests/00_workflow_fixtures.sql"
 $PSQL -d siadocs_test -f "$ROOT/supabase/tests/01_numbering_test.sql"
 $PSQL -d siadocs_test -f "$ROOT/supabase/tests/02_rls_test.sql"
+$PSQL -d siadocs_test -f "$ROOT/supabase/tests/03_approval_test.sql"
 bash "$ROOT/scripts/test-db-concurrency.sh" "$DIR" "$PORT"
 echo "UJI DATABASE LULUS"

@@ -41,6 +41,8 @@ function draftFromData(
     contentFormat: "HTML",
     signatureMode: l.signature_mode,
     signerIds: l.signer_ids || [],
+    mandatoryApproverIds: l.mandatory_approver_ids || l.signer_ids || [],
+    additionalApproverIds: l.additional_approver_ids || [],
     areas: l.signature_areas || [],
     stampArea: l.stamp_area || undefined,
     numberArea: l.number_area || undefined,
@@ -135,6 +137,8 @@ export function LetterEditor({
       letterTypeCode: type,
       signerIds: [],
       reviewerId: "",
+      mandatoryApproverIds: [],
+      additionalApproverIds: [],
       areas: [],
       recipientUserId: "",
       recipientName: "",
@@ -153,8 +157,9 @@ export function LetterEditor({
   function updateSigner(index: number, value: string) {
     const ids = [...input.signerIds];
     ids[index] = value;
-    change("signerIds", ids.slice(0, count));
+    setInput(x=>({...x,signerIds:ids.slice(0,count),mandatoryApproverIds:x.mandatoryApproverIds?.length===count?x.mandatoryApproverIds:ids.slice(0,count)}));
   }
+  const additionalApprovers=options.people.filter(p=>options.approverGrants.some(g=>g.approverId===p.id&&(!g.typeCode||g.typeCode===input.letterTypeCode)));
   async function save(preview: boolean) {
     setBusy(true);
     setError("");
@@ -165,6 +170,7 @@ export function LetterEditor({
       const data = {
         ...input,
         signerIds: ids,
+        mandatoryApproverIds: input.mandatoryApproverIds?.slice(0,count) || ids,
         areas: currentFormat === "PDF" ? input.areas.slice(0, count) : [],
       };
       const form = new FormData();
@@ -580,7 +586,19 @@ export function LetterEditor({
           </Card>
         )}
         <Card className="p-5 space-y-4">
-          <h2 className="font-bold">Persetujuan dan Tanda Tangan</h2>
+          <h2 className="font-bold">Persetujuan Surat</h2>
+          <p className="text-sm">Penyetuju memutuskan kelayakan surat. Penandatangan dipilih terpisah di bawah. Orang yang sama hanya mempunyai satu langkah persetujuan per pengajuan.</p>
+          {Array.from({length:count},(_,index)=><Field key={`approval-${index}`} label={isBill?(index===0?'Penyetuju SM Finance':'Penyetuju Direktur'):'Penyetuju Formal (SM/Direktur)'} required>
+            <Select value={input.mandatoryApproverIds?.[index] || input.signerIds[index] || ''} onChange={e=>{const ids=[...(input.mandatoryApproverIds?.length?input.mandatoryApproverIds:input.signerIds)];ids[index]=e.target.value;change('mandatoryApproverIds',ids);}} required>
+              <option value="">Pilih pejabat penyetuju</option>{signers.filter(p=>!isBill||(index===0?p.position==='SM':p.position==='DIR')).map(p=><option key={p.id} value={p.id}>{p.name} — {p.title}</option>)}
+            </Select>
+          </Field>)}
+          <Field label="Penyetuju Tambahan (opsional)" hint="Hanya pegawai yang telah diberi kewenangan perusahaan untuk jenis dan unit ini. Pilihan berulang tidak membuat persetujuan ganda.">
+            {additionalApprovers.map(p=><label key={p.id} className="flex gap-2 text-sm"><input type="checkbox" checked={input.additionalApproverIds?.includes(p.id)||false} onChange={e=>change('additionalApproverIds',e.target.checked?[...(input.additionalApproverIds||[]),p.id]:(input.additionalApproverIds||[]).filter(id=>id!==p.id))}/>{p.name} — {p.title}</label>)}
+            {additionalApprovers.length===0&&<p className="text-xs text-neutral-500">Belum ada penugasan penyetuju tambahan. Super Admin tidak otomatis berwenang.</p>}
+          </Field>
+          <h2 className="font-bold">Tanda Tangan Dokumen</h2>
+
           {internal && (
             <label className="flex items-center gap-2 text-sm">
               <input
@@ -610,7 +628,7 @@ export function LetterEditor({
                   ? index === 0
                     ? "Senior Manager (tahap 1)"
                     : "Direktur (tahap 2)"
-                  : "Pejabat Penyetuju dan Penandatangan"
+                  : "Pejabat Penandatangan"
               }
               htmlFor={`signer-${index}`}
               required
