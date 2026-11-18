@@ -1,5 +1,6 @@
 "use client";
 
+import {notificationHref} from "@/domain/notification-links";
 import * as React from "react";
 import Link from "next/link";
 import { PageHeader } from "@/components/ui/page-header";
@@ -172,7 +173,7 @@ export function NotifikasiClient({
 
                 <div className="flex items-center gap-2 shrink-0">
                   {item.letter_id && (
-                    <Link href={`/surat/${item.letter_id}`}>
+                    <Link prefetch={false} href={notificationHref(item)}>
                       <Button variant="outline" size="sm">
                         Buka Surat
                       </Button>

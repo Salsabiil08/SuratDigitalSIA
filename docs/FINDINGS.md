@@ -1,3 +1,16 @@
+# Pembaruan PR-05 — 18 November 2026
+
+PR-05 diizinkan setelah penerimaan PR-04; [laporan](plans/PR05_VALIDATION.md), [Draft PR #6](https://github.com/Salsabiil08/SuratDigitalSIA/pull/6). CI run #33 lulus: 202 tes/typecheck serta PostgreSQL/konkurensi nyata. Build lokal lulus. Production belum berubah; UAT staging masih diperlukan.
+
+- Kotak Masuk hanya dari dispatch_recipients resmi milik akun; Kotak Keluar dari pengiriman dengan kewenangan sender/creator/delegasi sah. Super Admin bukan pembaca global.
+- Daftar memakai client sesi/RLS dan RPC SECURITY INVOKER tanpa actor parameter/service role. Pencarian literal, filter status penerima dan pagination dihitung pada snapshot query yang sama; error tidak diubah menjadi sukses kosong.
+- Status/time final, kirim, baca dan receipt terpisah; status per penerima/CC tidak diratakan menjadi Selesai. Filter receipt mengecualikan CC yang tidak berhak menerima sebagai PRIMARY.
+- Surat Saya tetap; notifikasi menuju detail berotorisasi dengan jalur kembali kotak yang sesuai. Membuka daftar tidak mencatat READ/RECEIVE; API dokumen PR-04 hanya READ, penerimaan tetap aksi eksplisit.
+- Grant delegasi yang dicabut dapat menutup daftar/dokumen sesuai hak baca PR-04; tidak ada asumsi akses arsip global. CC default nonaktif dan keputusan perusahaan PR-04 tetap berlaku.
+- PR-06 balasan dan integrasi disposisi PR-07 belum diizinkan; hanya identifier dispatch/letter/recipient disiapkan sebagai titik integrasi.
+
+## Snapshot PR-04 (historis)
+
 # Pembaruan PR-04 — 18 November 2026
 
 PR-04 diizinkan setelah penerimaan PR-03; [laporan dan batas](plans/PR04_VALIDATION.md). Production belum berubah.

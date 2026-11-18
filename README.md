@@ -8,7 +8,7 @@ Aplikasi persuratan digital yang berjalan di https://suratdigital-sig.vercel.app
 
 Baseline production adalah commit `4e0c0c661af58dd6db729c202643cd6629f7eb07`. Editor format/pratinjau, draft/versi, penomoran, pengesahan dan disposisi dua arah mempunyai bukti kerja. Reviewer independen, pengiriman/penerimaan internal, Kotak Masuk dan balasan resmi berelasi masih menjadi target pengembangan. Jangan menafsirkan checklist lama sebagai klaim seluruh R.04 adaptasi NDO telah selesai.
 
-PR-00–03 tersedia sebagai draft; **PR-04 (pengiriman/penerimaan internal)** disetujui untuk implementasi/pengujian pada branch terpisah. PR-05 menunggu persetujuan berikutnya. Tidak ada izin mengubah database production, merge, atau deploy.
+PR-00–04 tersedia sebagai draft; **PR-05 (Kotak Masuk/Keluar)** disetujui untuk implementasi/pengujian pada branch terpisah. PR-06 menunggu persetujuan berikutnya. Tidak ada izin mengubah database production, merge, atau deploy.
 
 | Dokumen | Tujuan |
 |---|---|
@@ -16,11 +16,12 @@ PR-00–03 tersedia sebagai draft; **PR-04 (pengiriman/penerimaan internal)** di
 | [Baseline production](docs/baselines/production-2026-11-18.md) | SHA/deployment, bukti audit, perlindungan fitur dan 13 surat lama |
 | [Spesifikasi target R.04](docs/spec/08-alur-ndo-r04.md) | Keputusan pengguna, reviewer, status, akses penerima dan relasi surat |
 | [Rencana migrasi](docs/plans/R04_NDO_MIGRATION_PLAN.md) | Perubahan aditif, urutan PR, risiko dan gerbang persetujuan |
+| [Laporan PR-05](docs/plans/PR05_VALIDATION.md) | Daftar surat resmi, status penerima, filter/pagination dan hak akses |
 | [Laporan PR-04](docs/plans/PR04_VALIDATION.md) | Pengiriman, receipt, snapshot, RLS/Storage dan pengujian |
 | [Laporan PR-03](docs/plans/PR03_VALIDATION.md) | Hasil approval terpisah dan fixture PostgreSQL |
 | [Laporan PR-02](docs/plans/PR02_VALIDATION.md) | Hasil implementasi, pengujian dan risiko kategori/review |
 | [Laporan PR-00](docs/plans/PR00_VALIDATION.md) | Cakupan dan hasil pemeriksaan PR ini |
-| [Backlog](tasks/BACKLOG.md) | Progres PR-00–04 dan pekerjaan berikutnya yang belum diizinkan |
+| [Backlog](tasks/BACKLOG.md) | Progres PR-00–05 dan pekerjaan berikutnya yang belum diizinkan |
 
 ## Menjalankan lokal
 
@@ -42,4 +43,4 @@ npm run build        # build lokal; tidak melakukan deployment
 
 Laporan audit baseline mencatat 69 tes lulus. Ini bukan bukti bahwa reviewer, pengiriman, penerimaan dan balasan target baru sudah lulus UAT. Hasil pemeriksaan PR-00 dicatat terpisah pada laporan PR.
 
-`vercel.json` menonaktifkan auto-deploy hanya untuk branch PR-00, PR-01, PR-02, PR-03 dan PR-04 yang sedang ditinjau. Tidak ada perubahan pengaturan project production atau perintah deploy pada PR-00.
+`vercel.json` menonaktifkan auto-deploy hanya untuk branch PR-00, PR-01, PR-02, PR-03, PR-04 dan PR-05 yang sedang ditinjau. Tidak ada perubahan pengaturan project production atau perintah deploy pada PR-00.
