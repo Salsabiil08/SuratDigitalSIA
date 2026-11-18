@@ -43,7 +43,7 @@ CLI 2.58.5 yang dipin digunakan untuk `migration new official_letter_replies`; t
 - Balasan formal Laporan diuji: pemeriksa sah PASS tetap belum approval, aktor lain tidak boleh approve, koreksi menghasilkan versi baru dan memerlukan keputusan baru, nomor ditahan sebelum gate selesai, final ditolak sebelum TTD, penandatangan salah ditolak, TTD basah unggah sah kemudian final/kirim berhasil.
 - Fault injection pada relasi/audit pembuatan dan official_reply_sends/penerima/notifikasi/audit pengiriman membuktikan transaksi rollback. Tidak menghasilkan status Sudah Dibalas atau audit palsu.
 - Fixture 06 ditambahkan ke suite PostgreSQL nyata. Skrip konkurensi mempertahankan 40 alokasi nomor unik dan 20 retry kirim/READ/RECEIVE, lalu menambah 20 retry buat balasan (satu surat/versi/relasi/audit) dan 20 retry kirim balasan (satu status/event).
-- `npm run build`: kompilasi/typecheck dan 23 halaman lulus. Build bukan deployment. `git diff --check` dan sintaks shell diperiksa. Hasil PostgreSQL/CI publikasi dicatat sesudah run.
+- `npm run build`: kompilasi/typecheck dan 23 halaman lulus. Build bukan deployment. `git diff --check` dan sintaks shell diperiksa. PostgreSQL nyata dan check CI run #37 juga lulus (bukti di bawah).
 
 ## Production, risiko dan UAT staging
 
@@ -60,3 +60,11 @@ UAT staging belum dijalankan:
 - Perusahaan menetapkan kewajiban/tenggat, kategori/reviewer/approver yang sah, delegasi/CC dan kebijakan tujuan jika pengirim resmi berupa delegasi. Tidak ada asumsi bisnis baru untuk PR-07.
 
 Berhenti setelah Draft PR dan bukti CI ditinjau. Tidak merge, migrasi production atau deployment. Integrasi disposisi PR-07 tidak dikerjakan.
+
+## Bukti publikasi dan CI
+
+- [Draft PR #7](https://github.com/Salsabiil08/SuratDigitalSIA/pull/7), base PR-05 `e86466c9fafdb59ab24d85dc5cee61df086bd210`; commit implementasi `bd1621c1f4c3a85606d45b6a46429980306304bc`. 33 berkas berubah, termasuk dokumentasi/pengaman.
+- [CI run #37](https://github.com/Salsabiil08/SuratDigitalSIA/actions/runs/44267321548) **success**: job check dan db lulus. PostgreSQL menjalankan seluruh 20 migrasi dan fixture 01–06 dengan ON_ERROR_STOP, lalu konkurensi. Bukti log: `konkurensi: 40|40|1|40`, `PENGIRIMAN/PEMBACAAN/PENERIMAAN KONKUREN LULUS: 20 retry masing-masing, satu snapshot dan event`, `BALASAN KONKUREN LULUS: 20 retry buat dan kirim, satu surat/relasi/status/audit`, `UJI DATABASE LULUS`.
+- Semua 19 blob migrasi baseline identik; dependensi dan workflow CI tidak berubah. Tautan Markdown dan sintaks shell valid. tsconfig.tsbuildinfo lokal bukan bagian PR.
+- Vercel branch PR-06 **0 deployment**. Production tetap READY `dpl_4aVP7FGF4i9eJhqARNu65dZtckZc` pada main `4e0c0c661af58dd6db729c202643cd6629f7eb07`; main tidak diubah. Tidak ada apply_migration/repair/reset/seed atau mutasi production.
+- Commit penutup hanya memperbarui bukti dokumentasi ini. PostgreSQL nyata lulus; UAT Supabase Auth/Storage/browser staging tetap belum dijalankan.

@@ -63,7 +63,7 @@ Status: PR-00–05 selesai dalam draft; implementasi PR-06 disetujui pada 18 Nov
 - [x] Balasan mengikuti review/approval/nomor/pengesahan; revisi membatalkan keputusan versi sebelumnya.
 - [x] Status per penerima hanya sesudah kirim, dalam transaksi yang sama; gagal kirim/audit/notifikasi rollback.
 - [x] Migrasi aditif, fixture lintas akun/rollback/RLS serta uji retry/konkurensi.
-- [ ] Buka Draft PR berbasis PR-05, verifikasi CI/production dan laporkan; berhenti sebelum PR-07.
+- [x] Buka [Draft PR #7](https://github.com/Salsabiil08/SuratDigitalSIA/pull/7) berbasis PR-05; CI #37 check 217/217 dan PostgreSQL/konkurensi lulus, production tidak berubah; laporkan dan berhenti sebelum PR-07.
 
 ## Tahap berikutnya — belum diizinkan
 - [ ] PR-07: integrasi disposisi dari Inbox dan hasil berelasi.

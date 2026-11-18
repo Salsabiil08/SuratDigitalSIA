@@ -1,6 +1,6 @@
 # Pembaruan PR-06 — 18 November 2026
 
-PR-06 diizinkan setelah penerimaan PR-05; [laporan](plans/PR06_VALIDATION.md). Production belum berubah.
+PR-06 diizinkan setelah penerimaan PR-05; [laporan](plans/PR06_VALIDATION.md), [Draft PR #7](https://github.com/Salsabiil08/SuratDigitalSIA/pull/7). CI #37 check 217/217 dan PostgreSQL/konkurensi lulus; build lokal lulus. Production belum berubah; UAT staging masih diperlukan.
 
 - Balasan dibuat penerima utama pengiriman resmi sebagai draf/surat baru. Kategori awal diwarisi untuk ditinjau di editor; pengirim resmi snapshot menjadi penerima yang dikunci. Tidak menyalin approval/TTD/nomor asal.
 - Relasi tidak memberi akses dokumen. RLS relasi memerlukan hak baca kedua endpoint, sehingga pengirim asal tidak melihat draf balasan kecuali punya peran independen yang sah.
