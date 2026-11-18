@@ -4,7 +4,7 @@
 
 Basis implementasi yang disetujui adalah **Salsabiil08/SuratDigitalSIA**. Jangan merekonsiliasi ke `Salsabiil08/SIAdocs` atau mengganti stack.
 
-PR-00 dan PR-01 tersedia pada draft PR #1/#2, belum di-merge. Pengguna menerima PR-01 secara fungsional dengan catatan CI PostgreSQL baseline dan mengizinkan **PR-02: kategori dan reviewer independen** pada 18 November 2026. Branch `feat/pr-02-independent-review` berbasis branch PR-01. Reviewer hanya catatan/lolos pemeriksaan/minta revisi; pembuat yang mengedit dan perubahan versi membatalkan keberlakuan keputusan lama. Investigasi fixture PostgreSQL dipisahkan dari implementasi; jangan melonggarkan guard penomoran. Berhenti setelah PR-02 dilaporkan; PR-03 dan seterusnya menunggu persetujuan baru. Jangan mengubah database production, menjalankan migrasi production, merge PR, atau melakukan deployment tanpa persetujuan eksplisit. Cegah deployment otomatis branch yang belum diizinkan.
+PR-00–02 tersedia sebagai draft PR #1–3, belum di-merge. Pengguna menerima PR-02 secara fungsional dengan catatan CI/reviewer dan mengizinkan **PR-03: pemisahan approver/penandatangan, deduplikasi dan perbaikan fixture PostgreSQL terpisah** pada 18 November 2026. Branch `feat/pr-03-independent-approval` berbasis PR-02. Creator-confirmation harus eksplisit, terikat versi dan diaudit; bukan approval historis palsu. Urutan dan kewenangan SM Finance–Direktur tetap wajib untuk tagihan. Pertahankan reviewer terpisah dan guard nomor; perbaiki data fixture agar mengikuti RPC nyata. Berhenti setelah PR-03 dilaporkan; **jangan mulai PR-04**. Tidak ada izin merge, perubahan database production atau deployment. Cegah auto-deploy branch yang belum diizinkan.
 
 ## Acuan dan cara membaca
 
@@ -34,6 +34,6 @@ Mulai dari [docs/INDEX.md](docs/INDEX.md) dan tugas aktif di [tasks/BACKLOG.md](
 
 - Satu PR kecil sesuai persetujuan. Perubahan database lewat migrasi aditif baru setelah pengujian lokal/staging; jangan mengubah migrasi terpakai atau memperlebar grant untuk mengatasi RLS.
 - Jangan menganggap target baru sudah diimplementasikan. Pisahkan baseline teruji, GAP, rencana, dan hasil UAT.
-- Batas historis PR-00: tidak mengubah `src/`, `supabase/`, dependensi, CI, atau PDF/DOCX blueprint. Satu pengecualian konfigurasi: `vercel.json` boleh mencegah auto-deploy **hanya branch PR-00**, tanpa mengubah main/project production. PR-01 memperketat notifikasi. PR-02 menambah kategori/review versi terpisah dengan migrasi aditif; pengaman deployment diperluas hanya ke branch PR-02.
+- Batas historis PR-00: tidak mengubah `src/`, `supabase/`, dependensi, CI, atau PDF/DOCX blueprint. Satu pengecualian konfigurasi: `vercel.json` boleh mencegah auto-deploy **hanya branch PR-00**, tanpa mengubah main/project production. PR-01 memperketat notifikasi. PR-02 menambah kategori/review versi terpisah. PR-03 menambah approval terpisah melalui migrasi aditif dan memperbaiki fixture secara terpisah; pengaman deployment diperluas hanya ke branch PR-03.
 - Jalankan `npm run check` (typecheck + Vitest, termasuk PGlite). `npm run test:db` adalah suite PostgreSQL terpisah; jangan mengklaimnya dijalankan oleh `check`. Build lokal bukan deployment. Untuk dokumentasi, periksa tautan, konsistensi keputusan, dan diff runtime/migrasi.
-- Perbarui status tugas dan laporkan bukti yang benar-benar dijalankan. Jangan menandai UAT seluruh target selesai karena tes PR-02 lulus.
+- Perbarui status tugas dan laporkan bukti yang benar-benar dijalankan. Jangan menandai UAT seluruh target selesai karena tes PR-03 lulus.

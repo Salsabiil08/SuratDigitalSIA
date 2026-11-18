@@ -587,6 +587,7 @@ it("Senior Manager tetap berwenang mengesahkan tagihan ketika penugasannya di un
       "update user_assignments set unit_id=(select id from organizational_units where code='ACH') where profile_id=$1",
       [actor(3)],
     );
+    await run("insert into approver_authorizations(approver_id,unit_id,letter_type_id,granted_by) values($1,(select id from organizational_units where code='FIN'),(select id from letter_types where code='Tag'),$2)",[actor(3),actor(2)]);
     const bank = (await rows("select id from master_bank limit 1"))[0].id;
     const id = await draft(6, "Tag", [3, 2], {
       billing: {

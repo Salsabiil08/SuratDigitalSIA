@@ -102,13 +102,13 @@ export async function getPendingApprovalsAction(): Promise<
   const { data, error } = await createClient()
     .from("approval_steps")
     .select(
-      "id,letter_id,step_order,letter:letters!approval_steps_letter_id_fkey(id,subject,revision,required_signature_count,recipient_external_name,letter_types(name),creator:profiles!letters_creator_id_fkey(full_name))",
+      "id,letter_id,step_order,version_id,cycle,letter:letters!approval_steps_letter_id_fkey(id,subject,revision,current_version_id,approval_cycle,approval_plan,required_signature_count,recipient_external_name,letter_types(name),creator:profiles!letters_creator_id_fkey(full_name))",
     )
     .eq("approver_id", user.id)
     .eq("status", "PENDING")
     .order("step_order");
   if (error) throw new Error(error.message);
-  return (data || []).map((s: any) => ({
+  return (data || []).filter((s:any)=>s.letter && s.version_id===s.letter.current_version_id && (s.letter.approval_cycle==null || s.cycle===s.letter.approval_cycle)).map((s: any) => ({
     id: s.id,
     letterId: s.letter_id,
     subject: s.letter.subject,
@@ -116,7 +116,7 @@ export async function getPendingApprovalsAction(): Promise<
     creatorName: s.letter.creator?.full_name || "",
     recipientName: s.letter.recipient_external_name || "Penerima internal",
     stepOrder: s.step_order,
-    totalSteps: s.letter.required_signature_count,
+    totalSteps: s.letter.approval_plan?.length || 0,
     previewContent: "Buka preview dokumen tersimpan sebelum memberi keputusan.",
     revision: s.letter.revision,
   }));

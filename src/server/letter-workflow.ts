@@ -146,8 +146,11 @@ export async function peopleOptions() {
   if (catError || ruleError || grantError) throw new Error('Konfigurasi pemeriksaan belum dapat diambil.');
   const reviewerGrants = (grants || []).filter(g => (!g.unit_id || g.unit_id === user.unit?.id) && g.starts_on <= today && (!g.ends_on || g.ends_on >= today))
     .map(g => ({ reviewerId: g.reviewer_id, typeCode: (g.type as any)?.code || null }));
+  const {data:approvalGrants,error:approvalGrantError}=await createAdminClient().from('approver_authorizations').select('approver_id,unit_id,starts_on,ends_on,type:letter_types(code)').eq('is_active',true);
+  if(approvalGrantError)throw new Error('Konfigurasi persetujuan belum dapat diambil.');
+  const approverGrants=(approvalGrants||[]).filter(g=>(!g.unit_id||g.unit_id===user.unit?.id)&&g.starts_on<=today&&(!g.ends_on||g.ends_on>=today)).map(g=>({approverId:g.approver_id,typeCode:(g.type as any)?.code||null}));
   const reviewRules = (rules || []).map(r => ({ ...r, typeCode: (r.type as any)?.code || null }));
-  return { user, people, banks: banks || [], financeUnitId:billingType?.creator_unit_id || '', categories: categories || [], reviewRules, reviewerGrants };
+  return { user, people, banks: banks || [], financeUnitId:billingType?.creator_unit_id || '', categories: categories || [], reviewRules, reviewerGrants, approverGrants };
 }
 export async function saveDraft(
   input: DraftInput,

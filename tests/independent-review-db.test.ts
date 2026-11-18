@@ -25,15 +25,15 @@ async function asUser(n: number, sql: string, params:any[] = []) {
 beforeAll(async()=>{
  await db.exec(readFileSync('supabase/tests/00_stub_supabase.sql','utf8'));
  const files=readdirSync('supabase/migrations').filter(f=>f.endsWith('.sql')).sort();
- for(const f of files.filter(f=>!f.includes('independent_category_review')))await db.exec(readFileSync('supabase/migrations/'+f,'utf8'));
+ for(const f of files.filter(f=>f<'20261118045220'))await db.exec(readFileSync('supabase/migrations/'+f,'utf8'));
  await db.exec(readFileSync('supabase/seed.sql','utf8'));
  // Simulasi 13 surat bernomor lama tanpa versi. Migrasi tidak boleh menyentuhnya.
  await db.exec(`insert into letters(letter_type_id,creator_id,creator_unit_id,status,subject,official_number,recipient_type,issued_at) select (select id from letter_types where code='IN'),'${actor(5)}',(select id from organizational_units where code='ACH'),'NUMBERED','Legacy dilindungi '||g,'LEGACY-'||g,'INTERNAL_USER',now() from generate_series(1,13) g`);
  const before=await rows("select to_jsonb(l) row from letters l where subject like 'Legacy dilindungi%' order by id");
  const auditBefore=await rows('select * from audit_logs order by id');
- for(const f of files.filter(f=>f.includes('independent_category_review')))await db.exec(readFileSync('supabase/migrations/'+f,'utf8'));
+ for(const f of files.filter(f=>f>='20261118045220'))await db.exec(readFileSync('supabase/migrations/'+f,'utf8'));
  // Kolom baru NULL adalah tambahan schema, bukan bukti review/backfill.
- const after=await rows("select to_jsonb(l)-'reviewer_id'-'review_status' row from letters l where subject like 'Legacy dilindungi%' order by id");
+ const after=(await rows("select to_jsonb(l) row from letters l where subject like 'Legacy dilindungi%' order by id")).map(r=>({row:Object.fromEntries(Object.keys(before[0].row).map(k=>[k,r.row[k]]))}));
  expect(after).toEqual(before);expect(await rows('select * from audit_logs order by id')).toEqual(auditBefore);
  await db.exec(`grant usage on schema public,app,auth to authenticated; grant select on profiles,letters,letter_versions,approval_steps to authenticated; grant update on letters to authenticated;
  insert into review_policy_managers(profile_id) values('${actor(2)}');

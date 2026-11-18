@@ -1,6 +1,6 @@
 # Backlog aktif — R.04 adaptasi NDO
 
-Status: PR-00/PR-01 selesai dalam draft; implementasi PR-02 disetujui pada 18 November 2026. Basis `Salsabiil08/SuratDigitalSIA`, baseline `4e0c0c661af58dd6db729c202643cd6629f7eb07`. Jangan merekonsiliasi `SIAdocs`.
+Status: PR-00–02 selesai dalam draft; implementasi PR-03 disetujui pada 18 November 2026. Basis `Salsabiil08/SuratDigitalSIA`, baseline `4e0c0c661af58dd6db729c202643cd6629f7eb07`. Jangan merekonsiliasi `SIAdocs`.
 
 ## PR-00 — dokumentasi baseline dan rencana (selesai; menunggu tinjauan)
 - [x] Tetapkan repo/SHA/deployment dan manifest baseline tanpa secret.
@@ -30,15 +30,24 @@ Status: PR-00/PR-01 selesai dalam draft; implementasi PR-02 disetujui pada 18 No
 - [x] Pengujian lintas akun/RLS/stale/fault injection dan investigasi fixture baseline terpisah.
 - [x] Buka [Draft PR #3](https://github.com/Salsabiil08/SuratDigitalSIA/pull/3) berbasis PR-01, verifikasi hasil dan laporkan; berhenti sebelum PR-03. Check lulus; job PostgreSQL tertahan fixture lama yang belum memenuhi prasyarat.
 
+## PR-03 — persetujuan terpisah dan tanpa duplikasi
+- [x] Approver wajib/tambahan terpisah dari penandatangan, snapshot per versi/hash dan siklus.
+- [x] Deduplikasi per aktor; konfirmasi pembuat eksplisit melalui pengajuan, tetap mengikuti urutan wajib.
+- [x] Kewenangan Finance/Direktur dan grant approver tambahan, tanpa hak bisnis otomatis Super Admin/pemeriksa.
+- [x] Tarik untuk koreksi sebelum nomor, simpan versi baru dan ajukan ulang tanpa menghapus keputusan lama.
+- [x] Ringkasan penerbitan memakai data nyata; allocator/seri/urutan/idempotensi/pembatalan dipertahankan.
+- [x] Fixture PostgreSQL diperbaiki terpisah melalui draft/versi/preview/RPC sah; fixture gagal awal diarsipkan untuk reproduksi.
+- [x] Uji lintas akun/RLS/urutan/gagal transaksi dan dokumentasi keputusan perusahaan.
+- [ ] Buka Draft PR berbasis PR-02, verifikasi CI dan production tidak berubah, laporkan dan berhenti.
+
 ## Tahap berikutnya — belum diizinkan
-- [ ] PR-03: persetujuan pilihan/pejabat wajib dan self-signer.
 - [ ] PR-04: pengiriman/penerimaan transaksi dan RLS snapshot.
 - [ ] PR-05: Kotak Masuk/Keluar dan label penyelesaian alur.
 - [ ] PR-06: balasan surat baru berelasi.
 - [ ] PR-07: integrasi disposisi dari Inbox dan hasil berelasi.
 - [ ] PR-08: UAT lintas peran dan regresi lengkap.
 
-Rincian: [spesifikasi target](../docs/spec/08-alur-ndo-r04.md), [rencana migrasi](../docs/plans/R04_NDO_MIGRATION_PLAN.md), [validasi PR-00](../docs/plans/PR00_VALIDATION.md), [validasi PR-01](../docs/plans/PR01_VALIDATION.md), [validasi PR-02](../docs/plans/PR02_VALIDATION.md).
+Rincian: [spesifikasi target](../docs/spec/08-alur-ndo-r04.md), [rencana migrasi](../docs/plans/R04_NDO_MIGRATION_PLAN.md), [validasi PR-00](../docs/plans/PR00_VALIDATION.md), [validasi PR-01](../docs/plans/PR01_VALIDATION.md), [validasi PR-02](../docs/plans/PR02_VALIDATION.md), [validasi PR-03](../docs/plans/PR03_VALIDATION.md).
 
 ## Riwayat backlog sebelum adaptasi NDO
 

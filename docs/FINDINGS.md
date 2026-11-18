@@ -1,3 +1,16 @@
+# Pembaruan PR-03 — 18 November 2026
+
+PR-03 diizinkan setelah penerimaan fungsional PR-02; production tetap di luar cakupan. [Laporan PR-03](plans/PR03_VALIDATION.md) dan [perbaikan fixture terpisah](plans/PR03_POSTGRES_FIXTURES.md).
+
+- G-03 ditangani pada branch: approver wajib/tambahan terpisah dari signer; satu keputusan per aktor/siklus, creator-confirmation eksplisit dan terikat versi. Kewenangan SM Finance–Direktur tidak dihapus.
+- Ringkasan penerbitan statis (G-06) diganti data versi/plan approval sesungguhnya. Allocator nomor tetap; gate memakai seluruh plan, bukan jumlah TTD.
+- Penanganan perubahan kewenangan/policy setelah approval sebelum nomor tersedia melalui Tarik untuk Koreksi, lalu simpan versi baru. Keputusan lama utuh; tidak backfill persetujuan lama.
+- Reviewer/pengelola review dan manager/grant approver tambahan perlu ditetapkan perusahaan. Mandat Finance lintas unit harus eksplisit; nama jabatan SM tetap umum.
+- Fixture SQL lama disimpan sebagai arsip reproduksi. Fixture aktif memakai RPC nyata; hasil PostgreSQL penuh dicatat sesudah CI berjalan, bukan diasumsikan dari PGlite.
+- G-01 penerima pra-kirim serta distribusi/receipt/balasan belum ditangani. PR-04 belum diizinkan.
+
+## Snapshot PR-02 (historis)
+
 # Pembaruan PR-02 — 18 November 2026
 
 Implementasi/pengujian lokal PR-02 diizinkan setelah penerimaan fungsional PR-01. [Laporan PR-02](plans/PR02_VALIDATION.md) membedakan perubahan branch dari production yang belum berubah.

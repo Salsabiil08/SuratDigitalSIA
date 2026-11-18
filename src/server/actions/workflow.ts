@@ -80,6 +80,7 @@ export async function reviewLetterAction(
   action: "PREVIEW" | "SUBMIT" | "APPROVE" | "REJECT" | "REQUEST_REVISION",
   revision: number,
   note?: string,
+  confirmCreatorApproval = false,
 ) {
   try {
     const user = await requireUser();
@@ -98,13 +99,9 @@ export async function reviewLetterAction(
           "Tentukan area nomor resmi pada PDF sebelum mengajukan.",
         );
     }
-    const { data, error } = await createAdminClient().rpc("review_letter", {
-      p_actor: user.id,
-      p_letter: id,
-      p_action: action,
-      p_revision: revision,
-      p_note: note || null,
-    });
+    const { data, error } = action === 'SUBMIT'
+      ? await createAdminClient().rpc('submit_letter_for_approval', {p_actor:user.id,p_letter:id,p_revision:revision,p_confirm_self:confirmCreatorApproval})
+      : await createAdminClient().rpc('review_letter', {p_actor:user.id,p_letter:id,p_action:action,p_revision:revision,p_note:note || null});
     if (error) throw new Error(error.message);
     for (const p of [
       "/surat",
@@ -147,4 +144,14 @@ export async function finalizeLetterAction(
       error: e instanceof Error ? e.message : "Finalisasi gagal.",
     };
   }
+}
+
+export async function restartApprovalAction(id:string, revision:number, reason:string) {
+  try {
+    const user=await requireUser();
+    const {error}=await createAdminClient().rpc('restart_letter_approval',{p_actor:user.id,p_letter:id,p_revision:revision,p_reason:reason});
+    if(error) throw new Error(error.message);
+    for(const path of ['/surat','/persetujuan','/pemeriksaan',`/surat/${id}`]) revalidatePath(path);
+    return {success:true};
+  }catch(e){return {success:false,error:e instanceof Error?e.message:'Pengajuan belum dapat dikoreksi.'};}
 }

@@ -4,7 +4,8 @@
     "deploymentEnabled": {
       "docs/pr-00-r04-ndo-baseline": false,
       "fix/pr-01-notifications-status": false,
-      "feat/pr-02-independent-review": false
+      "feat/pr-02-independent-review": false,
+      "feat/pr-03-independent-approval": false
     }
   }
 }
