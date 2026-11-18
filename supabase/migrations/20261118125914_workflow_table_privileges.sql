@@ -13,5 +13,16 @@ end $$;
 alter default privileges in schema public revoke all on tables from public,anon,authenticated;
 -- Penandaan notifikasi tetap melalui grant kolom dan guard PR-01.
 revoke insert,delete,truncate,references,trigger on notifications from public,anon,authenticated;
+-- Selaras dengan penugasan Auth/server: unit/jabatan aktif dan tanggal bisnis WIB.
+create or replace function app.active_assignment(p_actor uuid) returns user_assignments
+language sql stable security definer set search_path=public,pg_temp as $$
+ select a from user_assignments a join profiles p on p.id=a.profile_id
+ join positions pos on pos.id=a.position_id and pos.is_active
+ join organizational_units u on u.id=a.unit_id and u.is_active
+ where a.profile_id=p_actor and p.is_active and a.is_active
+ and (a.start_date is null or a.start_date<=(now() at time zone 'Asia/Jakarta')::date)
+ and (a.end_date is null or a.end_date>=(now() at time zone 'Asia/Jakarta')::date)
+ order by a.start_date desc nulls last limit 1
+$$;
 notify pgrst,'reload schema';
 commit;
