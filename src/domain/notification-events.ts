@@ -3,6 +3,8 @@
  * Membaca notifikasi bukan membaca surat, menerima surat, atau mengubah statusnya.
  */
 const EVENTS: Record<string, { label: string; title: string; variant: 'gray' | 'amber' | 'blue' | 'green' | 'red' }> = {
+  INTERNAL_SENT: {label:'Pengiriman',title:'Surat internal tersedia untuk Anda.',variant:'blue'},
+  INTERNAL_RECEIVED: {label:'Penerimaan',title:'Penerima utama mengonfirmasi penerimaan surat.',variant:'green'},
   REVIEW_REQUESTED: { label: 'Pemeriksaan', title: 'Surat menunggu pemeriksaan Anda.', variant: 'amber' },
   REVIEW_COMMENT: { label: 'Pemeriksaan', title: 'Pemeriksa memberi catatan pada surat Anda.', variant: 'blue' },
   REVIEW_PASS: { label: 'Pemeriksaan', title: 'Naskah lolos pemeriksaan. Persetujuan tetap melalui tahap terpisah.', variant: 'green' },

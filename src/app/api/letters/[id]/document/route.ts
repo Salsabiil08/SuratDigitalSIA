@@ -1,3 +1,5 @@
+import { requireUser } from "@/server/auth";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { PDFDocument, rgb } from "pdf-lib";
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
@@ -8,9 +10,13 @@ export async function GET(
   { params }: { params: { id: string } },
 ) {
   try {
+    const user=await requireUser();
     const letter = await readLetter(params.id);
+    const {data:context,error:contextError}=await createAdminClient().rpc('get_internal_delivery_context',{p_actor:user.id,p_letter:letter.id});
+    if(contextError||!context)throw new Error('Anda tidak berwenang melihat dokumen ini.');
     const blank = new URL(request.url).searchParams.get("blank") === "1";
-    let sourceLetter = letter;
+    if(blank&&!context.fullVersionAccess)throw new Error('Salinan sebelum pengesahan tidak tersedia melalui hak penerima/pengiriman.');
+    let sourceLetter = {...letter,current_version_id:context.documentVersionId};
     if (blank) {
       const { data: version } = await createClient()
         .from("letter_versions")
@@ -22,13 +28,15 @@ export async function GET(
         .maybeSingle();
       if (version) sourceLetter = { ...letter, current_version_id: version.id };
     }
-    const doc = await downloadVersion(sourceLetter);
-    let bytes = await fillOfficialNumber(
-      doc.bytes,
-      doc.format,
-      letter.official_number,
-      blank,
-    );
+    const doc = await downloadVersion(sourceLetter,false);
+    // Dokumen final disajikan persis bytes snapshot; tidak diregenerasi saat diunduh.
+    let bytes = letter.finalized_at && !blank ? doc.bytes : await fillOfficialNumber(doc.bytes,doc.format,letter.official_number,blank);
+    if(context.recipientRole && context.dispatch && request.method==='GET'){
+      const matches=doc.version.id===context.dispatch.version_id && doc.version.file_hash===context.dispatch.file_hash;
+      if(!matches&&!context.fullVersionAccess)throw new Error('Snapshot pengiriman tidak sesuai.');
+      if(matches){const {error:readError}=await createAdminClient().rpc('record_internal_recipient_action',{p_actor:user.id,p_dispatch:context.dispatch.id,p_action:'READ'});
+        if(readError)throw new Error('Pembacaan belum dapat dicatat. Coba kembali.');}
+    }
     if (
       doc.format === "PDF" &&
       !letter.finalized_at &&

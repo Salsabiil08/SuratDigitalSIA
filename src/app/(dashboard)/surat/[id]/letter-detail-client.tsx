@@ -1,5 +1,6 @@
 "use client";
 import { decideReviewAction } from "@/server/actions/reviews";
+import { sendInternalLetterAction,receiveInternalLetterAction } from "@/server/actions/delivery";
 import { displayLabel } from "@/domain/display-labels";
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
@@ -32,6 +33,8 @@ export function LetterDetailClient({
   const [external, setExternal] = useState(false);
   const [previewed, setPreviewed] = useState(false);
   const [confirmSelf,setConfirmSelf]=useState(false);
+  const [sendConfirmed,setSendConfirmed]=useState(false);
+  const [ccIds,setCcIds]=useState<string[]>([]);
   const [note, setNote] = useState("");
   const reload = useCallback(async () => {
     try {
@@ -154,6 +157,21 @@ export function LetterDetailClient({
           </p>
         )}
       </Card>
+      {l.type.category==='INTERNAL' && <Card className="p-5 space-y-3">
+        <h2 className="font-bold">Pengiriman dan Penerimaan</h2>
+        <p className="text-sm">Dokumen: {l.finalized_at?'Final dan terkunci':'Belum final'} · Pengiriman: {data.delivery?.dispatch?'Terkirim':'Belum dikirim'}</p>
+        {data.delivery?.dispatch && <>
+          <p className="text-sm">Dikirim pada {new Date(data.delivery.dispatch.sent_at).toLocaleString('id-ID',{timeZone:'Asia/Jakarta'})} WIB. Versi dan sidik dokumen pengiriman dicatat tetap.</p>
+          {(data.delivery.recipients as {profile_id:string;recipient_role:string;read_at:string|null;received_at:string|null}[]).map(r=><p key={r.profile_id} className="text-sm">{r.recipient_role==='PRIMARY'?'Penerima utama':'Tembusan'} · {r.read_at?'Dokumen sudah dibuka':'Belum dibuka'} · {r.received_at?'Penerimaan dikonfirmasi':'Belum ada konfirmasi penerimaan'}</p>)}
+          <p className="text-xs text-neutral-600">Membuka atau mengunduh dokumen bukan konfirmasi penerimaan. Tembusan tidak otomatis wajib membalas.</p>
+          {data.delivery.recipientRole==='PRIMARY' && !data.delivery.recipients.find((r:any)=>r.profile_id===data.userId)?.received_at && <Button isLoading={busy} onClick={()=>act(()=>receiveInternalLetterAction(data.delivery.dispatch.id),'Penerimaan Anda telah dicatat.')}>Konfirmasi Terima Surat</Button>}
+        </>}
+        {data.delivery?.canDispatch && l.finalized_at && l.status==='NUMBERED' && !data.delivery.dispatch && <>
+          {data.delivery.ccEnabled&&<fieldset className="space-y-1"><legend className="text-sm font-semibold">Tembusan (opsional)</legend>{data.ccOptions.filter(p=>p.id!==l.recipient_user_id).map(p=><label key={p.id} className="flex gap-2 text-sm"><input type="checkbox" checked={ccIds.includes(p.id)} onChange={e=>setCcIds(e.target.checked?[...ccIds,p.id]:ccIds.filter(id=>id!==p.id))}/>{p.full_name}</label>)}</fieldset>}
+          <label className="flex gap-2 text-sm"><input type="checkbox" checked={sendConfirmed} onChange={e=>setSendConfirmed(e.target.checked)}/>Saya mengirim dokumen final ini kepada {l.recipient?.full_name||'penerima utama yang tercatat'}. Pengiriman resmi dicatat dan penerima mendapat akses.</label>
+          <Button disabled={!sendConfirmed} isLoading={busy} onClick={()=>act(()=>sendInternalLetterAction(id,ccIds),'Surat resmi telah dikirim. Penerimaan menunggu konfirmasi penerima.')}>Kirim Surat Internal</Button>
+        </>}
+      </Card>}
       <Card className="p-5 space-y-4">
         <h2 className="font-bold">Pratinjau Dokumen</h2>
         {v ? (
