@@ -1,3 +1,14 @@
+# Pembaruan PR-01 — 18 November 2026
+
+Implementasi/pengujian lokal PR-01 disetujui setelah PR-00. [Laporan PR-01](plans/PR01_VALIDATION.md) mencatat bukti dan batas; production belum berubah.
+
+- G-02: label `finalized_at` kini **Dokumen final**, tidak lagi Selesai. Pengiriman/penerimaan/selesai alur belum diimplementasikan.
+- G-06, bagian notifikasi: helper service-role publik tanpa caller dihapus. Event tetap berasal dari RPC sah. Migrasi baru mempersempit ACL/RLS dan melindungi kolom event; error write diteruskan sebagai gagal, judul dinormalisasi Indonesia. Perbaikan belum aktif di production.
+- G-06, ringkasan penerbitan statis, G-01 akses penerima pra-kirim, G-03 deduplikasi dan G-04 reviewer/Inbox/receipt/balasan tetap terbuka untuk PR terkait.
+- Tes PostgreSQL baseline PR-00 gagal pada fixture penomoran; tidak diperbaiki terselubung oleh PR-01 dan tetap penghalang CI penuh.
+
+## Snapshot temuan PR-00 (historis)
+
 # Temuan aktif — PR-00 R.04 adaptasi NDO
 
 Tanggal: 18 November 2026. Temuan audit disimpan, belum diperbaiki oleh PR dokumentasi ini.

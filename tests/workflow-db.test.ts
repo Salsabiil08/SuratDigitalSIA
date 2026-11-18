@@ -653,3 +653,33 @@ it("versi draft menyimpan format HTML secara eksplisit, teks lama tetap TEXT", a
     )[0].content_format,
   ).toBe("TEXT");
 });
+
+describe.sequential('PR-01: event dan audit terikat transaksi alur sah', () => {
+  it('aksi tanpa kewenangan tidak menghasilkan event atau audit palsu', async () => {
+    const id = await draft(5, 'IN');
+    const before = await rows('select (select count(*) from notifications) n, (select count(*) from audit_logs) a');
+    await expect(act(id, 6, 'SUBMIT')).rejects.toThrow();
+    expect(await rows('select (select count(*) from notifications) n, (select count(*) from audit_logs) a')).toEqual(before);
+    expect((await get(id)).status).toBe('DRAFT');
+  });
+  it('gagal insert event membatalkan perubahan status dan audit, lalu retry sah berhasil', async () => {
+    const id = await draft(5, 'IN');
+    await act(id, 5, 'PREVIEW');
+    const before = await rows('select (select count(*) from notifications) n, (select count(*) from audit_logs) a');
+    await db.exec(`create function app.test_fail_notification() returns trigger language plpgsql as $$ begin raise exception 'Simulasi write event gagal'; end $$;
+      create trigger test_fail_notification before insert on notifications for each row execute function app.test_fail_notification()`);
+    try {
+      await expect(act(id, 5, 'SUBMIT')).rejects.toThrow(/event gagal/);
+      expect((await get(id)).status).toBe('DRAFT');
+      expect(await rows('select (select count(*) from notifications) n, (select count(*) from audit_logs) a')).toEqual(before);
+    } finally {
+      await db.exec('drop trigger test_fail_notification on notifications; drop function app.test_fail_notification()');
+    }
+    await act(id, 5, 'SUBMIT');
+    expect((await get(id)).status).toBe('READY_TO_ISSUE');
+    expect((await rows('select recipient_id,event_type from notifications where letter_id=$1', [id]))).toEqual([{ recipient_id: actor(5), event_type: 'SUBMIT' }]);
+    expect((await rows("select action from audit_logs where letter_id=$1 and action='SUBMIT'", [id]))).toHaveLength(1);
+    await expect(act(id, 5, 'SUBMIT')).rejects.toThrow();
+    expect((await rows("select id from notifications where letter_id=$1 and event_type='SUBMIT'", [id]))).toHaveLength(1);
+  });
+});
