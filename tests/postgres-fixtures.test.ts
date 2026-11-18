@@ -16,3 +16,5 @@ it('fixture RLS tidak memberi grant ALL atau menganggap pengguna boleh bypass RP
 it('fixture approval independen, self-confirmation, tagihan dan review terpisah',async()=>{await db.exec(sql('supabase/tests/03_approval_test.sql'));});
 
 it('fixture pengiriman/penerimaan/rollback/RLS/Storage',async()=>{await db.exec(sql('supabase/tests/04_internal_delivery_test.sql'));});
+
+it('fixture kotak masuk/keluar, filter/pagination, otorisasi/CC dan error',async()=>{await db.exec(sql('supabase/tests/05_mailbox_test.sql'));});

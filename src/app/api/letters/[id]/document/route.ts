@@ -1,3 +1,4 @@
+import { revalidatePath } from "next/cache";
 import { requireUser } from "@/server/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { PDFDocument, rgb } from "pdf-lib";
@@ -35,7 +36,8 @@ export async function GET(
       const matches=doc.version.id===context.dispatch.version_id && doc.version.file_hash===context.dispatch.file_hash;
       if(!matches&&!context.fullVersionAccess)throw new Error('Snapshot pengiriman tidak sesuai.');
       if(matches){const {error:readError}=await createAdminClient().rpc('record_internal_recipient_action',{p_actor:user.id,p_dispatch:context.dispatch.id,p_action:'READ'});
-        if(readError)throw new Error('Pembacaan belum dapat dicatat. Coba kembali.');}
+        if(readError)throw new Error('Pembacaan belum dapat dicatat. Coba kembali.');
+        revalidatePath('/kotak-masuk');revalidatePath('/kotak-keluar');}
     }
     if (
       doc.format === "PDF" &&

@@ -1,5 +1,6 @@
 "use client";
 
+import {notificationHref} from "@/domain/notification-links";
 import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -209,13 +210,8 @@ export function DashboardShell({
                       quickNotifs.slice(0, 4).map((item) => (
                         <Link
                           key={item.id}
-                          href={
-                            item.disposition_id
-                              ? "/disposisi"
-                              : item.letter_id
-                                ? `/surat/${item.letter_id}`
-                                : "/notifikasi"
-                          }
+                          href={notificationHref(item)}
+                          prefetch={false}
                           onClick={() => setIsNotifOpen(false)}
                           className="p-2.5 hover:bg-neutral-50 rounded-lg flex items-start gap-2.5 transition-colors block text-left"
                         >

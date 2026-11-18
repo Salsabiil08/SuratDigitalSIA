@@ -4,6 +4,7 @@ vi.mock('@/server/auth',()=>({requireUser:m.user}));
 vi.mock('@/server/letter-workflow',()=>({readLetter:m.read,downloadVersion:m.download}));
 vi.mock('@/lib/supabase/admin',()=>({createAdminClient:m.admin}));
 vi.mock('@/lib/supabase/server',()=>({createClient:m.client}));
+vi.mock('next/cache',()=>({revalidatePath:vi.fn()}));
 import {GET} from '../src/app/api/letters/[id]/document/route';
 const bytes=new Uint8Array([37,80,68,70,45,102,105,110,97,108]);
 let ctx:any;

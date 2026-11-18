@@ -1,4 +1,4 @@
-> **Panduan historis — bukan kontrak aktif.** Ikuti `AGENTS.md`, `docs/INDEX.md`, dan `docs/spec/08-alur-ndo-r04.md` di root repo. PR-04 disetujui untuk implementasi dan pengujian lokal; jangan mulai PR-05, ubah database production, merge atau deploy tanpa persetujuan. Bagian lama yang melarang editor, gambar TTD/stempel, pengiriman atau Kotak Masuk tidak mengalahkan keputusan pengguna terbaru. Panduan visual yang tidak bertentangan tetap dapat digunakan.
+> **Panduan historis — bukan kontrak aktif.** Ikuti `AGENTS.md`, `docs/INDEX.md`, dan `docs/spec/08-alur-ndo-r04.md` di root repo. PR-05 disetujui untuk implementasi dan pengujian lokal; jangan mulai PR-06, ubah database production, merge atau deploy tanpa persetujuan. Bagian lama yang melarang editor, gambar TTD/stempel, pengiriman atau Kotak Masuk tidak mengalahkan keputusan pengguna terbaru. Panduan visual yang tidak bertentangan tetap dapat digunakan.
 
 # ANTIGRAVITY.md: Membangun SIADocs R.04
 

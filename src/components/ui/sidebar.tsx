@@ -44,6 +44,8 @@ export function Sidebar({ user, unreadNotificationsCount, className }: SidebarPr
 
   const suratItems: NavItem[] = [
     { label: 'Surat Saya', href: '/surat' },
+    { label: 'Kotak Masuk', href: '/kotak-masuk' },
+    { label: 'Kotak Keluar', href: '/kotak-keluar' },
     { label: 'Buat Surat', href: '/surat/buat' },
     { label: 'Ambil Nomor', href: '/surat/ambil-nomor' },
   ];

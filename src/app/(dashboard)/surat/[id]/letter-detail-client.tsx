@@ -1,6 +1,7 @@
 "use client";
 import { decideReviewAction } from "@/server/actions/reviews";
 import { sendInternalLetterAction,receiveInternalLetterAction } from "@/server/actions/delivery";
+import {useSearchParams} from "next/navigation";
 import { displayLabel } from "@/domain/display-labels";
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
@@ -25,6 +26,8 @@ export function LetterDetailClient({
   id: string;
   initialData: Awaited<ReturnType<typeof getWorkflowLetter>>;
 }) {
+  const params=useSearchParams();const origin=params.get('asal');
+  const backTo=origin==='kotak-masuk'?'/kotak-masuk':origin==='kotak-keluar'?'/kotak-keluar':'/surat';
   const [data, setData] =
     useState<Awaited<ReturnType<typeof getWorkflowLetter>>>(initialData);
   const [error, setError] = useState("");
@@ -79,8 +82,8 @@ export function LetterDetailClient({
   const documentUrl = `/api/letters/${id}/document?areas=1&revision=${l.revision}`;
   return (
     <div className="max-w-5xl space-y-5">
-      <Link className="text-brand-red text-sm underline" href="/surat">
-        Kembali ke Surat Saya
+      <Link className="text-brand-red text-sm underline" href={backTo}>
+        Kembali ke {origin==='kotak-masuk'?'Kotak Masuk':origin==='kotak-keluar'?'Kotak Keluar':'Surat Saya'}
       </Link>
       <PageHeader title={l.subject} />
       {error && (
@@ -162,7 +165,7 @@ export function LetterDetailClient({
         <p className="text-sm">Dokumen: {l.finalized_at?'Final dan terkunci':'Belum final'} · Pengiriman: {data.delivery?.dispatch?'Terkirim':'Belum dikirim'}</p>
         {data.delivery?.dispatch && <>
           <p className="text-sm">Dikirim pada {new Date(data.delivery.dispatch.sent_at).toLocaleString('id-ID',{timeZone:'Asia/Jakarta'})} WIB. Versi dan sidik dokumen pengiriman dicatat tetap.</p>
-          {(data.delivery.recipients as {profile_id:string;recipient_role:string;read_at:string|null;received_at:string|null}[]).map(r=><p key={r.profile_id} className="text-sm">{r.recipient_role==='PRIMARY'?'Penerima utama':'Tembusan'} · {r.read_at?'Dokumen sudah dibuka':'Belum dibuka'} · {r.received_at?'Penerimaan dikonfirmasi':'Belum ada konfirmasi penerimaan'}</p>)}
+          {(data.delivery.recipients as {profile_id:string;recipient_role:string;read_at:string|null;received_at:string|null}[]).map(r=><p key={r.profile_id} className="text-sm">{r.recipient_role==='PRIMARY'?'Penerima utama':'Tembusan'} · {r.read_at?'Dokumen sudah dibuka':'Belum dibuka'} · {r.recipient_role==='CC'?'Salinan, tanpa konfirmasi penerimaan utama':r.received_at?'Penerimaan dikonfirmasi':'Belum ada konfirmasi penerimaan'}</p>)}
           <p className="text-xs text-neutral-600">Membuka atau mengunduh dokumen bukan konfirmasi penerimaan. Tembusan tidak otomatis wajib membalas.</p>
           {data.delivery.recipientRole==='PRIMARY' && !data.delivery.recipients.find((r:any)=>r.profile_id===data.userId)?.received_at && <Button isLoading={busy} onClick={()=>act(()=>receiveInternalLetterAction(data.delivery.dispatch.id),'Penerimaan Anda telah dicatat.')}>Konfirmasi Terima Surat</Button>}
         </>}
