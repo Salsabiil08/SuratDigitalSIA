@@ -1,0 +1,15 @@
+import { PGlite } from '@electric-sql/pglite';
+import { beforeAll,afterAll,it } from 'vitest';
+import {readdirSync,readFileSync} from 'node:fs';
+const db=new PGlite();
+const sql=(p:string)=>readFileSync(p,'utf8').split('\n').filter(l=>!l.startsWith('\\')).join('\n');
+beforeAll(async()=>{
+ await db.exec(sql('supabase/tests/00_stub_supabase.sql'));
+ for(const f of readdirSync('supabase/migrations').filter(f=>f.endsWith('.sql')).sort())await db.exec(sql('supabase/migrations/'+f));
+ await db.exec(sql('supabase/seed.sql'));await db.exec(sql('supabase/tests/00_workflow_fixtures.sql'));
+},30000);
+afterAll(()=>db.close());
+it('fixture penomoran/pembatalan/disposisi sesuai alur RPC nyata',async()=>{await db.exec(sql('supabase/tests/01_numbering_test.sql'));});
+it('fixture RLS tidak memberi grant ALL atau menganggap pengguna boleh bypass RPC',async()=>{await db.exec(sql('supabase/tests/02_rls_test.sql'));});
+
+it('fixture approval independen, self-confirmation, tagihan dan review terpisah',async()=>{await db.exec(sql('supabase/tests/03_approval_test.sql'));});

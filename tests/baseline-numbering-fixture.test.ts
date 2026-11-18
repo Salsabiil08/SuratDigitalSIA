@@ -11,7 +11,7 @@ beforeAll(async()=>{
 },30000);
 afterAll(()=>db.close());
 it('fixture SQL baseline gagal sebelum PR-02 karena dokumen versi tidak disiapkan',async()=>{
- const sql=readFileSync('supabase/tests/01_numbering_test.sql','utf8').split('\n').filter(line=>!line.startsWith('\\')).join('\n');
+ const sql=readFileSync('supabase/tests/archive/01_numbering_test.pr02.sql','utf8').split('\n').filter(line=>!line.startsWith('\\')).join('\n');
  try { await expect(db.exec(sql)).rejects.toThrow('Surat belum siap diterbitkan.'); }
  finally { await db.exec('rollback'); }
  expect((await db.query('select id from number_issuances')).rows).toHaveLength(0);
