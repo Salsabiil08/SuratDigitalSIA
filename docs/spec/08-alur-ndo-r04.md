@@ -13,7 +13,7 @@ Tanggal keputusan: 18 November 2026 (WIB). Status: **arah dan keputusan pengguna
 | Disposisi | Selesai hanya setelah pemberi memeriksa dan menerima hasil. |
 | Balasan resmi | Surat baru yang terhubung ke surat asal; bukan menimpa naskah asal atau memakai ulang nomornya. |
 | Perlindungan baseline | Pertahankan fitur production dan identitas visual. Jangan mengubah otomatis 13 surat lama tanpa versi dokumen. |
-| Tahap aktif | PR-00 saja. PR-01 menunggu persetujuan baru. Database production, merge dan deployment selalu memerlukan persetujuan tersendiri. |
+| Tahap aktif | PR-00/PR-01 dalam draft; PR-02 kategori/reviewer diizinkan untuk implementasi/pengujian lokal. PR-03 menunggu persetujuan baru. Database production, merge dan deployment selalu memerlukan persetujuan tersendiri. |
 
 ## 2. Cakupan dan invarian SIA
 
@@ -102,4 +102,4 @@ Masih perlu validasi perusahaan: siapa/lingkup reviewer yang sah; pengesah kebij
 
 ## 9. Gerbang implementasi
 
-Rincian migrasi dan pembagian PR ada di [rencana migrasi](../plans/R04_NDO_MIGRATION_PLAN.md). PR-00 selesai pada dokumentasi dan hasil pemeriksaan; tidak membuat SQL baru, menjalankan backfill, mengubah alur runtime, merge, atau deploy. PR-01 tidak dimulai sampai persetujuan berikutnya.
+Rincian migrasi dan pembagian PR ada di [rencana migrasi](../plans/R04_NDO_MIGRATION_PLAN.md). PR-00 selesai pada dokumentasi dan hasil pemeriksaan; tidak membuat SQL baru, menjalankan backfill, mengubah alur runtime, merge, atau deploy. PR-01 selesai dalam draft, dan PR-02 kini diizinkan terpisah. Lihat [hasil PR-02](../plans/PR02_VALIDATION.md); PR-03 tidak dimulai sampai persetujuan berikutnya.

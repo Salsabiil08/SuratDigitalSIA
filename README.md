@@ -8,7 +8,7 @@ Aplikasi persuratan digital yang berjalan di https://suratdigital-sig.vercel.app
 
 Baseline production adalah commit `4e0c0c661af58dd6db729c202643cd6629f7eb07`. Editor format/pratinjau, draft/versi, penomoran, pengesahan dan disposisi dua arah mempunyai bukti kerja. Reviewer independen, pengiriman/penerimaan internal, Kotak Masuk dan balasan resmi berelasi masih menjadi target pengembangan. Jangan menafsirkan checklist lama sebagai klaim seluruh R.04 adaptasi NDO telah selesai.
 
-Saat ini **hanya PR-00 (dokumentasi baseline dan rencana)** yang disetujui. PR-01 menunggu persetujuan berikutnya. Tidak ada izin mengubah database production, merge, atau deploy.
+PR-00 dan PR-01 tersedia sebagai draft; **PR-02 (kategori dan reviewer independen)** disetujui untuk implementasi/pengujian pada branch terpisah. PR-03 menunggu persetujuan berikutnya. Tidak ada izin mengubah database production, merge, atau deploy.
 
 | Dokumen | Tujuan |
 |---|---|
@@ -16,8 +16,9 @@ Saat ini **hanya PR-00 (dokumentasi baseline dan rencana)** yang disetujui. PR-0
 | [Baseline production](docs/baselines/production-2026-11-18.md) | SHA/deployment, bukti audit, perlindungan fitur dan 13 surat lama |
 | [Spesifikasi target R.04](docs/spec/08-alur-ndo-r04.md) | Keputusan pengguna, reviewer, status, akses penerima dan relasi surat |
 | [Rencana migrasi](docs/plans/R04_NDO_MIGRATION_PLAN.md) | Perubahan aditif, urutan PR, risiko dan gerbang persetujuan |
+| [Laporan PR-02](docs/plans/PR02_VALIDATION.md) | Hasil implementasi, pengujian dan risiko kategori/review |
 | [Laporan PR-00](docs/plans/PR00_VALIDATION.md) | Cakupan dan hasil pemeriksaan PR ini |
-| [Backlog](tasks/BACKLOG.md) | Tugas PR-00 dan pekerjaan berikutnya yang belum diizinkan |
+| [Backlog](tasks/BACKLOG.md) | Progres PR-00–02 dan pekerjaan berikutnya yang belum diizinkan |
 
 ## Menjalankan lokal
 
@@ -39,4 +40,4 @@ npm run build        # build lokal; tidak melakukan deployment
 
 Laporan audit baseline mencatat 69 tes lulus. Ini bukan bukti bahwa reviewer, pengiriman, penerimaan dan balasan target baru sudah lulus UAT. Hasil pemeriksaan PR-00 dicatat terpisah pada laporan PR.
 
-`vercel.json` menonaktifkan auto-deploy hanya untuk branch `docs/pr-00-r04-ndo-baseline`, agar peninjauan dokumentasi tidak menerbitkan deployment. Tidak ada perubahan pengaturan project production atau perintah deploy pada PR-00.
+`vercel.json` menonaktifkan auto-deploy hanya untuk branch PR-00, PR-01 dan PR-02 yang sedang ditinjau. Tidak ada perubahan pengaturan project production atau perintah deploy pada PR-00.

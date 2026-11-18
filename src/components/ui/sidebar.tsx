@@ -53,6 +53,7 @@ export function Sidebar({ user, unreadNotificationsCount, className }: SidebarPr
   }
 
   suratItems.push(
+    { label: 'Pemeriksaan Surat', href: '/pemeriksaan' },
     { label: 'Pengesahan', href: '/pengesahan' },
     { label: 'Disposisi', href: '/disposisi' }
   );

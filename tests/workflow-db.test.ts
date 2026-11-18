@@ -37,6 +37,7 @@ const draft = async (
 ) => {
   const p = {
     source: "CREATE",
+    categoryCode: "PEMBERITAHUAN",
     letterTypeCode: type,
     subject: "Uji revisi",
     letterDate: jakartaDate(),
@@ -111,7 +112,7 @@ describe.sequential("Database: alur nyata dengan akun berbeda", () => {
   it("membuat draft tanpa nomor, tanpa preview pengajuan ditolak", async () => {
     letterId = await draft(5, "IN");
     expect((await get(letterId)).official_number).toBeNull();
-    await expect(act(letterId, 5, "SUBMIT")).rejects.toThrow(/preview/i);
+    await expect(act(letterId, 5, "SUBMIT")).rejects.toThrow(/preview|pratinjau/i);
   });
   it("membatasi pengeditan, tanggal mundur, dan perubahan oleh akun lain", async () => {
     await expect(
