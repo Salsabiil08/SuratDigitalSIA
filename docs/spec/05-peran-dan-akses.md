@@ -1,3 +1,5 @@
+> Dokumen historis: rancangan R.04 sebelum adaptasi NDO. Untuk keputusan aktif gunakan [spesifikasi target 08](08-alur-ndo-r04.md) dan [revisi production 00](00-revisi-alur.md). Aturan lama yang bertentangan tidak boleh dipakai untuk menghapus fitur production atau menganggap target baru sudah tersedia.
+
 # Peran dan Hak Akses
 
 Akses ditegakkan di database (RLS, `supabase/migrations/20261111000004_rls.sql`) dan di server. Menyembunyikan tombol saja tidak cukup.

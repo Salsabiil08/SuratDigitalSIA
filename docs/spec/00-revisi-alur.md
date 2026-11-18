@@ -1,3 +1,5 @@
+> Catatan fitur production yang dipertahankan. Tambahan target adaptasi NDO dan batas pekerjaan aktif ada di [08-alur-ndo-r04.md](08-alur-ndo-r04.md). PR-00 hanya dokumentasi; fitur target belum diimplementasikan.
+
 # Revisi Alur SIADocs — REV-01 sampai REV-07
 
 Permintaan pengguna 18 November 2026. Berlaku di atas larangan editor, gambar TTD/stempel, dan tanggal mundur dalam instruksi R.04. R.03 tetap menjadi acuan aturan bisnis yang tidak diganti. R.03 sendiri memakai unggahan tanda tangan basah; mekanisme gambar di bawah adalah perubahan eksplisit pengguna.

@@ -1,6 +1,7 @@
 @AGENTS.md
 
-## Tambahan untuk Claude Code
+## Acuan pekerjaan aktif
 
-- Peran khusus ada di `.claude/agents/` (architect, db-engineer, backend-engineer, frontend-engineer, qa-engineer, reviewer). Delegasikan tugas sesuai peran dan minta peninjau memeriksa hasil sebelum tugas ditandai selesai.
-- Perintah siap pakai: `/next-task`, `/check`, `/review`.
+Baca `docs/INDEX.md`, spesifikasi target `docs/spec/08-alur-ndo-r04.md`, baseline dan rencana migrasi. Basis hanya `Salsabiil08/SuratDigitalSIA`. Saat ini hanya PR-00 disetujui; berhenti dan laporkan setelah selesai. PR-01, perubahan database production, merge dan deployment menunggu persetujuan tersendiri. Panduan historis tidak mengalahkan keputusan terbaru.
+
+Peran dan perintah di `.claude/` adalah referensi kerja, bukan izin otomatis memperluas cakupan atau memulai tahap berikutnya.

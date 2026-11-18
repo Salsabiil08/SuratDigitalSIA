@@ -1,3 +1,34 @@
+# Backlog aktif — R.04 adaptasi NDO
+
+Status: hanya PR-00 disetujui pada 18 November 2026. Basis `Salsabiil08/SuratDigitalSIA`, baseline `4e0c0c661af58dd6db729c202643cd6629f7eb07`. Jangan merekonsiliasi `SIAdocs`.
+
+## PR-00 — dokumentasi baseline dan rencana (aktif)
+- [x] Tetapkan repo/SHA/deployment dan manifest baseline tanpa secret.
+- [x] Dokumentasikan keputusan reviewer hanya memeriksa, bukan mengedit.
+- [x] Catat default Permohonan/Laporan wajib dan Pemberitahuan opsional, override jenis–kategori berotorisasi, serta status belum tervalidasi perusahaan.
+- [x] Pisahkan finalitas dokumen, pengiriman/penerimaan dan selesai alur dalam kontrak target.
+- [x] Dokumentasikan akses penerima setelah kirim, deduplikasi pembuat-pejabat, balasan berelasi dan penerimaan hasil disposisi oleh pemberi.
+- [x] Lindungi 13 surat lama dan rencanakan migrasi aditif tanpa backfill otomatis.
+- [x] Selaraskan acuan agen/README/indeks dan tandai panduan lama historis.
+- [x] Verifikasi tautan, batas diff, manifest dan `npm run check`; catat laporan PR-00.
+- [ ] Buka PR untuk ditinjau tanpa merge/deployment; laporkan dan berhenti.
+
+## Tahap berikutnya — belum diizinkan
+- [ ] PR-01: otorisasi notifikasi/event dan kerangka status — **menunggu persetujuan baru; jangan mulai**.
+- [ ] PR-02: kategori dan reviewer independen.
+- [ ] PR-03: persetujuan pilihan/pejabat wajib dan self-signer.
+- [ ] PR-04: pengiriman/penerimaan transaksi dan RLS snapshot.
+- [ ] PR-05: Kotak Masuk/Keluar dan label penyelesaian alur.
+- [ ] PR-06: balasan surat baru berelasi.
+- [ ] PR-07: integrasi disposisi dari Inbox dan hasil berelasi.
+- [ ] PR-08: UAT lintas peran dan regresi lengkap.
+
+Rincian: [spesifikasi target](../docs/spec/08-alur-ndo-r04.md), [rencana migrasi](../docs/plans/R04_NDO_MIGRATION_PLAN.md), [validasi PR-00](../docs/plans/PR00_VALIDATION.md).
+
+## Riwayat backlog sebelum adaptasi NDO
+
+Checklist di bawah dipertahankan sebagai catatan pekerjaan terdahulu. Status `[x]` bukan klaim seluruh target NDO selesai dan tidak menutup GAP audit. Beberapa klaim lama perlu dibaca bersama baseline dan laporan audit.
+
 # Backlog (R.04)
 
 Kerjakan berurutan. Tugas selesai bila kriteria terpenuhi dan `npm run check` lulus. Rincian milestone ada di `ANTIGRAVITY.md` bagian 9.

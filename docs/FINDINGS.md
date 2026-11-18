@@ -1,3 +1,26 @@
+# Temuan aktif — PR-00 R.04 adaptasi NDO
+
+Tanggal: 18 November 2026. Temuan audit disimpan, belum diperbaiki oleh PR dokumentasi ini.
+
+| ID | Keputusan/temuan | Perlakuan PR-00 |
+|---|---|---|
+| D-01 | Website live berasal dari SuratDigitalSIA, bukan SIAdocs | Pengguna menetapkan SuratDigitalSIA sebagai basis; tidak ada rekonsiliasi sekarang. |
+| D-02 | Review wajib/opsional harus memperhitungkan kategori dan jenis | Default awal Permohonan/Laporan wajib, Pemberitahuan opsional; konfigurasi awal belum tervalidasi perusahaan. Tidak diterapkan ke database. |
+| D-03 | Reviewer tidak mengedit | Catatan, setujui pemeriksaan atau minta revisi saja; pembuat membuat versi baru. |
+| G-01 | Penerima dapat membaca sejak NUMBERED sebelum kirim | Tetap GAP sampai PR pengiriman/RLS disetujui; target hak baca berbasis snapshot pengiriman. |
+| G-02 | finalized_at menyebabkan label Selesai tanpa bukti pengiriman/penerimaan | Kontrak target memisahkan finalitas dan selesai alur; runtime tidak diubah. |
+| G-03 | Pembuat yang juga signer mendapat approval duplikat | Rencana deduplikasi tanpa melewati kewenangan pihak wajib lain/penerbitan/TTD. |
+| G-04 | Reviewer, Inbox, receipt dan balasan formal belum tersambung | Target dan urutan PR dicatat, bukan dinyatakan tersedia. |
+| G-05 | Ada 13 surat bernomor tanpa versi dokumen dan selisih history migrasi | Tidak diubah otomatis, tidak dibuat bukti palsu, tidak menjalankan ulang baseline/repair. |
+| G-06 | Helper notifikasi tanpa guard dan judul berkode; ringkasan nomor lama statis | Tetap temuan terbuka untuk PR-01/PR terkait; tidak diperbaiki terselubung dalam PR-00. |
+| G-07 | Panduan lama meniadakan editor/pengiriman/Inbox dan mengklaim selesai penuh | Diberi penanda historis; spesifikasi target dan bukti baseline menjadi acuan aktif. |
+
+Lihat [baseline](baselines/production-2026-11-18.md), [spesifikasi target](spec/08-alur-ndo-r04.md) dan [rencana migrasi](plans/R04_NDO_MIGRATION_PLAN.md). Validasi perusahaan tentang lingkup reviewer, pengesah policy, override per jenis, bukti terima luar dan penutupan balasan masih tertunda. Izin PR-00 tidak mengizinkan PR-01, perubahan database production, merge atau deployment.
+
+## Catatan historis sebelum PR-00
+
+Catatan berikut dipertahankan sebagai riwayat, bukan bukti seluruh target baru sudah berfungsi. Misalnya klaim lama bahwa kolom distribution_status dihapus tidak sama dengan schema aktual audit: kolom/tabel masih ada, alurnya belum tersambung.
+
 # Temuan & Laporan Hasil Uji Arsitektur (Blueprint R.04)
 
 Catat di sini temuan, klarifikasi teknis, atau penegasan aturan bisnis SIADocs Blueprint R.04.

@@ -1,0 +1,105 @@
+{
+  "repository": "Salsabiil08/SuratDigitalSIA",
+  "baseline_ref": "main",
+  "baseline_sha": "4e0c0c661af58dd6db729c202643cd6629f7eb07",
+  "baseline_tree_sha": "a4758982f5077d1e1a65d249fbd707275d355e49",
+  "source_trees": {
+    "src": "c2be74467154e854761f75302560adebd5f35ca3",
+    "supabase": "23af496ebab8c1b3937a178429884f642c809db1",
+    "tests": "7b6a0cdcf2416e9052610b433d2bc536fc53f37f",
+    ".github": "3a2cb707c3412db6422ea856a06d1197dcea3908"
+  },
+  "dependency_blobs": {
+    "package.json": "d0dfc15549fb8eead5d7f773d44cc554910e788b",
+    "package-lock.json": "99b692f964876d36c1a8249e8ab24926e1efc75d"
+  },
+  "website": "https://suratdigital-sig.vercel.app/",
+  "production_deployment_id": "dpl_4aVP7FGF4i9eJhqARNu65dZtckZc",
+  "production_verified_before_pr00": true,
+  "audit_date_wib": "2026-11-18",
+  "audit_snapshot_not_live_db_query": true,
+  "legacy_numbered_without_current_version": 13,
+  "local_migration_count": 14,
+  "production_history_versions_observed_in_audit": [
+    "20261117204405",
+    "20261117204922",
+    "20261117210259",
+    "20261117213134",
+    "20261118012449",
+    "20261118013200",
+    "20261118013517",
+    "20261118020743"
+  ],
+  "migration_files": [
+    {
+      "path": "supabase/migrations/20261111000001_schema.sql",
+      "sha256": "f3353e946f318d5a8dba1b7f312a3fbfdbb757c77c23ded22c0f68c16cb8b165",
+      "history_observed_in_audit": false
+    },
+    {
+      "path": "supabase/migrations/20261111000002_constraints.sql",
+      "sha256": "e86f7042d70c95107e8e74c77054e43211a3e1adb77e80c8305931f1e41307ed",
+      "history_observed_in_audit": false
+    },
+    {
+      "path": "supabase/migrations/20261111000003_functions.sql",
+      "sha256": "aa23a712a9f72a04236ad2c24d9f3745af1bf15970200d25ca818e7134b9c4ee",
+      "history_observed_in_audit": false
+    },
+    {
+      "path": "supabase/migrations/20261111000004_rls.sql",
+      "sha256": "95e008ac2da80a507f521211ab186b971f39bc8727cb3b33fe155b531151c471",
+      "history_observed_in_audit": false
+    },
+    {
+      "path": "supabase/migrations/20261114000001_r04.sql",
+      "sha256": "8dad7dd5357655b7f930625d1386dc1ab70acbc2fce3c8ba002baaf9f1fd3185",
+      "history_observed_in_audit": false
+    },
+    {
+      "path": "supabase/migrations/20261114000002_m2_rls.sql",
+      "sha256": "e64e339008b2d2baec95023e10153489d70778ca50a57b1875c1e5ec16cffcbc",
+      "history_observed_in_audit": false
+    },
+    {
+      "path": "supabase/migrations/20261117204405_revision_workflow.sql",
+      "sha256": "d2893e510f9c13f3f06f6c772fe2aaeef4776529aa67928e36fc7ad666010e4a",
+      "history_observed_in_audit": true
+    },
+    {
+      "path": "supabase/migrations/20261117204922_workflow_permissions.sql",
+      "sha256": "083197c17892db73348eb4daf68ded348af236bd5fef78ab33bf79af260070c5",
+      "history_observed_in_audit": true
+    },
+    {
+      "path": "supabase/migrations/20261117210259_authorized_cancellation.sql",
+      "sha256": "c6d973e68daeefd1344f11b0a5041e482471382a9c64e33acb8500c50b77414e",
+      "history_observed_in_audit": true
+    },
+    {
+      "path": "supabase/migrations/20261117213134_workflow_validation_guards.sql",
+      "sha256": "0aa3a9dff9e672fcb2fdfe9049245ab79bf8f5c6cf5a72d96542e9b7ebb956c4",
+      "history_observed_in_audit": true
+    },
+    {
+      "path": "supabase/migrations/20261118012449_disposition_review_flow.sql",
+      "sha256": "459ef3e38f0f357d6dfa0f8cc279f49feba9a93de342240fcd1edee1a45cdee2",
+      "history_observed_in_audit": true
+    },
+    {
+      "path": "supabase/migrations/20261118013200_general_senior_manager.sql",
+      "sha256": "714d3fcdd908e800e795d7d1fda2275969e4e87f3f5812e7e6ae58c4a8c5857e",
+      "history_observed_in_audit": true
+    },
+    {
+      "path": "supabase/migrations/20261118013517_cancellation_read_scope.sql",
+      "sha256": "a9e3aaddfa93dab6ac2781177fa26779d13a2611dedfb4f2f439d6666e4e8c8e",
+      "history_observed_in_audit": true
+    },
+    {
+      "path": "supabase/migrations/20261118020743_rich_text_content.sql",
+      "sha256": "77a0ece2e925d920e143aa099d91401d34b6c70ab26b33a019b2a24b4f2d338f",
+      "history_observed_in_audit": true
+    }
+  ]
+}

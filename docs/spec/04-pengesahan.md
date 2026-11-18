@@ -1,3 +1,5 @@
+> Dokumen historis: rancangan R.04 sebelum adaptasi NDO. Untuk keputusan aktif gunakan [spesifikasi target 08](08-alur-ndo-r04.md) dan [revisi production 00](00-revisi-alur.md). Aturan lama yang bertentangan tidak boleh dipakai untuk menghapus fitur production atau menganggap target baru sudah tersedia.
+
 # Pengesahan Tanda Tangan (R.04)
 
 Tanda tangan dan stempel selalu di luar SIADocs, tanpa TTE tersertifikasi. Pembuat memilih jalur di Buat Surat atau Ambil Nomor untuk surat yang memerlukan tanda tangan (Eksternal dan Tagihan selalu, Internal bila perlu). Jalur dapat diubah sebelum bernomor dan terkunci setelah nomor terbit. Persetujuan wajib tetap berjalan sebelum nomor pada kedua jalur. Penandatangan hanya Senior Manager atau Direktur Utama.

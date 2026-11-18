@@ -1,3 +1,5 @@
+> **Panduan historis — bukan kontrak aktif.** Ikuti `AGENTS.md`, `docs/INDEX.md`, dan `docs/spec/08-alur-ndo-r04.md` di root repo. PR-00 saja yang disetujui; jangan mulai PR-01, ubah database production, merge atau deploy tanpa persetujuan. Bagian lama yang melarang editor, gambar TTD/stempel, pengiriman atau Kotak Masuk tidak mengalahkan keputusan pengguna terbaru. Panduan visual yang tidak bertentangan tetap dapat digunakan.
+
 # ANTIGRAVITY.md: Membangun SIADocs R.04
 
 File ini adalah instruksi utama untuk agen di Google Antigravity (atau agen lain) agar membangun aplikasi **SIADocs** PT Semen Indonesia Aceh dengan **Next.js, TypeScript, dan Supabase**. Baca seluruh file sebelum menulis kode.
