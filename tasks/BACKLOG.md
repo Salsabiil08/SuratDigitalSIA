@@ -55,7 +55,7 @@ Status: PR-00–04 selesai dalam draft; implementasi PR-05 disetujui pada 18 Nov
 - [x] PRIMARY/CC/status tiap penerima serta final/kirim/baca/terima terpisah, tanpa label Selesai otomatis.
 - [x] Receipt eksplisit, notifikasi/detail sah, refresh cache setelah baca/terima; Surat Saya dipertahankan.
 - [x] Migrasi aditif read-only dan uji PostgreSQL/mailbox/UI/server/regresi.
-- [ ] Buka Draft PR berbasis PR-04, verifikasi CI/production dan laporkan; berhenti sebelum PR-06.
+- [x] Buka [Draft PR #6](https://github.com/Salsabiil08/SuratDigitalSIA/pull/6) berbasis PR-04; CI check 202/202 dan PostgreSQL/konkurensi lulus (run #33), production tidak berubah; laporkan dan berhenti sebelum PR-06.
 
 ## Tahap berikutnya — belum diizinkan
 - [ ] PR-06: balasan surat baru berelasi.

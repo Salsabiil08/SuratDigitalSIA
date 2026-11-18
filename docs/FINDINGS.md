@@ -1,6 +1,6 @@
 # Pembaruan PR-05 — 18 November 2026
 
-PR-05 diizinkan setelah penerimaan PR-04; [laporan](plans/PR05_VALIDATION.md). Production belum berubah.
+PR-05 diizinkan setelah penerimaan PR-04; [laporan](plans/PR05_VALIDATION.md), [Draft PR #6](https://github.com/Salsabiil08/SuratDigitalSIA/pull/6). CI run #33 lulus: 202 tes/typecheck serta PostgreSQL/konkurensi nyata. Build lokal lulus. Production belum berubah; UAT staging masih diperlukan.
 
 - Kotak Masuk hanya dari dispatch_recipients resmi milik akun; Kotak Keluar dari pengiriman dengan kewenangan sender/creator/delegasi sah. Super Admin bukan pembaca global.
 - Daftar memakai client sesi/RLS dan RPC SECURITY INVOKER tanpa actor parameter/service role. Pencarian literal, filter status penerima dan pagination dihitung pada snapshot query yang sama; error tidak diubah menjadi sukses kosong.

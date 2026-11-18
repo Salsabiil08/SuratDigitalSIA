@@ -40,10 +40,10 @@ Kartu memakai komponen/palet/typografi SIADocs yang ada, grid/flex responsif, te
 
 ## Hasil lokal dan fixture
 
-- `npm run check`: **202/202 tes dan typecheck lulus**, 22 berkas, termasuk seluruh regresi PR-04. Hasil akhir CI dicatat sesudah run.
+- `npm run check`: **202/202 tes dan typecheck lulus**, 22 berkas, termasuk seluruh regresi PR-04. CI check juga lulus pada run #33 (lihat bukti di bawah).
 - Domain mailbox/link 4 kasus; server read 5 kasus (sesi/RPC tanpa actor/service, tanpa akun, query/response gagal); UI server-render 5 kasus (status/tombol PRIMARY, CC, multi recipient/agregat, error terpisah kosong, URL/pagination dan layout responsif).
 - Fixture `05_mailbox_test.sql` lewat PGlite: final unsent tidak muncul; 23 pengiriman, pencarian literal/nomor/pengirim/case, filter READ/RECEIVE independen, tiga halaman tanpa duplikasi, clamp page, akun lain/admin, delegasi dicabut, CC dan status masing-masing, daftar tidak memutasi read/receipt, query permission/inactive benar-benar error, anon/service tidak mendapat execute RPC.
-- Fixture yang sama ditambahkan ke suite PostgreSQL nyata, bersama regresi nomor/review/approval/TTD/disposisi/delivery/Storage dan konkurensi PR-04. Kelulusan PGlite tidak disamakan dengan PostgreSQL sebelum hasil CI tersedia.
+- Fixture yang sama ditambahkan ke suite PostgreSQL nyata, bersama regresi nomor/review/approval/TTD/disposisi/delivery/Storage dan konkurensi PR-04. Suite PostgreSQL nyata juga lulus pada CI run #33.
 - `npm run build` lulus kompilasi, typecheck dan pembangkitan 23 halaman termasuk dua route baru; bukan deployment.
 - Migrasi tidak DML pada surat/dispatch/recipient/audit. Uji forward 13 surat lama tetap utuh, tanpa delivery/receipt fiktif. Seluruh 18 migrasi baseline dan dependensi/CI tetap dipertahankan; hanya migrasi baru, fixture dan skrip pengujian yang ditambah.
 
@@ -60,4 +60,12 @@ Metadata production hanya dibaca: RPC mailbox belum ada, tabel dispatch belum di
 
 ## Titik berhenti
 
-Draft PR berbasis PR-04. Tidak merge, tidak mengubah database production atau deploy. Tidak mengimplementasikan PR-06 balasan resmi atau PR-07 integrasi disposisi. Hasil publikasi/CI ditambahkan setelah verifikasi, kemudian berhenti untuk peninjauan pengguna.
+Draft PR berbasis PR-04. Tidak merge, tidak mengubah database production atau deploy. Tidak mengimplementasikan PR-06 balasan resmi atau PR-07 integrasi disposisi. Hasil publikasi/CI tercatat di bawah; berhenti untuk peninjauan pengguna.
+
+## Bukti publikasi dan CI
+
+- [Draft PR #6](https://github.com/Salsabiil08/SuratDigitalSIA/pull/6), base `feat/pr-04-internal-delivery` pada `40a593e1e9e3a7033daf4f4f7d6b01ebe449765c`, commit implementasi `4be59c7fdd827f5064bde6ded172fd9a4cd0edf8`. 33 berkas berubah, termasuk laporan/konfigurasi.
+- [CI run #33](https://github.com/Salsabiil08/SuratDigitalSIA/actions/runs/44264159108): **success**, job check dan db keduanya lulus. Check 202/202 tes dalam 22 berkas; PostgreSQL menjalankan seluruh migrasi termasuk mailbox dan fixture 01–05, kemudian konkurensi. Log: `konkurensi: 40|40|1|40`, `PENGIRIMAN/PEMBACAAN/PENERIMAAN KONKUREN LULUS: 20 retry masing-masing, satu snapshot dan event`, `UJI DATABASE LULUS`.
+- Pemeriksaan seluruh 18 blob migrasi PR-04 identik; dependensi dan workflow CI tidak diubah. Tautan Markdown yang berubah valid; `git diff --check` dan sintaks shell lulus.
+- Verifikasi read-only Vercel: branch PR-05 **0 deployment**. Production tetap READY `dpl_4aVP7FGF4i9eJhqARNu65dZtckZc`, commit main `4e0c0c661af58dd6db729c202643cd6629f7eb07`; main tetap sama. Tidak ada merge atau mutasi database production.
+- Commit penutup hanya memperbarui dokumentasi bukti ini. UAT staging belum dijalankan; keberhasilan CI bukan pengganti pengujian Supabase Auth/Storage dan browser lintas akun/perangkat.
