@@ -71,7 +71,7 @@ export default function KonfirmasiPenerbitanPage() {
           <div>
             <h2 className="text-xl font-bold text-neutral-900 m-0">Nomor Resmi Berhasil Diterbitkan!</h2>
             <p className="text-xs text-neutral-500 mt-1">
-              Status surat telah bertransisi menjadi <b>Sudah Bernomor (NUMBERED)</b> dalam satu transaksi ACID.
+              Surat sudah memiliki nomor resmi. Nomor ini tersimpan dan tidak dapat digunakan untuk surat lain.
             </p>
           </div>
 
@@ -129,7 +129,7 @@ export default function KonfirmasiPenerbitanPage() {
               </div>
               <div className="flex justify-between py-2 border-b border-[#EEEEEA]">
                 <span className="text-neutral-500 text-xs">Status Prasyarat:</span>
-                <Chip variant="blue">Siap Diberi Nomor (READY_TO_ISSUE)</Chip>
+                <Chip variant="blue">Siap Diberi Nomor</Chip>
               </div>
               <div className="flex justify-between py-2 border-b border-[#EEEEEA]">
                 <span className="text-neutral-500 text-xs">Zona Waktu Operasional:</span>

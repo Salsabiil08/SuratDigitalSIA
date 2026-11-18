@@ -393,11 +393,180 @@ describe.sequential("Database: alur nyata dengan akun berbeda", () => {
     expect((await get(id)).status).toBe("CANCELLED");
     expect((await get(id)).official_number).toBe(num);
   });
-  it('menolak rincian tagihan kosong dan konfirmasi luar null',async()=>{
-    const bank=(await rows('select id from master_bank limit 1'))[0].id;
-    await expect(draft(6,'Tag',[3,2],{billing:{bankId:bank,accountNumber:'UJI',accountHolder:'UJI'}})).rejects.toThrow(/rincian/i);
-    const id=await draft(5,'KRE',[2],{signatureMode:'EXTERNAL'});await act(id,5,'PREVIEW');await act(id,5,'SUBMIT');await act(id,2,'APPROVE');await issue(id,5,'null-guard');const l=await get(id);
-    await expect(run('select finalize_letter($1,$2,$3,$4)',[actor(5),id,l.revision,null])).rejects.toThrow(/Konfirmasi/);
+  it("menolak rincian tagihan kosong dan konfirmasi luar null", async () => {
+    const bank = (await rows("select id from master_bank limit 1"))[0].id;
+    await expect(
+      draft(6, "Tag", [3, 2], {
+        billing: { bankId: bank, accountNumber: "UJI", accountHolder: "UJI" },
+      }),
+    ).rejects.toThrow(/rincian/i);
+    const id = await draft(5, "KRE", [2], { signatureMode: "EXTERNAL" });
+    await act(id, 5, "PREVIEW");
+    await act(id, 5, "SUBMIT");
+    await act(id, 2, "APPROVE");
+    await issue(id, 5, "null-guard");
+    const l = await get(id);
+    await expect(
+      run("select finalize_letter($1,$2,$3,$4)", [
+        actor(5),
+        id,
+        l.revision,
+        null,
+      ]),
+    ).rejects.toThrow(/Konfirmasi/);
   });
+});
 
+describe.sequential("Disposisi: surat kembali untuk diperiksa pemberi", () => {
+  let id: string, response: string;
+  const disp = async () =>
+    (await rows("select * from dispositions where id=$1", [id]))[0];
+  const move = async (n: number, action: string, note = "") =>
+    run("select disposition_workflow($1,$2,$3,$4,$5::jsonb)", [
+      actor(n),
+      action,
+      id,
+      (await disp()).revision,
+      JSON.stringify({ note }),
+    ]);
+  it("staf dan admin tanpa jabatan tidak dapat memberi disposisi, GM tidak lintas unit", async () => {
+    const create = (n: number, r: number) =>
+      rows("select disposition_workflow($1,'CREATE',null,null,$2::jsonb)", [
+        actor(n),
+        JSON.stringify({
+          recipientId: actor(r),
+          subject: "Uji disposisi",
+          instruction: "Buat surat tindak lanjut",
+          priority: "NORMAL",
+          requiresLetter: true,
+        }),
+      ]);
+    await expect(create(5, 6)).rejects.toThrow(/jabatan/);
+    await expect(create(1, 5)).rejects.toThrow(/penugasan/);
+    await expect(create(4, 6)).rejects.toThrow(/kewenangan/);
+    id = (await create(4, 5))[0].disposition_workflow;
+    expect((await disp()).status).toBe("NEW");
+    expect((await disp()).letter_id).toBeNull();
+  });
+  it("penerima tidak dapat menutup sendiri atau mengirim sebelum surat selesai", async () => {
+    await expect(move(5, "ACCEPT")).rejects.toThrow(/kewenangan/);
+    await expect(move(6, "START")).rejects.toThrow(/berwenang/);
+    await expect(move(5, "SUBMIT", "Sudah dikerjakan")).rejects.toThrow(
+      /Selesaikan surat/,
+    );
+    response = await draft(5, "IN", [], { dispositionId: id });
+    expect((await disp()).response_letter_id).toBe(response);
+    await expect(draft(6, "IN", [], { dispositionId: id })).rejects.toThrow(
+      /penerima/,
+    );
+    await expect(draft(5, "IN", [], { dispositionId: id })).rejects.toThrow(
+      /Lanjutkan/,
+    );
+    await act(response, 5, "PREVIEW");
+    await act(response, 5, "SUBMIT");
+    await issue(response, 5, "disposition-test");
+    await expect(move(5, "SUBMIT", "Hasil")).rejects.toThrow(
+      /Selesaikan surat/,
+    );
+    const l = await get(response);
+    await run("select finalize_letter($1,$2,$3,false)", [
+      actor(5),
+      response,
+      l.revision,
+    ]);
+    await move(5, "SUBMIT", "Surat tindak lanjut selesai");
+    expect((await disp()).status).toBe("IN_REVIEW");
+  });
+  it("RLS hanya peserta, surat hasil dapat dibaca pemberi, penerima tidak bisa menyetujui hasil", async () => {
+    await run("select set_config('request.jwt.claim.sub',$1,false)", [
+      actor(4),
+    ]);
+    expect(
+      (await rows("select app.can_read_letter($1) yes", [response]))[0].yes,
+    ).toBe(true);
+    await run("select set_config('request.jwt.claim.sub',$1,false)", [
+      actor(6),
+    ]);
+    expect(
+      (await rows("select app.can_read_letter($1) yes", [response]))[0].yes,
+    ).toBe(false);
+    await db.exec("grant select on dispositions to authenticated");
+    await db.exec("set role authenticated");
+    try {
+      expect(
+        (await rows("select id from dispositions where id=$1", [id])).length,
+      ).toBe(0);
+    } finally {
+      await db.exec("reset role");
+    }
+    await expect(move(5, "ACCEPT")).rejects.toThrow(/kewenangan/);
+    await expect(move(4, "RETURN")).rejects.toThrow(/perlu diperbaiki/);
+    await move(4, "RETURN", "Perbaiki tujuan surat");
+    expect((await disp()).status).toBe("REVISION_REQUESTED");
+  });
+  it("perbaikan menggunakan surat baru; nomor lama utuh; hanya pemberi menerima hasil", async () => {
+    const old = await get(response);
+    const corrected = await draft(5, "IN", [], {
+      dispositionId: id,
+      subject: "Perbaikan hasil disposisi",
+    });
+    await act(corrected, 5, "PREVIEW");
+    await act(corrected, 5, "SUBMIT");
+    await issue(corrected, 5, "disposition-correction");
+    const l = await get(corrected);
+    await run("select finalize_letter($1,$2,$3,false)", [
+      actor(5),
+      corrected,
+      l.revision,
+    ]);
+    await move(5, "SUBMIT", "Tujuan sudah diperbaiki");
+    const revision = (await disp()).revision;
+    await expect(
+      run("select disposition_workflow($1,'ACCEPT',$2,$3,'{}')", [
+        actor(4),
+        id,
+        revision - 1,
+      ]),
+    ).rejects.toThrow(/berubah/);
+    await move(4, "ACCEPT", "Hasil sudah sesuai");
+    expect((await disp()).status).toBe("DONE");
+    expect((await get(response)).official_number).toBe(old.official_number);
+    await expect(move(5, "START")).rejects.toThrow(/kewenangan/);
+    const events = await rows(
+      "select action from audit_logs where entity_id=$1 and action like 'DISPOSITION_%'",
+      [id],
+    );
+    expect(events.map((e) => e.action)).toContain("DISPOSITION_ACCEPT");
+    expect(events.map((e) => e.action)).toContain("DISPOSITION_RETURN");
+    expect(
+      (
+        await rows(
+          "select id from notifications where disposition_id=$1 and recipient_id=$2",
+          [id, actor(4)],
+        )
+      ).length,
+    ).toBeGreaterThan(0);
+  });
+  it("RPC disposisi dan inti draft tidak dapat dijalankan langsung oleh klien", async () => {
+    for (const fn of [
+      "disposition_workflow(uuid,text,uuid,integer,jsonb)",
+      "save_letter_draft_core(uuid,jsonb,jsonb)",
+    ]) {
+      expect(
+        (
+          await rows(
+            "select has_function_privilege('authenticated',$1,'execute') yes",
+            [fn],
+          )
+        )[0].yes,
+      ).toBe(false);
+      expect(
+        (
+          await rows("select has_function_privilege('anon',$1,'execute') yes", [
+            fn,
+          ])
+        )[0].yes,
+      ).toBe(false);
+    }
+  });
 });

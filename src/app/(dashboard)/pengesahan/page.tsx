@@ -28,7 +28,7 @@ export default async function Page() {
               className="text-brand-red underline text-sm"
               href={`/surat/${s.letter_id}`}
             >
-              Preview dan Tanda Tangani
+              Pratinjau dan Tanda Tangani
             </Link>
           </Card>
         ))

@@ -29,3 +29,12 @@ Data uji diberi label [UJI REV-18]. Lima surat uji telah final dan satu ditolak.
 - Gambar TTD bukan TTE tersertifikasi. Unggahan tanda tangan basah disertai pernyataan pejabat, bukan verifikasi kriptografis identitas goresan.
 - Jalur di luar sistem membutuhkan konfirmasi pembuat; sistem tidak mengklaim melihat bukti yang tidak diunggah.
 - Data/nomor lama tidak ditulis ulang. Dokumen lama yang tidak pernah disimpan tidak dibuatkan bukti palsu.
+
+
+## Revisi disposisi dan bahasa — 18 November 2026
+
+- 62 uji otomatis lulus, termasuk 17 uji transaksi database dengan migrasi nyata dan akun berbeda. Build production lulus.
+- Disposisi baru memisahkan surat acuan opsional dari surat tindak lanjut; penerima membuat draft melalui alur surat biasa. Pengiriman hasil wajib menunggu finalisasi bila surat diwajibkan. Hanya pemberi dapat menerima hasil; permintaan perbaikan wajib catatan.
+- Diuji: staf/admin tanpa jabatan tidak dapat memberi tugas; GM tidak lintas unit; akun lain ditolak; RLS hanya peserta; pemberi dapat membaca hasil; larangan penyelesaian sendiri; perbaikan memakai surat baru dan mempertahankan nomor lama; konflik versi ditolak; audit/notifikasi atomik.
+- Kode status database tetap, label antarmuka berbahasa Indonesia; SM ditampilkan sebagai Senior Manager lintas organisasi. Penugasan unit dan aturan tagihan tidak diubah. Login dropdown sementara tetap memakai Supabase Auth asli.
+- Migrasi Supabase `20261118012449_disposition_review_flow` terverifikasi; RPC hanya server; advisor tidak menemukan masalah database baru. Peringatan lama perlindungan kata sandi bocor belum aktif tetap ada.

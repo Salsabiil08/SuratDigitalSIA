@@ -135,7 +135,7 @@ export function SignPanel({
         </Field>
       )}
       <Button variant="secondary" onClick={() => send(true)} isLoading={busy}>
-        Preview Hasil TTD dan Stempel
+        Pratinjau Hasil TTD dan Stempel
       </Button>
       {preview && (
         <>

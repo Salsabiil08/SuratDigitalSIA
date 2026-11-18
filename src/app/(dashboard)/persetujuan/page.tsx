@@ -204,7 +204,7 @@ export default function PersetujuanPage() {
               </div>
 
               <div className="text-sm text-neutral-600">
-                <Link className="text-brand-red underline" href={`/surat/${selectedItem.letterId}`}>Preview dokumen dan berikan keputusan pada versi terkini →</Link>
+                <Link className="text-brand-red underline" href={`/surat/${selectedItem.letterId}`}>Pratinjau dokumen dan berikan keputusan pada versi terkini →</Link>
               </div>
 
               {/* Input Catatan / Alasan */}
@@ -254,7 +254,7 @@ export default function PersetujuanPage() {
                   onClick={() => { window.location.href = `/surat/${selectedItem.letterId}`; }}
                   className="bg-emerald-700 hover:bg-emerald-800 font-bold"
                 >
-                  Preview dan Setujui
+                  Pratinjau dan Setujui
                 </Button>
               </div>
             </Card>

@@ -6,6 +6,7 @@ export interface SignatureArea {
   height: number;
 }
 export interface DraftInput {
+  dispositionId?: string;
   id?: string;
   revision?: number;
   source: "CREATE" | "UPLOAD";
@@ -94,6 +95,6 @@ export function workflowLabel(letter: {
         NUMBERED: "Menunggu Finalisasi",
         CANCELLED: "Dibatalkan",
       } as Record<string, string>
-    )[letter.status] || letter.status
+    )[letter.status] || "Belum diketahui"
   );
 }

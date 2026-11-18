@@ -40,7 +40,7 @@ export default async function AdminLogPage() {
   return (
     <div className="flex flex-col gap-3.5 sm:gap-4 w-full">
       <PageHeader
-        title="Log History"
+        title="Riwayat Aktivitas"
         className="pb-0"
       />
 
@@ -73,7 +73,7 @@ export default async function AdminLogPage() {
             Belum ada riwayat aktivitas sistem
           </div>
           <p className="text-xs text-neutral-500 max-w-md mx-auto">
-            Audit log sistem bersifat append-only. Setiap kali ada pembuatan draf, persetujuan, penerbitan nomor, atau pembatalan surat yang dilakukan secara nyata, jejak transaksi akan otomatis tercatat di sini.
+            Pembuatan draf, persetujuan, penerbitan nomor, tindak lanjut disposisi, dan pembatalan surat akan tercatat di sini. Riwayat yang sudah tersimpan tidak dapat diubah atau dihapus.
           </p>
         </Card>
       ) : (
@@ -131,7 +131,7 @@ export default async function AdminLogPage() {
       )}
 
       <div className="text-xs text-neutral-400">
-        Log bersifat tambah saja (append-only), tidak dapat diubah atau dihapus. Isi dokumen tidak dapat diakses melalui log ini.
+        Riwayat yang sudah tersimpan tidak dapat diubah atau dihapus. Isi dokumen tidak ditampilkan di sini.
       </div>
     </div>
   );

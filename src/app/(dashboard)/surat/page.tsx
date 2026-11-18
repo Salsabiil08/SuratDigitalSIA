@@ -196,7 +196,7 @@ export default function SuratSayaPage() {
                   </TableCell>
                   <TableCell>
                     <Chip variant={getStatusChipVariant(letter.status)}>
-                      {letter.workflowStatus || STATUS_LABEL[letter.status as LetterStatus] || letter.status}
+                      {letter.workflowStatus || STATUS_LABEL[letter.status as LetterStatus] || 'Belum diketahui'}
                     </Chip>
                   </TableCell>
                   <TableCell>
@@ -210,7 +210,7 @@ export default function SuratSayaPage() {
                       }
                     >
                       {SIGNATURE_STATUS_LABEL[letter.signatureStatus as SignatureStatus] ||
-                        letter.signatureStatus}
+                        'Belum diketahui'}
                     </Chip>
                   </TableCell>
                   <TableCell className="text-right">

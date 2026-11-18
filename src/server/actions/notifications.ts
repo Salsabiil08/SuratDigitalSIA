@@ -2,7 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
-import { getCurrentUser } from '@/server/auth';
+import { requireUser } from '@/server/auth';
 import { revalidatePath } from 'next/cache';
 
 export interface NotificationItem {
@@ -36,58 +36,15 @@ export async function getNotificationsAction(): Promise<{
   error?: string;
 }> {
   try {
-    const user = await getCurrentUser();
-    const recipientId = user?.id || 'a0000000-0000-0000-0000-000000000005';
-    const supabase = createAdminClient();
-
-    // 1. Cek notifikasi khusus untuk user aktif (jika bukan Super Admin)
-    if (user && !user.isSuperAdmin) {
-      const { data: userNotifs } = await supabase
-        .from('notifications')
-        .select('id, recipient_id, letter_id, disposition_id, event_type, title, is_read, read_at, created_at')
-        .eq('recipient_id', recipientId)
-        .order('created_at', { ascending: false })
-        .limit(50);
-
-      if (userNotifs && userNotifs.length > 0) {
-        const unread = userNotifs.filter((n) => !n.is_read).length;
-        return {
-          success: true,
-          data: userNotifs as NotificationItem[],
-          unreadCount: unread,
-        };
-      }
-    }
-
-    // 2. Ambil notifikasi terkini dari Supabase (untuk Super Admin atau fallback aktivitas organisasi)
-    const { data: allNotifs, error } = await supabase
-      .from('notifications')
-      .select('id, recipient_id, letter_id, disposition_id, event_type, title, is_read, read_at, created_at')
-      .order('created_at', { ascending: false })
-      .limit(50);
-
-    if (error || !allNotifs || allNotifs.length === 0) {
-      return {
-        success: true,
-        data: getDemoNotifications(recipientId),
-        unreadCount: 0,
-      };
-    }
-
-    const items = allNotifs as NotificationItem[];
-    const unreadCount = items.filter((n) => !n.is_read).length;
-
-    return {
-      success: true,
-      data: items,
-      unreadCount,
-    };
-  } catch (err: any) {
-    return {
-      success: true,
-      data: getDemoNotifications('a0000000-0000-0000-0000-000000000005'),
-      unreadCount: 0,
-    };
+    const user = await requireUser();
+    const { data, error } = await createClient().from('notifications')
+      .select('id,recipient_id,letter_id,disposition_id,event_type,title,is_read,read_at,created_at')
+      .eq('recipient_id',user.id).order('created_at',{ascending:false}).limit(50);
+    if(error) throw new Error('Gagal memuat pemberitahuan.');
+    const items=(data||[]) as NotificationItem[];
+    return {success:true,data:items,unreadCount:items.filter(n=>!n.is_read).length};
+  } catch {
+    return {success:false,data:[],unreadCount:0,error:'Gagal memuat pemberitahuan.'};
   }
 }
 
@@ -96,14 +53,15 @@ export async function getNotificationsAction(): Promise<{
  */
 export async function markNotificationAsReadAction(notificationId: string) {
   try {
-    const supabase = createAdminClient();
+    const user = await requireUser();
+    const supabase = createClient();
     const { error } = await supabase
       .from('notifications')
       .update({
         is_read: true,
         read_at: new Date().toISOString(),
       })
-      .eq('id', notificationId);
+      .eq('id', notificationId).eq('recipient_id',user.id);
 
     if (error) {
       console.warn('markNotificationAsReadAction error:', error.message);
@@ -120,9 +78,9 @@ export async function markNotificationAsReadAction(notificationId: string) {
  */
 export async function markAllNotificationsAsReadAction() {
   try {
-    const user = await getCurrentUser();
-    const recipientId = user?.id || 'a0000000-0000-0000-0000-000000000005';
-    const supabase = createAdminClient();
+    const user = await requireUser();
+    const recipientId = user.id;
+    const supabase = createClient();
 
     const { error } = await supabase
       .from('notifications')
@@ -169,47 +127,3 @@ export async function createNotification(input: CreateNotificationInput) {
     return { success: false, error: err.message };
   }
 }
-
-function getDemoNotifications(recipientId: string): NotificationItem[] {
-  return [
-    {
-      id: 'notif-001',
-      recipient_id: recipientId,
-      letter_id: 'l-002',
-      event_type: 'NUMBER_ISSUED',
-      title: 'Nomor surat resmi 00105-Tag/FIN/SIA/11.2026 telah berhasil diterbitkan.',
-      is_read: false,
-      created_at: new Date(Date.now() - 1000 * 60 * 15).toISOString(), // 15 menit lalu
-    },
-    {
-      id: 'notif-002',
-      recipient_id: recipientId,
-      letter_id: 'l-001',
-      event_type: 'APPROVAL_REQUEST',
-      title: 'Surat dinas baru membutuhkan persetujuan Anda sebagai Penyetuju Tahap 1.',
-      is_read: false,
-      created_at: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(), // 2 jam lalu
-    },
-    {
-      id: 'notif-003',
-      recipient_id: recipientId,
-      disposition_id: 'disp-001',
-      event_type: 'DISPOSITION',
-      title: 'Anda menerima instruksi disposisi baru dengan instruksi tindak lanjut.',
-      is_read: true,
-      read_at: new Date(Date.now() - 1000 * 60 * 60 * 5).toISOString(),
-      created_at: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(), // 1 hari lalu
-    },
-    {
-      id: 'notif-004',
-      recipient_id: recipientId,
-      letter_id: 'l-003',
-      event_type: 'CANCELLED',
-      title: 'Surat dengan nomor resmi 00098/DIR/SIA/11.2026 telah dibatalkan resmi.',
-      is_read: true,
-      read_at: new Date(Date.now() - 1000 * 60 * 60 * 12).toISOString(),
-      created_at: new Date(Date.now() - 1000 * 60 * 60 * 48).toISOString(), // 2 hari lalu
-    },
-  ];
-}
-

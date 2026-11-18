@@ -1,5 +1,6 @@
 'use server';
 
+import { displayLabel } from '@/domain/display-labels';
 import { createClient } from '@/lib/supabase/server';
 import { getCurrentUser } from '@/server/auth';
 
@@ -54,7 +55,7 @@ export async function getDashboardDataAction(): Promise<DashboardMetrics> {
     const { count: activeDispositionsCount } = await supabase
       .from('dispositions')
       .select('*', { count: 'exact', head: true })
-      .in('status', ['NEW', 'IN_PROGRESS']);
+      .in('status', ['NEW', 'IN_PROGRESS', 'IN_REVIEW', 'REVISION_REQUESTED']);
 
     // 2. Ambil hal-hal yang Perlu Tindakan:
     // Bagi Staf & Pegawai: Disposisi Masuk yang belum diselesaikan
@@ -68,8 +69,7 @@ export async function getDashboardDataAction(): Promise<DashboardMetrics> {
         status,
         giver:profiles!giver_id (full_name)
       `)
-      .eq('recipient_id', currentUserId)
-      .in('status', ['NEW', 'IN_PROGRESS'])
+      .or(`and(recipient_id.eq.${currentUserId},status.in.(NEW,IN_PROGRESS,REVISION_REQUESTED)),and(giver_id.eq.${currentUserId},status.eq.IN_REVIEW)`)
       .order('created_at', { ascending: false })
       .limit(5);
 
@@ -112,8 +112,8 @@ export async function getDashboardDataAction(): Promise<DashboardMetrics> {
         id: d.id,
         kind: 'DISPOSISI',
         subject: d.subject,
-        typeName: `Disposisi (${d.priority})`,
-        status: d.status === 'NEW' ? 'Perlu Dikerjakan' : 'Sedang Diproses',
+        typeName: 'Disposisi',
+        status: d.status === 'IN_REVIEW' ? 'Periksa Hasil Pekerjaan' : d.status === 'REVISION_REQUESTED' ? 'Perlu Perbaikan' : d.status === 'NEW' ? 'Perlu Dikerjakan' : 'Sedang Dikerjakan',
         officialNumber: d.giver?.full_name ? `Dari: ${d.giver.full_name}` : 'Instruksi Pimpinan',
         recipientText: d.instruction,
         link: '/disposisi',
@@ -157,10 +157,10 @@ export async function getDashboardDataAction(): Promise<DashboardMetrics> {
 
     const recentActivities = (auditLogs || []).map((log: any) => ({
       id: log.id,
-      action: log.action,
+      action: displayLabel(log.action),
       description: log.official_number
-        ? `Nomor ${log.official_number} diproses (${log.reason || log.action})`
-        : log.reason || log.action,
+        ? `Nomor ${log.official_number} diproses (${log.reason || displayLabel(log.action)})`
+        : log.reason || displayLabel(log.action),
       time: new Date(log.occurred_at).toLocaleTimeString('id-ID', {
         hour: '2-digit',
         minute: '2-digit',

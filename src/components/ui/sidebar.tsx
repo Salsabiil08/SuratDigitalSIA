@@ -64,13 +64,13 @@ export function Sidebar({ user, unreadNotificationsCount, className }: SidebarPr
   ];
 
   if (user?.isSuperAdmin) {
-    adminItems.push({ label: 'Log History', href: '/admin/log' });
+    adminItems.push({ label: 'Riwayat Aktivitas', href: '/admin/log' });
   }
 
   const groups: NavGroup[] = [
     {
       items: [
-        { label: 'Dashboard', href: '/' },
+        { label: 'Beranda', href: '/' },
       ],
     },
     {

@@ -53,3 +53,9 @@ Kerjakan berurutan. Tugas selesai bila kriteria terpenuhi dan `npm run check` lu
 - [x] REV-06: stempel opsional oleh penandatangan sah, preview dan audit.
 - [x] REV-07: penerima, field, template dan validasi internal/eksternal berbeda; tagihan tetap Finance dan dua tahap.
 - [x] Verifikasi migration, RLS, Storage, login nyata, production dan laporan tes.
+
+### Revisi pengguna 18 November — disposisi dan bahasa
+- [x] Label teknis surat/status diganti bahasa Indonesia; jabatan umum Senior Manager.
+- [x] Disposisi → buat surat tindak lanjut → kirim hasil → pemeriksaan pemberi → perbaikan/penerimaan.
+- [x] Otorisasi database, akses dokumen peserta, audit dan notifikasi transaksi, pencegahan penyelesaian sepihak.
+- [x] Uji database akun berbeda dan proses perbaikan tanpa mengubah nomor lama.

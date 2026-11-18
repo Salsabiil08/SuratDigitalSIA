@@ -14,7 +14,7 @@ export default async function DashboardPage() {
     <div className="flex flex-col gap-3.5 sm:gap-4 w-full">
       {/* Header Dashboard Padat & Rapi */}
       <PageHeader
-        title="Dashboard"
+        title="Beranda"
         className="pb-0"
         actions={
           <div className="flex items-center gap-2">

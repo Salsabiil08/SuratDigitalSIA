@@ -14,5 +14,5 @@ export default async function DisposisiPage() {
     canReceiveDisposition: false,
   };
 
-  return <DisposisiClient initialData={initialData} />;
+  return <DisposisiClient initialData={initialData} initialError={res.error} />;
 }

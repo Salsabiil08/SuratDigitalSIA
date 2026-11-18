@@ -16,3 +16,9 @@ Permintaan pengguna 18 November 2026. Berlaku di atas larangan editor, gambar TT
 Batas format web: dokumen PDF/DOCX maksimal 3 MB dan satu lampiran per penyimpanan maksimal 1 MB (total lampiran per surat 25 MB); PNG TTD/stempel maksimal 512 KB. Preview DOCX memakai renderer browser; hasil di Word bisa berbeda sedikit, sehingga unduhan tetap disediakan untuk pemeriksaan. PDF menampilkan tata letak asli.
 
 Verifikasi: tes domain, pengolahan berkas PDF/DOCX, dan transaksi PostgreSQL terisolasi di `tests/workflow*.test.ts` dan `tests/document-signing.test.ts`; hasil pengujian production dicatat di `docs/REVISION_TEST_REPORT.md`.
+
+## Revisi disposisi dan bahasa (18 November 2026)
+
+Instruksi terbaru pengguna: label tampilan memakai bahasa Indonesia yang mudah dipahami; kode database tidak ditampilkan. Jabatan SM adalah Senior Manager lintas organisasi, bukan nama jabatan SM Finance. Penugasan unit dan otorisasi tagihan tetap mengikuti aturan yang berlaku.
+
+Disposisi: pemberi berjabatan lebih tinggi menugaskan penerima aktif (GM dalam unitnya; SM/Direktur lintas unit). Super Admin tanpa jabatan bisnis tidak memperoleh hak pemberi. Surat acuan opsional dan berbeda dari surat tindak lanjut. Secara bawaan penerima wajib membuat surat tindak lanjut melalui proses surat biasa. Hasil dengan surat wajib hanya boleh dikirim setelah surat selesai/final. Penerima mengirim hasil untuk diperiksa, pemberi menerima atau mengembalikan dengan catatan perbaikan wajib. Hanya penerimaan oleh pemberi menutup disposisi. Dokumen final tetap terkunci; perbaikan surat final menggunakan surat baru tanpa mengubah atau memakai ulang nomor sebelumnya. Pergantian surat dicatat dalam riwayat. Seluruh perubahan tahap, catatan, notifikasi, dan audit disimpan dalam transaksi database dengan pemeriksaan kewenangan dan versi.

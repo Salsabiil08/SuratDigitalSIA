@@ -19,7 +19,7 @@ export function DocumentPreview({
       try {
         const res = await fetch(url, { cache: "no-store" });
         if (!res.ok)
-          throw new Error((await res.json()).error || "Preview gagal.");
+          throw new Error((await res.json()).error || "Pratinjau gagal.");
         const blob = await res.blob();
         if (!alive || !frame.current) return;
         if (format === "PDF") {
@@ -28,7 +28,7 @@ export function DocumentPreview({
           return;
         }
         const doc = frame.current.contentDocument;
-        if (!doc) throw new Error("Preview tidak dapat dimuat.");
+        if (!doc) throw new Error("Pratinjau tidak dapat dimuat.");
         doc.open();
         doc.write(
           `<!DOCTYPE html><html><head><meta name="referrer" content="no-referrer"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src data: blob:; style-src 'unsafe-inline'; font-src data: blob:;"><style>body{margin:0;background:#f3f4f6}.docx-wrapper{padding:12px!important}.docx-wrapper>section{margin-bottom:12px!important}</style></head><body><main></main></body></html>`,
@@ -44,7 +44,7 @@ export function DocumentPreview({
         });
         if (alive) onLoaded?.();
       } catch (e) {
-        if (alive) setError(e instanceof Error ? e.message : "Preview gagal.");
+        if (alive) setError(e instanceof Error ? e.message : "Pratinjau gagal.");
       }
     }
     void show();
@@ -65,7 +65,7 @@ export function DocumentPreview({
         <iframe
           ref={frame}
           sandbox="allow-same-origin"
-          title="Preview dokumen surat"
+          title="Pratinjau dokumen surat"
           className="w-full h-[680px] bg-neutral-100 border rounded-xl"
           onLoad={() => {
             if (format === "PDF") onLoaded?.();

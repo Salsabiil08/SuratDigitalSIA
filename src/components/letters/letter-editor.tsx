@@ -24,10 +24,12 @@ export function LetterEditor({
   source = "CREATE",
   billing = false,
   id,
+  dispositionId,
 }: {
   source?: "CREATE" | "UPLOAD";
   billing?: boolean;
   id?: string;
+  dispositionId?: string;
 }) {
   const router = useRouter();
   const [options, setOptions] = useState<Awaited<
@@ -36,6 +38,7 @@ export function LetterEditor({
   const [ready, setReady] = useState(false);
   const [input, setInput] = useState<DraftInput>({
     source,
+    dispositionId,
     letterTypeCode: billing ? "Tag" : "IN",
     subject: "",
     letterDate: jakartaDate(),
@@ -590,7 +593,7 @@ export function LetterEditor({
           {!internal && (
             <p className="text-sm">
               {isBill
-                ? "Dua persetujuan dan TTD berurutan: SM Finance lalu Direktur."
+                ? "Dua persetujuan dan TTD berurutan: Senior Manager lalu Direktur."
                 : "Satu persetujuan dan TTD wajib oleh SM atau Direktur."}
             </p>
           )}
@@ -600,7 +603,7 @@ export function LetterEditor({
               label={
                 isBill
                   ? index === 0
-                    ? "SM Finance (tahap 1)"
+                    ? "Senior Manager (tahap 1)"
                     : "Direktur (tahap 2)"
                   : "Pejabat Penyetuju dan Penandatangan"
               }

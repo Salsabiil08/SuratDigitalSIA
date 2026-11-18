@@ -1,3 +1,4 @@
+import { displayLabel } from '@/domain/display-labels';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { requireSuperAdmin } from './auth';
 
@@ -171,12 +172,12 @@ export async function getAuditLogs(limit = 50): Promise<AuditLogData[]> {
       id: l.id,
       occurredAt: l.occurred_at,
       actorName: (l.actor as unknown as { full_name: string })?.full_name || 'Sistem',
-      action: l.action,
+      action: displayLabel(l.action),
       officialNumber: l.official_number || undefined,
       letterSubject: (l.letter as unknown as { subject: string })?.subject || undefined,
       reason: l.reason || undefined,
-      statusBefore: l.status_before || undefined,
-      statusAfter: l.status_after || undefined,
+      statusBefore: l.status_before ? displayLabel(l.status_before) : undefined,
+      statusAfter: l.status_after ? displayLabel(l.status_after) : undefined,
     }));
   } catch (err) {
     return [];

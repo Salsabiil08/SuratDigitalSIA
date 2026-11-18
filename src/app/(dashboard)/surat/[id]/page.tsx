@@ -1,4 +1,5 @@
 "use client";
+import { displayLabel } from "@/domain/display-labels";
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
@@ -154,7 +155,7 @@ export default function Page() {
         )}
       </Card>
       <Card className="p-5 space-y-4">
-        <h2 className="font-bold">Preview Dokumen</h2>
+        <h2 className="font-bold">Pratinjau Dokumen</h2>
         {v ? (
           <>
             <DocumentPreview
@@ -177,7 +178,7 @@ export default function Page() {
               </a>
             </div>
             <p className="text-xs text-neutral-500">
-              Versi {v.version_no} · SHA-256 {v.file_hash || "Belum tersedia"}
+              Versi dokumen {v.version_no}
             </p>
           </>
         ) : (
@@ -200,11 +201,11 @@ export default function Page() {
               onClick={() =>
                 act(
                   () => reviewLetterAction(id, "PREVIEW", l.revision),
-                  "Preview versi terkini tercatat. Anda dapat mengajukan persetujuan.",
+                  "Pratinjau versi terkini tercatat. Anda dapat mengajukan persetujuan.",
                 )
               }
             >
-              Konfirmasi Preview
+              Konfirmasi Pratinjau
             </Button>
             <Button
               disabled={l.previewed_revision !== l.revision}
@@ -332,7 +333,7 @@ export default function Page() {
           <p className="text-sm">
             Nomor resmi tetap disimpan dan tidak dipakai ulang. Surat bernomor
             memerlukan otorisasi kepala unit/delegasi (internal), penandatangan
-            (eksternal), atau SM Finance dan Direktur (tagihan).
+            (eksternal), atau Senior Manager dan Direktur (tagihan).
           </p>
           <label className="text-sm block" htmlFor="cancel-reason">
             Alasan / catatan pembatalan
@@ -365,7 +366,7 @@ export default function Page() {
           {data.cancellations.map((r: any) => (
             <div className="text-sm space-y-2" key={r.id}>
               <p>
-                {r.status} — {r.reason}
+                {displayLabel(r.status)} — {r.reason}
               </p>
               {r.status === "PENDING" &&
                 r.cancellation_authorizations?.some(
@@ -406,7 +407,7 @@ export default function Page() {
         {data.approvals.map((a) => (
           <p key={a.id} className="text-sm border-b py-2">
             Siklus {a.cycle}, tahap {a.step_order}:{" "}
-            {(a.approver as any)?.full_name} — {a.status}
+            {(a.approver as any)?.full_name} — {displayLabel(a.status)}
             {a.decision_note ? ` · ${a.decision_note}` : ""}
             {a.decided_at
               ? ` · ${new Date(a.decided_at).toLocaleString("id-ID", { timeZone: "Asia/Jakarta" })} WIB`
@@ -415,7 +416,7 @@ export default function Page() {
         ))}
         {data.signatures.map((s) => (
           <p key={s.id} className="text-sm border-b py-2">
-            TTD {s.sign_order}: {(s.signer as any)?.full_name} — {s.status}{" "}
+            TTD {s.sign_order}: {(s.signer as any)?.full_name} — {displayLabel(s.status)}{" "}
             {s.method === "IMAGE"
               ? "(gambar TTD, bukan TTE tersertifikasi)"
               : s.method === "WET_UPLOAD"

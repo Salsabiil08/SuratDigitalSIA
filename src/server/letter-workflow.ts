@@ -95,7 +95,7 @@ export async function peopleOptions() {
     db
       .from("user_assignments")
       .select(
-        "profile_id,is_official_signer,start_date,end_date,position:positions!user_assignments_position_id_fkey(code,name,is_active),unit:organizational_units!user_assignments_unit_id_fkey(id,code,name,is_active)",
+        "profile_id,is_official_signer,start_date,end_date,position:positions!user_assignments_position_id_fkey(code,name,level,is_active),unit:organizational_units!user_assignments_unit_id_fkey(id,code,name,is_active)",
       )
       .eq("is_active", true)
       .order("start_date", { ascending: false }),
@@ -126,6 +126,7 @@ export async function peopleOptions() {
         name: p.full_name,
         title: a?.position?.name || "",
         position: a?.position?.code || "",
+        level: a?.position?.level || 0,
         unit: a?.unit?.code || "",
       unitId: a?.unit?.id || "",
       active: !!a?.unit?.is_active && !!a?.position?.is_active,

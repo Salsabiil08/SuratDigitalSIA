@@ -123,7 +123,7 @@ begin
   insert into profiles (id, full_name, email, system_role, is_active) values
     (u_admin, 'Super Admin SIADocs', 'admin@sia.co.id', 'SUPER_ADMIN', true),
     (u_dir, 'Budi Hartono (Direktur Utama)', 'dirut@sia.co.id', 'USER', true),
-    (u_sm, 'Siti Rahma (Senior Manager Finance)', 'sm.finance@sia.co.id', 'USER', true),
+    (u_sm, 'Siti Rahma (Senior Manager)', 'sm.finance@sia.co.id', 'USER', true),
     (u_gm, 'Ahmad Fauzi (GM Accounting)', 'gm.accounting@sia.co.id', 'USER', true),
     (u_stf_a, 'Rina Dewi (Staff Accounting)', 'staff.accounting@sia.co.id', 'USER', true),
     (u_stf_f, 'Doni Pratama (Staff Finance)', 'staff.finance@sia.co.id', 'USER', true)
