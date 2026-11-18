@@ -19,7 +19,7 @@ Status: PR-00 selesai; implementasi PR-01 disetujui pada 18 November 2026. Basis
 - [x] Tambahkan migrasi baru ACL/RLS/trigger notifikasi tanpa mengubah data lama.
 - [x] Normalisasi label event Indonesia dan bedakan Dokumen final dari selesai alur.
 - [x] Uji negatif server action, ACL/RLS dan rollback status/audit/event.
-- [ ] Buka draft PR bertumpuk di atas PR-00, laporkan hasil dan berhenti.
+- [x] Buka [draft PR #2](https://github.com/Salsabiil08/SuratDigitalSIA/pull/2) bertumpuk di atas PR-00, laporkan hasil dan berhenti.
 
 ## Tahap berikutnya — belum diizinkan
 - [ ] PR-02: kategori dan reviewer independen.
