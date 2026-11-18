@@ -6,6 +6,8 @@ Perbaikan final: Next 15.5.29/PostCSS 8.5.33 (audit production 0), async request
 
 [Draft PR-08 #9](https://github.com/Salsabiil08/SuratDigitalSIA/pull/9); CI integrasi #45 lulus check/db/browser-public. Bukti dan keterbatasan staging tetap dalam readiness; CI hijau tidak membatalkan NO-GO.
 
+Audit dev tambahan: Vitest 5.1.1/Vite 8.3.8 menutup critical/moderate; seluruh 244 assertion dipertahankan, API tes dinonaktifkan. Sisa 12 high dev/build berasal dari picomatch tanpa patch upstream, bukan runtime; glob tidak menerima input pengguna. CI menambah gerbang critical untuk audit penuh.
+
 ## Snapshot PR-07 (historis)
 
 # Pembaruan PR-07 — 18 November 2026

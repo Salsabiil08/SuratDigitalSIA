@@ -40,7 +40,7 @@ beforeAll(async()=>{
  select authorize_letter_reviewer('${actor(2)}','${actor(4)}',(select id from organizational_units where code='ACH'),null,true,null,'Penugasan pengujian perusahaan');`);
 },30000);
 afterAll(()=>db.close());
-describe.sequential('PR-02 kategori/reviewer independen',()=>{
+describe('PR-02 kategori/reviewer independen', { concurrent: false }, () =>{
  it.each(['PERMOHONAN','LAPORAN'])('%s wajib reviewer, kategori kosong tidak bisa melewati gate',async categoryCode=>{
   const id=await draft({categoryCode,reviewerId:''});await expect(submit(id)).rejects.toThrow(/Pemeriksa/);
   expect((await get(id)).official_number).toBeNull();

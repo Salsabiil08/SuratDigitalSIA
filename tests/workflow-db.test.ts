@@ -89,7 +89,7 @@ beforeAll(async () => {
   );
 }, 30000);
 afterAll(() => db.close());
-describe.sequential("Database: alur nyata dengan akun berbeda", () => {
+describe("Database: alur nyata dengan akun berbeda", { concurrent: false }, () => {
   it("RPC sensitif tidak dapat dipanggil anon atau authenticated", async () => {
     for (const fn of [
       "save_letter_draft(uuid,jsonb,jsonb)",
@@ -418,7 +418,7 @@ describe.sequential("Database: alur nyata dengan akun berbeda", () => {
   });
 });
 
-describe.sequential("Disposisi: surat kembali untuk diperiksa pemberi", () => {
+describe("Disposisi: surat kembali untuk diperiksa pemberi", { concurrent: false }, () => {
   let id: string, response: string;
   const disp = async () =>
     (await rows("select * from dispositions where id=$1", [id]))[0];
@@ -656,7 +656,7 @@ it("versi draft menyimpan format HTML secara eksplisit, teks lama tetap TEXT", a
   ).toBe("TEXT");
 });
 
-describe.sequential('PR-01: event dan audit terikat transaksi alur sah', () => {
+describe('PR-01: event dan audit terikat transaksi alur sah', { concurrent: false }, () => {
   it('aksi tanpa kewenangan tidak menghasilkan event atau audit palsu', async () => {
     const id = await draft(5, 'IN');
     const before = await rows('select (select count(*) from notifications) n, (select count(*) from audit_logs) a');
