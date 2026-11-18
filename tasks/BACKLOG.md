@@ -2,7 +2,7 @@
 
 Status: hanya PR-00 disetujui pada 18 November 2026. Basis `Salsabiil08/SuratDigitalSIA`, baseline `4e0c0c661af58dd6db729c202643cd6629f7eb07`. Jangan merekonsiliasi `SIAdocs`.
 
-## PR-00 — dokumentasi baseline dan rencana (aktif)
+## PR-00 — dokumentasi baseline dan rencana (selesai; menunggu tinjauan)
 - [x] Tetapkan repo/SHA/deployment dan manifest baseline tanpa secret.
 - [x] Dokumentasikan keputusan reviewer hanya memeriksa, bukan mengedit.
 - [x] Catat default Permohonan/Laporan wajib dan Pemberitahuan opsional, override jenis–kategori berotorisasi, serta status belum tervalidasi perusahaan.
@@ -11,7 +11,7 @@ Status: hanya PR-00 disetujui pada 18 November 2026. Basis `Salsabiil08/SuratDig
 - [x] Lindungi 13 surat lama dan rencanakan migrasi aditif tanpa backfill otomatis.
 - [x] Selaraskan acuan agen/README/indeks dan tandai panduan lama historis.
 - [x] Verifikasi tautan, batas diff, manifest dan `npm run check`; catat laporan PR-00.
-- [ ] Buka PR untuk ditinjau tanpa merge/deployment; laporkan dan berhenti.
+- [x] Buka draft PR #1 untuk ditinjau tanpa merge/deployment; laporkan dan berhenti. CI check lulus; kegagalan tes PostgreSQL baseline dicatat pada laporan validasi.
 
 ## Tahap berikutnya — belum diizinkan
 - [ ] PR-01: otorisasi notifikasi/event dan kerangka status — **menunggu persetujuan baru; jangan mulai**.

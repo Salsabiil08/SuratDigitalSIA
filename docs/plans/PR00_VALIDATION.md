@@ -18,7 +18,7 @@ Tanggal: 18 November 2026 (WIB). Basis `Salsabiil08/SuratDigitalSIA`, baseline `
 | `npm run check` | Lulus: typecheck dan **69/69 tes**, 7 berkas; 20 kasus database PGlite dan 49 kasus domain/dokumen |
 | Diff terhadap baseline untuk src, supabase, tests, package.json, package-lock.json dan .github | Kosong; tidak ada perubahan implementasi/migrasi/dependensi/CI |
 | Manifest baseline | SHA dan tree cocok; digest seluruh 14 file migrasi cocok dengan file baseline |
-| Tautan lokal dokumen aktif baru/ditulis ulang dan penanda historis baru | Diperiksa; tautan arsip lama yang tidak disentuh tidak dinyatakan telah dibersihkan |
+| Tautan lokal dokumen aktif baru/ditulis ulang dan penanda historis baru | 29 tautan relatif diperiksa; tautan arsip lama yang tidak disentuh tidak dinyatakan telah dibersihkan |
 | Konfigurasi deployment branch | JSON valid; hanya key branch PR-00 bernilai false, tanpa pengaturan main, build, route, env atau region |
 | `git diff --check` | Lulus |
 
@@ -26,4 +26,10 @@ Tanggal: 18 November 2026 (WIB). Basis `Salsabiil08/SuratDigitalSIA`, baseline `
 
 ## Verifikasi publikasi dan titik berhenti
 
-PR akan dibuka sebagai draft untuk peninjauan. URL PR dan pemeriksaan branch/deployment dicatat setelah publikasi. Main harus tetap pada SHA baseline dan deployment production harus tetap sama. PR tidak di-merge, database production tidak dibaca/ditulis ulang pada pekerjaan PR-00, dan PR-01 tidak dimulai.
+Draft [PR #1](https://github.com/Salsabiil08/SuratDigitalSIA/pull/1) sudah dibuka dari branch PR-00 ke main. Verifikasi setelah publikasi: main tetap pada SHA baseline; deployment production tetap `dpl_4aVP7FGF4i9eJhqARNu65dZtckZc` dengan SHA baseline dan status READY; daftar deployment branch PR-00 kosong. PR tidak di-merge, database production tidak dibaca/ditulis ulang pada pekerjaan PR-00, dan PR-01 tidak dimulai.
+
+## CI remote dan temuan baseline
+
+Pada commit dokumentasi pertama `9545f1748c6d0ae41af8312c1636316812b3dbd9`, [CI run 44236815468](https://github.com/Salsabiil08/SuratDigitalSIA/actions/runs/44236815468) selesai: job `check` lulus; job `db` gagal. Seluruh 14 migrasi diterapkan pada database sementara runner, lalu `supabase/tests/01_numbering_test.sql:106` gagal dengan `Surat belum siap diterbitkan.` dari fungsi `issue_letter_number`. Suite berhenti sehingga kelulusan uji PostgreSQL/konkurensi berikutnya tidak dapat diklaim.
+
+SQL, tes, skrip dan CI identik dengan baseline; kegagalan dicatat sebagai temuan baseline, belum diperbaiki dalam PR dokumentasi ini. Perbaikan fixture/aturan penomoran harus ditinjau terpisah tanpa melonggarkan guard bisnis. CI untuk commit pembaruan laporan dapat berjalan ulang; status terbaru tersedia di halaman PR. Tidak ada klaim seluruh CI hijau.
