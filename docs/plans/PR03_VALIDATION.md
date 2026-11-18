@@ -28,14 +28,14 @@ Konfigurasi manager/grant adalah RPC server-only; belum ada halaman pengelolaan 
 
 ## Pengujian
 
-- `npm run check`: **typecheck dan 159/159 tes lulus**, 16 berkas. Hasil PostgreSQL nyata dicatat terpisah setelah CI.
+- `npm run check`: **typecheck dan 159/159 tes lulus**, 16 berkas. Job PostgreSQL dan konkurensi nyata di CI juga lulus; lihat bukti publikasi di bawah.
 - Tambahan 16 kasus DB approval: internal biasa/formal/eksternal, signer berbeda, tambahan/duplikat, konfirmasi pembuat, tagihan SM/Direktur dan pembuat Direktur menunggu SM, mandat Finance, review terpisah, versi/hash/restart, RLS, grant/akun berubah, rollback event/audit nomor.
 - Empat kasus Server Action: aktor sesi, konfirmasi eksplisit/default false, tanpa akun aktif, gagal RPC tidak sukses palsu.
 - Tiga fixture SQL aktif dijalankan melalui PGlite; dua tes reproduksi baseline tetap memuat fixture arsip sebelum PR-02. [Perbaikan PostgreSQL terpisah](PR03_POSTGRES_FIXTURES.md) mencatat perubahan data uji tanpa melemahkan guard.
 - Forward migration pada 13 surat bernomor sintetis tanpa versi: seluruh nilai kolom lama dan audit identik sebelum/sesudah; kolom baru tidak diisi bukti palsu. Ini uji lokal, bukan mutasi/read isi surat production.
 - 42 tautan relatif aktif diperiksa; empat branch PR saja dinonaktifkan auto-deploy. Dependensi/CI dan seluruh 16 migrasi baseline tetap utuh.
 - `npm run build` lulus kompilasi, typecheck dan pembangkitan 21 halaman. `bash -n` skrip DB/konkurensi lulus. `git diff --check` dan integritas sumber migrasi baseline diperiksa.
-- Lingkungan lokal tidak mempunyai binari PostgreSQL; `npm run test:db` menolak dengan pesan jelas. Job CI db menjadi bukti PostgreSQL dan konkurensi nyata. Jangan mengklaimnya lulus sebelum hasil tersedia.
+- Lingkungan lokal tidak mempunyai binari PostgreSQL; `npm run test:db` menolak dengan pesan jelas. Job CI db telah lulus pada commit implementasi/fixture; ini bukti PostgreSQL/konkurensi sementara runner, bukan penerapan production.
 
 Metadata production diperiksa baca-saja: tabel approval_steps masih schema baseline, belum ada tabel approval baru dan history tetap 8 entri. Tidak ada apply_migration, DDL/DML, seed, repair, merge atau perintah deploy ke production. vercel.json hanya menambahkan larangan auto-deploy branch PR-03.
 
@@ -50,3 +50,14 @@ Metadata production diperiksa baca-saja: tabel approval_steps masih schema basel
 ## Titik berhenti
 
 Draft PR berbasis PR-02, dengan implementasi dan perbaikan fixture pada commit terpisah. Tidak merge, tidak mengubah database production, tidak deploy dan tidak memulai PR-04. Publikasi/CI terbaru dicatat di PR dan laporan ini.
+
+## Publikasi dan bukti CI
+
+[Draft PR #4](https://github.com/Salsabiil08/SuratDigitalSIA/pull/4) berbasis branch PR-02. Dua commit kode terpisah:
+
+- Implementasi: `1f84f8662ce35034bbe2a072daba60ce3093e89d`.
+- Fixture: `75165a38345a55330bd9b54c9b8cf997455b2b5d`.
+
+[CI run 44255908236](https://github.com/Salsabiil08/SuratDigitalSIA/actions/runs/44255908236) selesai **success**: job check lulus typecheck/159 tes; job db menerapkan 17 migrasi pada PostgreSQL sementara, menjalankan fixture penomoran/pembatalan/disposisi, RLS dan approval baru, kemudian konkurensi. Log menyatakan `konkurensi: 40|40|1|40` dan `UJI DATABASE LULUS`. Skrip juga memeriksa counter tetap 40 setelah 10 retry serentak pada surat yang sama. Kegagalan fixture baseline sudah diperbaiki dengan prasyarat asli, bukan menonaktifkan guard. Ini tidak menyatakan UAT Auth/Storage/browser staging sudah selesai.
+
+Setelah publikasi: branch PR-03 tidak mempunyai deployment Vercel; production tetap READY pada `dpl_4aVP7FGF4i9eJhqARNu65dZtckZc`, SHA main `4e0c0c661af58dd6db729c202643cd6629f7eb07`. Tidak ada perubahan database production atau merge. Commit dokumentasi hasil dapat memicu CI ulang; kode implementasi yang diuji tidak berubah. **PR-04 belum dimulai.**

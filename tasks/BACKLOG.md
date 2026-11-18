@@ -38,7 +38,7 @@ Status: PR-00–02 selesai dalam draft; implementasi PR-03 disetujui pada 18 Nov
 - [x] Ringkasan penerbitan memakai data nyata; allocator/seri/urutan/idempotensi/pembatalan dipertahankan.
 - [x] Fixture PostgreSQL diperbaiki terpisah melalui draft/versi/preview/RPC sah; fixture gagal awal diarsipkan untuk reproduksi.
 - [x] Uji lintas akun/RLS/urutan/gagal transaksi dan dokumentasi keputusan perusahaan.
-- [ ] Buka Draft PR berbasis PR-02, verifikasi CI dan production tidak berubah, laporkan dan berhenti.
+- [x] Buka [Draft PR #4](https://github.com/Salsabiil08/SuratDigitalSIA/pull/4) berbasis PR-02; CI check dan PostgreSQL/konkurensi lulus, production tidak berubah; laporkan dan berhenti.
 
 ## Tahap berikutnya — belum diizinkan
 - [ ] PR-04: pengiriman/penerimaan transaksi dan RLS snapshot.

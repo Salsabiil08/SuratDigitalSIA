@@ -6,7 +6,7 @@ PR-03 diizinkan setelah penerimaan fungsional PR-02; production tetap di luar ca
 - Ringkasan penerbitan statis (G-06) diganti data versi/plan approval sesungguhnya. Allocator nomor tetap; gate memakai seluruh plan, bukan jumlah TTD.
 - Penanganan perubahan kewenangan/policy setelah approval sebelum nomor tersedia melalui Tarik untuk Koreksi, lalu simpan versi baru. Keputusan lama utuh; tidak backfill persetujuan lama.
 - Reviewer/pengelola review dan manager/grant approver tambahan perlu ditetapkan perusahaan. Mandat Finance lintas unit harus eksplisit; nama jabatan SM tetap umum.
-- Fixture SQL lama disimpan sebagai arsip reproduksi. Fixture aktif memakai RPC nyata; hasil PostgreSQL penuh dicatat sesudah CI berjalan, bukan diasumsikan dari PGlite.
+- Fixture SQL lama disimpan sebagai arsip reproduksi. Fixture aktif memakai RPC nyata. CI run 44255908236 kini lulus check dan PostgreSQL/konkurensi (40 nomor unik, retry tanpa counter naik); blocker fixture baseline sudah diselesaikan tanpa melonggarkan guard.
 - G-01 penerima pra-kirim serta distribusi/receipt/balasan belum ditangani. PR-04 belum diizinkan.
 
 ## Snapshot PR-02 (historis)

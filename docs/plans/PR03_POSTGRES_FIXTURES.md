@@ -17,6 +17,10 @@ Perubahan fixture dipisahkan dari implementasi runtime dalam commit tersendiri p
 
 ## Bukti dan batas
 
-Tiga fixture SQL aktif dijalankan di PGlite dalam `tests/postgres-fixtures.test.ts`. Tes arsip mereproduksi kegagalan baseline semula. Suite PostgreSQL asli dan konkurensi dijalankan melalui job CI `db`; hasil sesungguhnya dicatat pada laporan PR-03 setelah job selesai. Lingkungan lokal tidak memiliki initdb/pg_ctl/psql; jangan menyamakan kelulusan PGlite dengan konkurensi PostgreSQL nyata.
+Tiga fixture SQL aktif dijalankan di PGlite dalam `tests/postgres-fixtures.test.ts`. Tes arsip mereproduksi kegagalan baseline semula. Suite PostgreSQL asli dan konkurensi dijalankan melalui job CI `db`; job tersebut lulus pada CI run 44255908236 untuk commit fixture 75165a3 (lihat laporan PR-03). Lingkungan lokal tidak memiliki initdb/pg_ctl/psql; jangan menyamakan kelulusan PGlite dengan konkurensi PostgreSQL nyata.
 
 Seluruh helper test harus tetap di luar migrasi production. Jangan memakai fixture untuk memperbaiki 13 surat lama atau mengisi keputusan historis.
+
+## Hasil PostgreSQL nyata
+
+[Run 44255908236](https://github.com/Salsabiil08/SuratDigitalSIA/actions/runs/44255908236) job db success: 17 migrasi diterapkan, seluruh fixture aktif lulus, konkurensi `40|40|1|40`, retry 10 kali tidak menaikkan counter, dan penutup `UJI DATABASE LULUS`. Job check pada run yang sama juga success. Perbaikan ini terbatas pada fixture test; tidak mengubah atau mengisi data surat production.
