@@ -1,6 +1,6 @@
 # Rencana migrasi aditif dan pembagian PR — R.04 adaptasi NDO
 
-Status: **rencana bertahap; PR-03 diizinkan untuk implementasi dan pengujian lokal, bukan production**. PR-00 tidak membuat atau menjalankan migrasi. Basis: [baseline production](../baselines/production-2026-11-18.md) dan [keputusan target](../spec/08-alur-ndo-r04.md). Persetujuan saat ini berhenti pada PR-03; merge, database production dan deployment belum diizinkan.
+Status: **rencana bertahap; PR-04 diizinkan untuk implementasi dan pengujian lokal, bukan production**. PR-00 tidak membuat atau menjalankan migrasi. Basis: [baseline production](../baselines/production-2026-11-18.md) dan [keputusan target](../spec/08-alur-ndo-r04.md). Persetujuan saat ini berhenti pada PR-04; merge, database production dan deployment belum diizinkan.
 
 ## 1. Syarat sebelum menulis/menerapkan migrasi berikutnya
 
@@ -36,14 +36,14 @@ Setiap tabel baru memerlukan RLS, FK, indeks dan ACL sempit. RPC mutasi sensitif
 | PR-00 | Baseline, kontrak R.04, rencana aditif dan catatan GAP | Dokumen/AGENTS/README/backlog; pengaman auto-deploy branch PR-00 | Diff aplikasi/migrasi/dependensi kosong; tautan/kontrak benar; check baseline | Selesai, draft PR #1 belum di-merge |
 | PR-01 | Otorisasi helper/event notifikasi dan kerangka status | src/server/actions/notifications.ts, server/notifications.ts, modul event internal, domain label/status | Caller arbitrer ditolak; audit/event tidak palsu; kegagalan ditangani | Selesai, draft PR #2 belum di-merge |
 | PR-02 | Kategori + reviewer independen | DraftInput, editor/persiapan, actions/workflow, reviewer UI, migrasi baru | Review wajib/opsional sesuai policy; reviewer tidak bisa edit; versi baru mengulang review; konfigurasi awal belum diklaim final perusahaan | Selesai, draft PR #3 belum di-merge |
-| PR-03 | Approval pilihan/pejabat wajib dan deduplikasi self-signer | approvals/workflow/editor/detail/halaman konfirmasi nomor; migrasi baru | Pejabat sah tetap wajib, tanpa approval duplikat; nomor tidak otomatis; ringkasan syarat memakai data nyata | **Implementasi PR-03 disetujui; lihat laporan PR-03** |
-| PR-04 | Pengiriman + penerimaan transaksi | Modul distribusi/domain, API privat dokumen, RPC/RLS aditif | Final/TTD lengkap; kirim/terima idempoten; penerima pra-kirim dan aktor salah ditolak | Menunggu |
+| PR-03 | Approval pilihan/pejabat wajib dan deduplikasi self-signer | approvals/workflow/editor/detail/halaman konfirmasi nomor; migrasi baru | Pejabat sah tetap wajib, tanpa approval duplikat; nomor tidak otomatis; ringkasan syarat memakai data nyata | Selesai, draft PR #4 belum di-merge |
+| PR-04 | Pengiriman + penerimaan transaksi | Modul distribusi/domain, API privat dokumen, RPC/RLS aditif | Final/TTD lengkap; kirim/terima idempoten; penerima pra-kirim dan aktor salah ditolak | **Implementasi PR-04 disetujui; lihat laporan PR-04** |
 | PR-05 | Kotak Masuk/Keluar dan status alur | Rute baru, sidebar, dashboard, detail, notifikasi | Dokumen terkirim hanya ke penerima; dibaca ≠ diterima; final ≠ selesai alur | Menunggu |
 | PR-06 | Balasan resmi berelasi | Editor/detail/relasi/workflow, FK/RLS aditif | Asal utuh, balasan surat/nomor baru, hak baca tidak bocor, draft bukan pemenuhan kewajiban | Menunggu |
 | PR-07 | Integrasi disposisi dari Inbox dan hasil berelasi | Inbox/detail/disposisi dan perluasan RPC | RETURN → perbaikan → ACCEPT oleh pemberi; hasil belum sah ditolak; nomor/dokumen final lama utuh | Menunggu |
 | PR-08 | UAT lintas akun, regresi dan panduan hasil | Tes review/distribusi/balasan/workflow/dokumen dan laporan | Seluruh actor dan jalur negatif, concurrency PostgreSQL, data lama terlindungi | Menunggu |
 
-Ketergantungan: PR-00 → PR-01 → PR-02 → PR-03 → PR-04 → PR-05 → PR-06/PR-07 → PR-08. PR-03 dimulai setelah persetujuan eksplisit pengguna; menyelesaikan PR-03 tidak mengizinkan PR-04. Setiap branch berikutnya juga harus menghormati larangan deploy otomatis sampai diizinkan.
+Ketergantungan: PR-00 → PR-01 → PR-02 → PR-03 → PR-04 → PR-05 → PR-06/PR-07 → PR-08. PR-04 dimulai setelah persetujuan eksplisit pengguna; menyelesaikan PR-04 tidak mengizinkan PR-05. Setiap branch berikutnya juga harus menghormati larangan deploy otomatis sampai diizinkan.
 
 ## 4. Perlindungan khusus 13 surat lama
 

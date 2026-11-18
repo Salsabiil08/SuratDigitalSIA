@@ -19,11 +19,13 @@ PSQL="psql -h $DIR -p $PORT -U postgres -v ON_ERROR_STOP=1 -q"
 $PSQL -d postgres -c "create database siadocs_test" >/dev/null
 export PGOPTIONS='--client-min-messages=notice'
 $PSQL -d siadocs_test -f "$ROOT/supabase/tests/00_stub_supabase.sql"
+$PSQL -d siadocs_test -f "$ROOT/supabase/tests/00_stub_storage.sql"
 for f in "$ROOT"/supabase/migrations/*.sql; do echo "migrasi: $(basename "$f")"; $PSQL -d siadocs_test -f "$f"; done
 $PSQL -d siadocs_test -f "$ROOT/supabase/seed.sql"
 $PSQL -d siadocs_test -f "$ROOT/supabase/tests/00_workflow_fixtures.sql"
 $PSQL -d siadocs_test -f "$ROOT/supabase/tests/01_numbering_test.sql"
 $PSQL -d siadocs_test -f "$ROOT/supabase/tests/02_rls_test.sql"
 $PSQL -d siadocs_test -f "$ROOT/supabase/tests/03_approval_test.sql"
+$PSQL -d siadocs_test -f "$ROOT/supabase/tests/04_internal_delivery_test.sql"
 bash "$ROOT/scripts/test-db-concurrency.sh" "$DIR" "$PORT"
 echo "UJI DATABASE LULUS"

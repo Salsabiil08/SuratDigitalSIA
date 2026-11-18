@@ -62,7 +62,13 @@ export async function getWorkflowLetter(id: string) {
     db.from('review_steps').select('*,reviewer:profiles!review_steps_reviewer_id_fkey(full_name),comments:review_comments(*)').eq('letter_id', id).order('cycle', { ascending: false }),
   ]);
   if (ve || ae || se || ce || re) throw new Error((ve || ae || se || ce || re)!.message);
+  const {data:delivery,error:de}=await createAdminClient().rpc('get_internal_delivery_context',{p_actor:user.id,p_letter:id});
+  if(de)throw new Error('Informasi pengiriman belum dapat diambil.');
+  let ccOptions: {id:string;full_name:string}[]=[];
+  if(delivery?.ccEnabled&&delivery?.canDispatch){const {data:ccPeople,error:cce}=await db.from('profiles').select('id,full_name').eq('is_active',true);if(cce)throw new Error('Penerima tembusan belum dapat diambil.');ccOptions=ccPeople||[];}
   return {
+    ccOptions,
+    delivery,
     letter: l,
     versions: versions || [],
     approvals: approvals || [],

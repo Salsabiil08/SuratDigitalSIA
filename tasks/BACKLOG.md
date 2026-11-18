@@ -1,6 +1,6 @@
 # Backlog aktif — R.04 adaptasi NDO
 
-Status: PR-00–02 selesai dalam draft; implementasi PR-03 disetujui pada 18 November 2026. Basis `Salsabiil08/SuratDigitalSIA`, baseline `4e0c0c661af58dd6db729c202643cd6629f7eb07`. Jangan merekonsiliasi `SIAdocs`.
+Status: PR-00–03 selesai dalam draft; implementasi PR-04 disetujui pada 18 November 2026. Basis `Salsabiil08/SuratDigitalSIA`, baseline `4e0c0c661af58dd6db729c202643cd6629f7eb07`. Jangan merekonsiliasi `SIAdocs`.
 
 ## PR-00 — dokumentasi baseline dan rencana (selesai; menunggu tinjauan)
 - [x] Tetapkan repo/SHA/deployment dan manifest baseline tanpa secret.
@@ -40,14 +40,22 @@ Status: PR-00–02 selesai dalam draft; implementasi PR-03 disetujui pada 18 Nov
 - [x] Uji lintas akun/RLS/urutan/gagal transaksi dan dokumentasi keputusan perusahaan.
 - [x] Buka [Draft PR #4](https://github.com/Salsabiil08/SuratDigitalSIA/pull/4) berbasis PR-02; CI check dan PostgreSQL/konkurensi lulus, production tidak berubah; laporkan dan berhenti.
 
+## PR-04 — pengiriman/penerimaan internal
+- [x] Snapshot final/hash/pengirim/penerima/key tetap; kirim dan event wajib atomik.
+- [x] Receipt/READ terpisah, aktor Auth, CC tidak menjadi PRIMARY/kewajiban balas.
+- [x] Tutup akses receiver pra-kirim pada RLS/versi/API/Storage/relasi; pertahankan penugasan independen.
+- [x] Pengirim pembuat/delegasi unit eksplisit; Super Admin tidak otomatis berwenang.
+- [x] UI detail untuk kirim/terima, tanpa membangun Inbox/Outbox PR-05.
+- [x] Uji fault injection, lintas akun, API, Storage dan snapshot; tambah fixture/konkurensi PostgreSQL.
+- [x] Buka [Draft PR #5](https://github.com/Salsabiil08/SuratDigitalSIA/pull/5) berbasis PR-03; CI check/PostgreSQL/konkurensi lulus, production tidak berubah; laporkan dan berhenti sebelum PR-05.
+
 ## Tahap berikutnya — belum diizinkan
-- [ ] PR-04: pengiriman/penerimaan transaksi dan RLS snapshot.
 - [ ] PR-05: Kotak Masuk/Keluar dan label penyelesaian alur.
 - [ ] PR-06: balasan surat baru berelasi.
 - [ ] PR-07: integrasi disposisi dari Inbox dan hasil berelasi.
 - [ ] PR-08: UAT lintas peran dan regresi lengkap.
 
-Rincian: [spesifikasi target](../docs/spec/08-alur-ndo-r04.md), [rencana migrasi](../docs/plans/R04_NDO_MIGRATION_PLAN.md), [validasi PR-00](../docs/plans/PR00_VALIDATION.md), [validasi PR-01](../docs/plans/PR01_VALIDATION.md), [validasi PR-02](../docs/plans/PR02_VALIDATION.md), [validasi PR-03](../docs/plans/PR03_VALIDATION.md).
+Rincian: [spesifikasi target](../docs/spec/08-alur-ndo-r04.md), [rencana migrasi](../docs/plans/R04_NDO_MIGRATION_PLAN.md), [validasi PR-00](../docs/plans/PR00_VALIDATION.md), [validasi PR-01](../docs/plans/PR01_VALIDATION.md), [validasi PR-02](../docs/plans/PR02_VALIDATION.md), [validasi PR-03](../docs/plans/PR03_VALIDATION.md), [validasi PR-04](../docs/plans/PR04_VALIDATION.md).
 
 ## Riwayat backlog sebelum adaptasi NDO
 
