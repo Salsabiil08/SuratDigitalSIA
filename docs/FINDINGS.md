@@ -6,6 +6,7 @@ PR-04 diizinkan setelah penerimaan PR-03; [laporan dan batas](plans/PR04_VALIDAT
 - Pengiriman/penerimaan/read memiliki fakta terpisah, RPC actor terverifikasi, row lock dan transaksi event/audit wajib. READ/unduh tidak membuat receipt; receipt tidak membuat READ atau selesai alur.
 - Delegasi pengiriman unit dan pengelola kebijakan harus eksplisit. CC default nonaktif karena aturan tembusan belum disahkan; bila diaktifkan oleh pengelola sah, CC hanya salinan dan tidak boleh mengaku PRIMARY atau otomatis wajib balas.
 - Internal formal jalur EXTERNAL tanpa berkas TTD di Storage ditahan pengirimannya, menunggu keputusan perusahaan. Finalisasi/download existing tetap tersedia; tidak mengarang bukti pengesahan.
+- CI run 44259876072 lulus check (187 tes/typecheck) dan PostgreSQL/konkurensi: 40 nomor unik, 20 retry masing-masing SEND/READ/RECEIVE tanpa duplikasi snapshot atau event.
 - Inbox/Outbox, balasan dan integrasi disposisi dari Inbox tetap di luar PR-04. RLS relasi surat internal acuan tidak menjadi jalur pintas sebelum pengiriman.
 
 ## Snapshot PR-03 (historis)

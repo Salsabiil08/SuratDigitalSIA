@@ -47,7 +47,7 @@ Status: PR-00–03 selesai dalam draft; implementasi PR-04 disetujui pada 18 Nov
 - [x] Pengirim pembuat/delegasi unit eksplisit; Super Admin tidak otomatis berwenang.
 - [x] UI detail untuk kirim/terima, tanpa membangun Inbox/Outbox PR-05.
 - [x] Uji fault injection, lintas akun, API, Storage dan snapshot; tambah fixture/konkurensi PostgreSQL.
-- [ ] Buka Draft PR berbasis PR-03, verifikasi CI, production dan laporan; berhenti sebelum PR-05.
+- [x] Buka [Draft PR #5](https://github.com/Salsabiil08/SuratDigitalSIA/pull/5) berbasis PR-03; CI check/PostgreSQL/konkurensi lulus, production tidak berubah; laporkan dan berhenti sebelum PR-05.
 
 ## Tahap berikutnya — belum diizinkan
 - [ ] PR-05: Kotak Masuk/Keluar dan label penyelesaian alur.

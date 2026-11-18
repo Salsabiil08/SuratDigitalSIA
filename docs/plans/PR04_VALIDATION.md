@@ -63,3 +63,11 @@ Tiga belas surat lama tanpa versi tidak dapat dikirim dengan bukti buatan. Surat
 ## Titik berhenti
 
 Draft PR berbasis PR-03, tanpa merge/migrasi production/deployment. Tidak membangun PR-05. Hasil CI dan publikasi ditambahkan setelah run selesai, kemudian berhenti untuk peninjauan pengguna.
+
+## Publikasi dan CI terverifikasi
+
+[Draft PR #5](https://github.com/Salsabiil08/SuratDigitalSIA/pull/5) berbasis branch PR-03, commit implementasi `dd8fad4c59c643269ada28ce5dee0159bfd63501`. [CI run 44259876072](https://github.com/Salsabiil08/SuratDigitalSIA/actions/runs/44259876072) selesai **success**: job check lulus typecheck/187 tes dan job db lulus seluruh fixture PostgreSQL setelah menerapkan 18 migrasi pada database sementara.
+
+Log PostgreSQL memuat `konkurensi: 40|40|1|40`, `PENGIRIMAN/PEMBACAAN/PENERIMAAN KONKUREN LULUS: 20 retry masing-masing, satu snapshot dan event`, lalu `UJI DATABASE LULUS`. Skrip memeriksa satu dispatch/penerima serta satu audit SEND/READ/RECEIVE dan satu notifikasi SEND/RECEIVED, walaupun permintaan berulang serentak. Fault injection pada tahap penerima/notifikasi/audit dan receipt serta RLS lintas akun/Storage juga telah dijalankan dalam fixture nyata. Bukti ini tidak menggantikan UAT Supabase Auth/Storage/browser staging.
+
+Pemeriksaan setelah publikasi: deployment branch PR-04 berjumlah nol. Production tetap READY pada `dpl_4aVP7FGF4i9eJhqARNu65dZtckZc`, SHA main `4e0c0c661af58dd6db729c202643cd6629f7eb07`. Tidak ada DDL/DML/migrasi production, merge atau deployment. Commit laporan berikutnya hanya dokumentasi dan dapat memicu ulang CI; kode implementasi yang lulus tidak berubah. **Berhenti sebelum PR-05.**
