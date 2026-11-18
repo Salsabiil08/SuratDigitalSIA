@@ -7,6 +7,8 @@ export interface SignatureArea {
   height: number;
 }
 export interface DraftInput {
+  categoryCode?: string;
+  reviewerId?: string;
   dispositionId?: string;
   id?: string;
   revision?: number;
@@ -81,9 +83,11 @@ export function workflowLabel(letter: {
   status: string;
   signature_status?: string;
   finalized_at?: string | null;
+  review_status?: string | null;
 }) {
   if (letter.status === "CANCELLED") return "Dibatalkan";
   if (documentFinality(letter.finalized_at) === "FINAL") return DOCUMENT_FINALITY_LABEL.FINAL;
+  if (letter.review_status === "WAITING") return "Menunggu Pemeriksaan";
   if (letter.status === "READY_TO_ISSUE") return "Disetujui";
   if (letter.status === "NUMBERED" && letter.signature_status === "WAITING")
     return "Menunggu TTD";

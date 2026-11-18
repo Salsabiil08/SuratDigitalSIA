@@ -3,6 +3,10 @@
  * Membaca notifikasi bukan membaca surat, menerima surat, atau mengubah statusnya.
  */
 const EVENTS: Record<string, { label: string; title: string; variant: 'gray' | 'amber' | 'blue' | 'green' | 'red' }> = {
+  REVIEW_REQUESTED: { label: 'Pemeriksaan', title: 'Surat menunggu pemeriksaan Anda.', variant: 'amber' },
+  REVIEW_COMMENT: { label: 'Pemeriksaan', title: 'Pemeriksa memberi catatan pada surat Anda.', variant: 'blue' },
+  REVIEW_PASS: { label: 'Pemeriksaan', title: 'Naskah lolos pemeriksaan. Persetujuan tetap melalui tahap terpisah.', variant: 'green' },
+  REVIEW_REQUEST_REVISION: { label: 'Perbaikan', title: 'Pemeriksa meminta perbaikan naskah surat.', variant: 'amber' },
   SUBMIT: { label: 'Pengajuan', title: 'Pengajuan surat telah diproses.', variant: 'amber' },
   APPROVAL_REQUEST: { label: 'Persetujuan', title: 'Surat menunggu persetujuan Anda.', variant: 'amber' },
   APPROVE: { label: 'Persetujuan', title: 'Persetujuan surat telah dicatat.', variant: 'green' },

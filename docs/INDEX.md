@@ -9,6 +9,7 @@
 | Aturan target dan keputusan reviewer | [08-alur-ndo-r04.md](spec/08-alur-ndo-r04.md) |
 | Fitur production yang wajib dipertahankan | [00-revisi-alur.md](spec/00-revisi-alur.md), baseline |
 | Rencana database, PR dan uji penerimaan | [R04_NDO_MIGRATION_PLAN.md](plans/R04_NDO_MIGRATION_PLAN.md) |
+| Perubahan dan validasi PR-02 | [PR02_VALIDATION.md](plans/PR02_VALIDATION.md), [investigasi fixture baseline](plans/PR02_BASELINE_FIXTURE_INVESTIGATION.md) |
 | Perubahan dan validasi PR-01 | [PR01_VALIDATION.md](plans/PR01_VALIDATION.md) |
 | Perubahan dan validasi PR-00 | [PR00_VALIDATION.md](plans/PR00_VALIDATION.md) |
 | Temuan dan keterbatasan | [FINDINGS.md](FINDINGS.md), [laporan tes baseline](REVISION_TEST_REPORT.md) |

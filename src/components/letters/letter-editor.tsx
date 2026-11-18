@@ -22,6 +22,8 @@ function draftFromData(
     v = data.versions.find((v) => v.id === l.current_version_id);
   return {
     id: l.id,
+    categoryCode: l.document_category?.code || "",
+    reviewerId: l.reviewer_id || "",
     revision: l.revision,
     source: l.source,
     letterTypeCode: l.type.code,
@@ -81,6 +83,8 @@ export function LetterEditor({
       ? draftFromData(initialData)
       : {
           source,
+          categoryCode: "",
+          reviewerId: "",
           dispositionId,
           letterTypeCode: billing ? "Tag" : "IN",
           subject: "",
@@ -130,6 +134,7 @@ export function LetterEditor({
       ...x,
       letterTypeCode: type,
       signerIds: [],
+      reviewerId: "",
       areas: [],
       recipientUserId: "",
       recipientName: "",
@@ -141,6 +146,9 @@ export function LetterEditor({
   const internal = input.letterTypeCode === "IN";
   const isBill = input.letterTypeCode === "Tag";
   const count = internal ? (formal ? 1 : 0) : isBill ? 2 : 1;
+  const reviewRule = options.reviewRules.find(r => r.category_code === input.categoryCode && r.typeCode === input.letterTypeCode)
+    || options.reviewRules.find(r => r.category_code === input.categoryCode && !r.typeCode);
+  const reviewers = options.people.filter(p => p.id !== options.user.id && options.reviewerGrants.some(g => g.reviewerId === p.id && (!g.typeCode || g.typeCode === input.letterTypeCode)));
   const signers = options?.people.filter((p) => p.signer) || [];
   function updateSigner(index: number, value: string) {
     const ids = [...input.signerIds];
@@ -193,7 +201,7 @@ export function LetterEditor({
         }
       />
       <p className="text-sm text-neutral-600">
-        Buat/Impor → Pratinjau dan Koreksi → Persetujuan → Nomor Resmi → TTD →
+        Buat/Impor → Pratinjau dan Koreksi → Pemeriksaan jika diperlukan → Persetujuan → Nomor Resmi → TTD →
         Finalisasi
       </p>
       {error && (
@@ -233,6 +241,20 @@ export function LetterEditor({
               </p>
             </Field>
           </div>
+          <Field label="Kategori Surat" htmlFor="letter-category" required>
+            <Select id="letter-category" value={input.categoryCode || ""} onChange={e => change('categoryCode', e.target.value)} required>
+              <option value="">Pilih kategori surat</option>
+              {options.categories.map(c => <option key={c.id} value={c.code}>{c.name}</option>)}
+            </Select>
+          </Field>
+          <Field label={`Pemeriksa Surat${reviewRule?.requires_review ? ' (wajib sebelum pengajuan)' : ' (opsional)'}`} htmlFor="letter-reviewer"
+            hint="Pemeriksa hanya memberi catatan atau hasil pemeriksaan. Anda tetap yang mengedit isi surat. Aturan awal perlu validasi perusahaan.">
+            <Select id="letter-reviewer" value={input.reviewerId || ""} onChange={e => change('reviewerId', e.target.value)}>
+              <option value="">{reviewRule?.requires_review ? 'Pilih pemeriksa berwenang' : 'Tanpa pemeriksa'}</option>
+              {reviewers.map(p => <option key={p.id} value={p.id}>{p.name} — {p.title}</option>)}
+            </Select>
+            {reviewers.length === 0 && <p className="text-xs text-amber-800">Belum ada pemeriksa dengan kewenangan jenis dan unit ini. Penugasan perlu ditetapkan perusahaan sebelum surat wajib pemeriksaan dapat diajukan.</p>}
+          </Field>
           <Field
             label="Tanggal Surat"
             htmlFor="letter-date"

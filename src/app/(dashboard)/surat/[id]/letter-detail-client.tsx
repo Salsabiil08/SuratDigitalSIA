@@ -1,4 +1,5 @@
 "use client";
+import { decideReviewAction } from "@/server/actions/reviews";
 import { displayLabel } from "@/domain/display-labels";
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
@@ -61,6 +62,7 @@ export function LetterDetailClient({
   const v = data.versions.find((v) => v.id === l.current_version_id);
   const editable =
     data.isCreator && ["DRAFT", "REVISION_REQUESTED"].includes(l.status);
+  const activeReview = data.reviews.find(r => r.reviewer_id === data.userId && r.status === 'PENDING' && r.version_id === l.current_version_id && l.review_status === 'WAITING');
   const activeApproval = data.approvals.find(
     (a) => a.approver_id === data.userId && a.status === "PENDING",
   );
@@ -211,7 +213,7 @@ export function LetterDetailClient({
                 )
               }
             >
-              Ajukan Persetujuan
+              {l.review_status === "PASSED" ? "Ajukan Persetujuan" : "Ajukan Surat"}
             </Button>
           </>
         )}
@@ -229,6 +231,22 @@ export function LetterDetailClient({
           </Button>
         )}
       </div>
+      {data.reviews.length > 0 && <Card className="p-5 space-y-3">
+        <h2 className="font-bold">Riwayat Pemeriksaan</h2>
+        {data.reviews.map(r => <div key={r.id} className="text-sm border-b pb-2">
+          <p>{r.reviewer?.full_name} — {r.status === 'PASSED' ? 'Lolos pemeriksaan' : r.status === 'REVISION_REQUESTED' ? 'Perlu perbaikan' : 'Menunggu pemeriksaan'}{r.version_id !== l.current_version_id ? ' (versi sebelumnya; tidak berlaku untuk versi ini)' : ''}</p>
+          {r.decision_note && <p>Catatan: {r.decision_note}</p>}
+          {r.comments.map((c: { id: string; note: string }) => <p key={c.id}>Catatan pemeriksa: {c.note}</p>)}
+        </div>)}
+      </Card>}
+      {activeReview && <Card className="p-5 space-y-4">
+        <h2 className="font-bold">Hasil Pemeriksaan Naskah</h2>
+        <p className="text-sm">Anda memeriksa versi ini. Perubahan isi dilakukan pembuat surat. Lolos pemeriksaan bukan persetujuan atau tanda tangan.</p>
+        <label htmlFor="review-note" className="block text-sm">Catatan (wajib untuk memberi catatan atau meminta perbaikan)</label>
+        <textarea id="review-note" className="w-full border rounded-xl p-3" value={note} onChange={e => setNote(e.target.value)} />
+        <div className="flex gap-3 flex-wrap">{([['COMMENT','Simpan Catatan'],['PASS','Lolos Pemeriksaan'],['REQUEST_REVISION','Minta Perbaikan']] as const).map(([action,label]) =>
+          <Button key={action} disabled={!previewed} isLoading={busy} variant={action === 'PASS' ? 'primary' : 'secondary'} onClick={() => act(() => decideReviewAction(activeReview.id, activeReview.version_id, l.revision, action, note), 'Hasil pemeriksaan tersimpan.')}>{label}</Button>)}</div>
+      </Card>}
       {activeApproval && (
         <Card className="p-5 space-y-4">
           <h2 className="font-bold">

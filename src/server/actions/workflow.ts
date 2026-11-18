@@ -24,6 +24,7 @@ export async function getWorkflowLetter(id: string) {
     { data: billing },
     { data: items },
     { data: cancellations, error: ce },
+    { data: reviews, error: re },
   ] = await Promise.all([
     db
       .from("letter_versions")
@@ -58,8 +59,9 @@ export async function getWorkflowLetter(id: string) {
       )
       .eq("letter_id", id)
       .order("created_at", { ascending: false }),
+    db.from('review_steps').select('*,reviewer:profiles!review_steps_reviewer_id_fkey(full_name),comments:review_comments(*)').eq('letter_id', id).order('cycle', { ascending: false }),
   ]);
-  if (ve || ae || se || ce) throw new Error((ve || ae || se || ce)!.message);
+  if (ve || ae || se || ce || re) throw new Error((ve || ae || se || ce || re)!.message);
   return {
     letter: l,
     versions: versions || [],
@@ -68,6 +70,7 @@ export async function getWorkflowLetter(id: string) {
     billing,
     items: items || [],
     cancellations: cancellations || [],
+    reviews: reviews || [],
     isCreator: l.creator_id === user.id,
     userId: user.id,
   };
@@ -106,6 +109,7 @@ export async function reviewLetterAction(
     for (const p of [
       "/surat",
       "/persetujuan",
+      "/pemeriksaan",
       "/pengesahan",
       "/",
       `/surat/${id}`,

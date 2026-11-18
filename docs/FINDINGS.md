@@ -1,3 +1,15 @@
+# Pembaruan PR-02 — 18 November 2026
+
+Implementasi/pengujian lokal PR-02 diizinkan setelah penerimaan fungsional PR-01. [Laporan PR-02](plans/PR02_VALIDATION.md) membedakan perubahan branch dari production yang belum berubah.
+
+- Kategori kini masuk form, draft dan pengajuan; reviewer independen mempunyai penugasan jenis/unit yang eksplisit dan hanya catatan/lolos/minta perbaikan. Keputusan terkait versi/hash, terpisah dari approval/TTD.
+- G-04 bagian reviewer ditangani pada branch PR-02. Inbox pengiriman, receipt dan balasan formal masih menunggu PR terkait. G-01 akses penerima pra-kirim tidak dinyatakan telah diperbaiki oleh PR-02.
+- Default kategori berstatus INITIAL; validasi perusahaan, penetapan pengelola policy dan pemberian kewenangan pemeriksa belum dilakukan. Tidak otomatis memberikan kewenangan bisnis kepada Super Admin/jabatan tertentu.
+- [Investigasi fixture penomoran](plans/PR02_BASELINE_FIXTURE_INVESTIGATION.md) mereproduksi kegagalan pada baseline tanpa PR-02: READY_TO_ISSUE tanpa versi dokumen. Guard tidak dilonggarkan; perbaikan fixture penuh tetap terpisah.
+- Tiga belas surat lama tidak dibackfill. Snapshot 13 surat simulasi dan audit sebelum/sesudah migrasi lokal identik setelah mengecualikan kolom baru NULL.
+
+## Snapshot temuan PR-01 (historis)
+
 # Pembaruan PR-01 — 18 November 2026
 
 Implementasi/pengujian lokal PR-01 disetujui setelah PR-00. [Laporan PR-01](plans/PR01_VALIDATION.md) mencatat bukti dan batas; production belum berubah.
