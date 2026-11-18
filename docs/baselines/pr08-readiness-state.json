@@ -1,0 +1,153 @@
+{
+  "date_wib": "2026-11-18",
+  "source_base": "fad16b73d0f72bf1ad0637ea1c5994e6277752d8",
+  "production_counts": {
+    "letters": 22,
+    "numbered_without_version": 13
+  },
+  "production_history": [
+    {
+      "name": "revision_workflow",
+      "version": "20261117204405"
+    },
+    {
+      "name": "workflow_permissions",
+      "version": "20261117204922"
+    },
+    {
+      "name": "authorized_cancellation",
+      "version": "20261117210259"
+    },
+    {
+      "name": "workflow_validation_guards",
+      "version": "20261117213134"
+    },
+    {
+      "name": "disposition_review_flow",
+      "version": "20261118012449"
+    },
+    {
+      "name": "general_senior_manager",
+      "version": "20261118013200"
+    },
+    {
+      "name": "cancellation_read_scope",
+      "version": "20261118013517"
+    },
+    {
+      "name": "rich_text_content",
+      "version": "20261118020743"
+    }
+  ],
+  "production_buckets": [
+    {
+      "id": "letter-documents",
+      "public": false
+    },
+    {
+      "id": "signature-assets",
+      "public": false
+    }
+  ],
+  "stack": [
+    {
+      "number": 1,
+      "base": "main",
+      "base_sha": "4e0c0c661af58dd6db729c202643cd6629f7eb07",
+      "head": "docs/pr-00-r04-ndo-baseline",
+      "head_sha": "a2be089ea84344764516c1c64e116cb2fc750803",
+      "draft": true,
+      "merged": false,
+      "mergeable": true,
+      "latest_ci": "failure"
+    },
+    {
+      "number": 2,
+      "base": "docs/pr-00-r04-ndo-baseline",
+      "base_sha": "a2be089ea84344764516c1c64e116cb2fc750803",
+      "head": "fix/pr-01-notifications-status",
+      "head_sha": "43db72db6856c2dbdc62f680aea6dce0cbf19d06",
+      "draft": true,
+      "merged": false,
+      "mergeable": true,
+      "latest_ci": "failure"
+    },
+    {
+      "number": 3,
+      "base": "fix/pr-01-notifications-status",
+      "base_sha": "43db72db6856c2dbdc62f680aea6dce0cbf19d06",
+      "head": "feat/pr-02-independent-review",
+      "head_sha": "5056f2625f28769663fee66cc32093719d0e10d1",
+      "draft": true,
+      "merged": false,
+      "mergeable": true,
+      "latest_ci": "failure"
+    },
+    {
+      "number": 4,
+      "base": "feat/pr-02-independent-review",
+      "base_sha": "5056f2625f28769663fee66cc32093719d0e10d1",
+      "head": "feat/pr-03-independent-approval",
+      "head_sha": "6e57882121425839ca1e5cd8bc672c1271f215cb",
+      "draft": true,
+      "merged": false,
+      "mergeable": true,
+      "latest_ci": "success"
+    },
+    {
+      "number": 5,
+      "base": "feat/pr-03-independent-approval",
+      "base_sha": "6e57882121425839ca1e5cd8bc672c1271f215cb",
+      "head": "feat/pr-04-internal-delivery",
+      "head_sha": "40a593e1e9e3a7033daf4f4f7d6b01ebe449765c",
+      "draft": true,
+      "merged": false,
+      "mergeable": true,
+      "latest_ci": "success"
+    },
+    {
+      "number": 6,
+      "base": "feat/pr-04-internal-delivery",
+      "base_sha": "40a593e1e9e3a7033daf4f4f7d6b01ebe449765c",
+      "head": "feat/pr-05-inbox-outbox",
+      "head_sha": "e86466c9fafdb59ab24d85dc5cee61df086bd210",
+      "draft": true,
+      "merged": false,
+      "mergeable": true,
+      "latest_ci": "success"
+    },
+    {
+      "number": 7,
+      "base": "feat/pr-05-inbox-outbox",
+      "base_sha": "e86466c9fafdb59ab24d85dc5cee61df086bd210",
+      "head": "feat/pr-06-official-replies",
+      "head_sha": "54279cee429f611dee257246c6bc96ada664e0fc",
+      "draft": true,
+      "merged": false,
+      "mergeable": true,
+      "latest_ci": "success"
+    },
+    {
+      "number": 8,
+      "base": "feat/pr-06-official-replies",
+      "base_sha": "54279cee429f611dee257246c6bc96ada664e0fc",
+      "head": "feat/pr-07-disposition-integration",
+      "head_sha": "fad16b73d0f72bf1ad0637ea1c5994e6277752d8",
+      "draft": true,
+      "merged": false,
+      "mergeable": true,
+      "latest_ci": "success"
+    }
+  ],
+  "staging_vercel": {
+    "id": "prj_WcEEQdbZEfWKnajexjxnAQlhciIe",
+    "name": "siadocs-r04-staging",
+    "node": "22.x",
+    "deployed": false
+  },
+  "staging_supabase": {
+    "status": "BLOCKED",
+    "reason": "Branching requires Pro; organization choice required for separate project"
+  },
+  "decision": "NO_GO"
+}

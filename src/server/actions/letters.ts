@@ -16,7 +16,7 @@ export interface LetterItemData {
 }
 export async function getLettersAction(): Promise<LetterItemData[]> {
   const user = await requireUser();
-  const { data, error } = await createClient()
+  const { data, error } = await (await createClient())
     .from("letters")
     .select(
       "*,letter_types(name,category),recipient:profiles!letters_recipient_user_id_fkey(full_name)",

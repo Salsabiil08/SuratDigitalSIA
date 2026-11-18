@@ -1,6 +1,6 @@
 # Backlog aktif — R.04 adaptasi NDO
 
-Status: PR-00–06 selesai dalam draft; implementasi PR-07 disetujui pada 18 November 2026. Basis `Salsabiil08/SuratDigitalSIA`, baseline `4e0c0c661af58dd6db729c202643cd6629f7eb07`. Jangan merekonsiliasi `SIAdocs`.
+Status: PR-00–07 selesai dalam draft; PR-08 FINAL disetujui pada 18 November 2026. Basis `Salsabiil08/SuratDigitalSIA`, baseline `4e0c0c661af58dd6db729c202643cd6629f7eb07`. Jangan merekonsiliasi `SIAdocs`.
 
 ## PR-00 — dokumentasi baseline dan rencana (selesai; menunggu tinjauan)
 - [x] Tetapkan repo/SHA/deployment dan manifest baseline tanpa secret.
@@ -73,8 +73,17 @@ Status: PR-00–06 selesai dalam draft; implementasi PR-07 disetujui pada 18 Nov
 - [x] Tes lokal server/API/UI dan fixture PostgreSQL, regresi serta build.
 - [x] Buka [Draft PR #8](https://github.com/Salsabiil08/SuratDigitalSIA/pull/8) berbasis PR-06; CI #41 check 234/234 dan PostgreSQL/konkurensi lulus, production tidak berubah; laporkan dan berhenti sebelum PR-08.
 
-## Tahap berikutnya — belum diizinkan
-- [ ] PR-08: UAT lintas peran dan regresi lengkap.
+## PR-08 FINAL — Production readiness
+- [x] Verifikasi stack/CI historis, schema/history production read-only dan data historis.
+- [x] Patch keamanan Next/PostCSS, adaptasi async API, guard staging, role UI dan error login.
+- [x] Migrasi grant aditif, tes PostgreSQL nyata/forward/rollback/replay/integritas.
+- [x] Smoke browser public desktop/mobile; Auth/Storage nyata bukan PASS.
+- [x] Vercel staging terpisah tanpa deploy/secret production; template/preflight siap.
+- [ ] Supabase staging: pilihan organisasi/proyek terpisah masih diperlukan; branching ditolak paket.
+- [ ] UAT Auth/Storage lintas akun dan sign-off kebijakan wajib perusahaan.
+- [ ] Draft PR-08 integrasi, CI akhir, laporan NO-GO dan runbook.
+
+Tidak membuat fase PR-09. Production/merge/deploy menunggu persetujuan baru.
 
 Rincian: [spesifikasi target](../docs/spec/08-alur-ndo-r04.md), [rencana migrasi](../docs/plans/R04_NDO_MIGRATION_PLAN.md), [validasi PR-00](../docs/plans/PR00_VALIDATION.md), [validasi PR-01](../docs/plans/PR01_VALIDATION.md), [validasi PR-02](../docs/plans/PR02_VALIDATION.md), [validasi PR-03](../docs/plans/PR03_VALIDATION.md), [validasi PR-04](../docs/plans/PR04_VALIDATION.md), [validasi PR-05](../docs/plans/PR05_VALIDATION.md), [validasi PR-06](../docs/plans/PR06_VALIDATION.md), [validasi PR-07](../docs/plans/PR07_VALIDATION.md).
 

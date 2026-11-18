@@ -5,7 +5,7 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { revalidatePath } from 'next/cache';
 export async function getPendingReviewsAction() {
   const user = await requireUser();
-  const { data, error } = await createClient().from('review_steps')
+  const { data, error } = await (await createClient()).from('review_steps')
     .select('id,letter_id,version_id,cycle,letter:letters!review_steps_letter_id_fkey(id,subject,current_version_id,reviewer_id,review_status,revision,status)')
     .eq('reviewer_id', user.id).eq('status', 'PENDING').order('assigned_at');
   if (error) throw new Error('Daftar pemeriksaan belum dapat diambil.');

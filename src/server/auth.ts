@@ -26,19 +26,19 @@ export interface UserProfile {
 
 /** Hapus cookie demo lama. Identitas hanya diverifikasi melalui Supabase Auth. */
 export async function clearLocalSession() {
-  cookies().set("siadocs_session", "", { path: "/", maxAge: 0 });
+  (await cookies()).set("siadocs_session", "", { path: "/", maxAge: 0 });
 }
 
 export const getCurrentUser = cache(async (): Promise<UserProfile | null> => {
   // 2. Cek sesi resmi dari Supabase Auth (hanya jika ada cookie auth, menghindari lag jaringan)
   try {
-    const cookieStore = cookies();
+    const cookieStore = await cookies();
     const hasAuthCookie = cookieStore
       .getAll()
       .some((c) => c.name.startsWith("sb-") && c.name.includes("-auth-token"));
 
     if (hasAuthCookie) {
-      const supabase = createClient();
+      const supabase = await createClient();
       const {
         data: { user },
         error: authError,

@@ -10,3 +10,6 @@ supabase/.temp/
 .qa-*
 test-results/
 playwright-report/
+
+.env.staging
+__pycache__/

@@ -42,7 +42,7 @@ export async function getSignedDownloadUrl(
   path: string,
   expiresInSeconds = 300
 ): Promise<string> {
-  const supabase = createClient();
+  const supabase = await createClient();
 
   const { data, error } = await supabase.storage.from(bucket).createSignedUrl(path, expiresInSeconds);
 

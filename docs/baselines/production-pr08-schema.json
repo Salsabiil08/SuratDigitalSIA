@@ -1,0 +1,3266 @@
+{
+  "tables": [
+    {
+      "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}",
+      "rls": true,
+      "name": "approval_steps",
+      "schema": "public",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "default": "gen_random_uuid()",
+          "not_null": true
+        },
+        {
+          "name": "letter_id",
+          "type": "uuid",
+          "default": null,
+          "not_null": true
+        },
+        {
+          "name": "cycle",
+          "type": "integer",
+          "default": null,
+          "not_null": true
+        },
+        {
+          "name": "step_order",
+          "type": "integer",
+          "default": null,
+          "not_null": true
+        },
+        {
+          "name": "approver_id",
+          "type": "uuid",
+          "default": null,
+          "not_null": true
+        },
+        {
+          "name": "step_source",
+          "type": "text",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "status",
+          "type": "text",
+          "default": null,
+          "not_null": true
+        },
+        {
+          "name": "decision_note",
+          "type": "text",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "version_id",
+          "type": "uuid",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "decided_at",
+          "type": "timestamp with time zone",
+          "default": null,
+          "not_null": false
+        }
+      ],
+      "constraints": [
+        {
+          "name": "approval_steps_approver_id_fkey",
+          "definition": "FOREIGN KEY (approver_id) REFERENCES profiles(id)"
+        },
+        {
+          "name": "approval_steps_letter_id_fkey",
+          "definition": "FOREIGN KEY (letter_id) REFERENCES letters(id)"
+        },
+        {
+          "name": "approval_steps_pkey",
+          "definition": "PRIMARY KEY (id)"
+        },
+        {
+          "name": "approval_steps_status_check",
+          "definition": "CHECK ((status = ANY (ARRAY['WAITING'::text, 'PENDING'::text, 'APPROVED'::text, 'REVISION_REQUESTED'::text, 'REJECTED'::text, 'SUPERSEDED'::text])))"
+        },
+        {
+          "name": "approval_steps_step_source_check",
+          "definition": "CHECK ((step_source = ANY (ARRAY['CREATOR_SELECTED'::text, 'SIGNER_CONFIRMATION'::text, 'BILLING_SUBMITTER'::text, 'BILLING_APPROVER'::text])))"
+        },
+        {
+          "name": "approval_steps_version_id_fkey",
+          "definition": "FOREIGN KEY (version_id) REFERENCES letter_versions(id)"
+        }
+      ]
+    },
+    {
+      "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}",
+      "rls": true,
+      "name": "audit_logs",
+      "schema": "public",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "default": "gen_random_uuid()",
+          "not_null": true
+        },
+        {
+          "name": "occurred_at",
+          "type": "timestamp with time zone",
+          "default": "now()",
+          "not_null": true
+        },
+        {
+          "name": "actor_id",
+          "type": "uuid",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "letter_id",
+          "type": "uuid",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "action",
+          "type": "text",
+          "default": null,
+          "not_null": true
+        },
+        {
+          "name": "entity_type",
+          "type": "text",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "entity_id",
+          "type": "text",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "status_before",
+          "type": "text",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "status_after",
+          "type": "text",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "official_number",
+          "type": "text",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "version_id",
+          "type": "uuid",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "reason",
+          "type": "text",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "metadata",
+          "type": "jsonb",
+          "default": null,
+          "not_null": false
+        }
+      ],
+      "constraints": [
+        {
+          "name": "audit_logs_actor_id_fkey",
+          "definition": "FOREIGN KEY (actor_id) REFERENCES profiles(id)"
+        },
+        {
+          "name": "audit_logs_letter_id_fkey",
+          "definition": "FOREIGN KEY (letter_id) REFERENCES letters(id)"
+        },
+        {
+          "name": "audit_logs_pkey",
+          "definition": "PRIMARY KEY (id)"
+        },
+        {
+          "name": "audit_logs_version_id_fkey",
+          "definition": "FOREIGN KEY (version_id) REFERENCES letter_versions(id)"
+        }
+      ]
+    },
+    {
+      "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}",
+      "rls": true,
+      "name": "authority_delegations",
+      "schema": "public",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "default": "gen_random_uuid()",
+          "not_null": true
+        },
+        {
+          "name": "grantor_assignment_id",
+          "type": "uuid",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "grantee_assignment_id",
+          "type": "uuid",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "scope_unit_id",
+          "type": "uuid",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "authority_type",
+          "type": "text",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "basis_reference",
+          "type": "text",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "valid_from",
+          "type": "date",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "valid_until",
+          "type": "date",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "recorded_by",
+          "type": "uuid",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "is_active",
+          "type": "boolean",
+          "default": null,
+          "not_null": false
+        }
+      ],
+      "constraints": [
+        {
+          "name": "authority_delegations_authority_type_check",
+          "definition": "CHECK ((authority_type = 'LETTER_CANCELLATION'::text))"
+        },
+        {
+          "name": "authority_delegations_grantee_assignment_id_fkey",
+          "definition": "FOREIGN KEY (grantee_assignment_id) REFERENCES user_assignments(id)"
+        },
+        {
+          "name": "authority_delegations_grantor_assignment_id_fkey",
+          "definition": "FOREIGN KEY (grantor_assignment_id) REFERENCES user_assignments(id)"
+        },
+        {
+          "name": "authority_delegations_pkey",
+          "definition": "PRIMARY KEY (id)"
+        },
+        {
+          "name": "authority_delegations_recorded_by_fkey",
+          "definition": "FOREIGN KEY (recorded_by) REFERENCES profiles(id)"
+        },
+        {
+          "name": "authority_delegations_scope_unit_id_fkey",
+          "definition": "FOREIGN KEY (scope_unit_id) REFERENCES organizational_units(id)"
+        }
+      ]
+    },
+    {
+      "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}",
+      "rls": true,
+      "name": "billing_details",
+      "schema": "public",
+      "columns": [
+        {
+          "name": "letter_id",
+          "type": "uuid",
+          "default": null,
+          "not_null": true
+        },
+        {
+          "name": "bank_id",
+          "type": "uuid",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "payee_name",
+          "type": "text",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "account_number",
+          "type": "text",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "total_amount",
+          "type": "numeric(18,2)",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "total_in_words",
+          "type": "text",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "sap_reference",
+          "type": "text",
+          "default": null,
+          "not_null": false
+        }
+      ],
+      "constraints": [
+        {
+          "name": "billing_details_bank_id_fkey",
+          "definition": "FOREIGN KEY (bank_id) REFERENCES master_bank(id)"
+        },
+        {
+          "name": "billing_details_pkey",
+          "definition": "PRIMARY KEY (letter_id)"
+        }
+      ]
+    },
+    {
+      "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}",
+      "rls": true,
+      "name": "billing_items",
+      "schema": "public",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "default": "gen_random_uuid()",
+          "not_null": true
+        },
+        {
+          "name": "letter_id",
+          "type": "uuid",
+          "default": null,
+          "not_null": true
+        },
+        {
+          "name": "line_no",
+          "type": "integer",
+          "default": null,
+          "not_null": true
+        },
+        {
+          "name": "description",
+          "type": "text",
+          "default": null,
+          "not_null": true
+        },
+        {
+          "name": "amount",
+          "type": "numeric(18,2)",
+          "default": null,
+          "not_null": true
+        }
+      ],
+      "constraints": [
+        {
+          "name": "billing_items_amount_chk",
+          "definition": "CHECK ((amount > (0)::numeric))"
+        },
+        {
+          "name": "billing_items_letter_id_fkey",
+          "definition": "FOREIGN KEY (letter_id) REFERENCES letters(id)"
+        },
+        {
+          "name": "billing_items_line_key",
+          "definition": "UNIQUE (letter_id, line_no)"
+        },
+        {
+          "name": "billing_items_pkey",
+          "definition": "PRIMARY KEY (id)"
+        }
+      ]
+    },
+    {
+      "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}",
+      "rls": true,
+      "name": "cancellation_authorizations",
+      "schema": "public",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "default": "gen_random_uuid()",
+          "not_null": true
+        },
+        {
+          "name": "request_id",
+          "type": "uuid",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "authorizer_id",
+          "type": "uuid",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "authority_basis",
+          "type": "text",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "delegation_id",
+          "type": "uuid",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "decision",
+          "type": "text",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "note",
+          "type": "text",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "decided_at",
+          "type": "timestamp with time zone",
+          "default": null,
+          "not_null": false
+        }
+      ],
+      "constraints": [
+        {
+          "name": "cancellation_authorizations_authority_basis_check",
+          "definition": "CHECK ((authority_basis = ANY (ARRAY['UNIT_HEAD'::text, 'DESIGNATED_OFFICIAL'::text, 'SIGNING_OFFICIAL'::text, 'SM_FINANCE'::text, 'DIRECTOR'::text])))"
+        },
+        {
+          "name": "cancellation_authorizations_authorizer_id_fkey",
+          "definition": "FOREIGN KEY (authorizer_id) REFERENCES profiles(id)"
+        },
+        {
+          "name": "cancellation_authorizations_decision_check",
+          "definition": "CHECK ((decision = ANY (ARRAY['APPROVED'::text, 'DECLINED'::text])))"
+        },
+        {
+          "name": "cancellation_authorizations_delegation_id_fkey",
+          "definition": "FOREIGN KEY (delegation_id) REFERENCES authority_delegations(id)"
+        },
+        {
+          "name": "cancellation_authorizations_pkey",
+          "definition": "PRIMARY KEY (id)"
+        },
+        {
+          "name": "cancellation_authorizations_request_id_fkey",
+          "definition": "FOREIGN KEY (request_id) REFERENCES cancellation_requests(id)"
+        }
+      ]
+    },
+    {
+      "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}",
+      "rls": true,
+      "name": "cancellation_requests",
+      "schema": "public",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "default": "gen_random_uuid()",
+          "not_null": true
+        },
+        {
+          "name": "letter_id",
+          "type": "uuid",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "requested_by",
+          "type": "uuid",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "reason",
+          "type": "text",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "status",
+          "type": "text",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "default": "now()",
+          "not_null": true
+        },
+        {
+          "name": "executed_at",
+          "type": "timestamp with time zone",
+          "default": null,
+          "not_null": false
+        }
+      ],
+      "constraints": [
+        {
+          "name": "cancellation_requests_letter_id_fkey",
+          "definition": "FOREIGN KEY (letter_id) REFERENCES letters(id)"
+        },
+        {
+          "name": "cancellation_requests_pkey",
+          "definition": "PRIMARY KEY (id)"
+        },
+        {
+          "name": "cancellation_requests_requested_by_fkey",
+          "definition": "FOREIGN KEY (requested_by) REFERENCES profiles(id)"
+        },
+        {
+          "name": "cancellation_requests_status_check",
+          "definition": "CHECK ((status = ANY (ARRAY['PENDING'::text, 'EXECUTED'::text, 'DECLINED'::text, 'WITHDRAWN'::text])))"
+        }
+      ]
+    },
+    {
+      "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}",
+      "rls": true,
+      "name": "dispositions",
+      "schema": "public",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "default": "gen_random_uuid()",
+          "not_null": true
+        },
+        {
+          "name": "letter_id",
+          "type": "uuid",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "giver_id",
+          "type": "uuid",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "recipient_id",
+          "type": "uuid",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "subject",
+          "type": "text",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "instruction",
+          "type": "text",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "priority",
+          "type": "text",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "due_date",
+          "type": "date",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "status",
+          "type": "text",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "follow_up_note",
+          "type": "text",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "read_at",
+          "type": "timestamp with time zone",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "default": "now()",
+          "not_null": true
+        },
+        {
+          "name": "completed_at",
+          "type": "timestamp with time zone",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "requires_letter",
+          "type": "boolean",
+          "default": "false",
+          "not_null": true
+        },
+        {
+          "name": "followup_note",
+          "type": "text",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "response_letter_id",
+          "type": "uuid",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "review_note",
+          "type": "text",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "submitted_at",
+          "type": "timestamp with time zone",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "reviewed_at",
+          "type": "timestamp with time zone",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "revision",
+          "type": "integer",
+          "default": "0",
+          "not_null": true
+        }
+      ],
+      "constraints": [
+        {
+          "name": "dispositions_giver_id_fkey",
+          "definition": "FOREIGN KEY (giver_id) REFERENCES profiles(id)"
+        },
+        {
+          "name": "dispositions_letter_id_fkey",
+          "definition": "FOREIGN KEY (letter_id) REFERENCES letters(id) ON DELETE SET NULL"
+        },
+        {
+          "name": "dispositions_pkey",
+          "definition": "PRIMARY KEY (id)"
+        },
+        {
+          "name": "dispositions_priority_check",
+          "definition": "CHECK ((priority = ANY (ARRAY['NORMAL'::text, 'IMPORTANT'::text, 'URGENT'::text])))"
+        },
+        {
+          "name": "dispositions_recipient_id_fkey",
+          "definition": "FOREIGN KEY (recipient_id) REFERENCES profiles(id)"
+        },
+        {
+          "name": "dispositions_response_letter_id_fkey",
+          "definition": "FOREIGN KEY (response_letter_id) REFERENCES letters(id)"
+        },
+        {
+          "name": "dispositions_status_check",
+          "definition": "CHECK ((status = ANY (ARRAY['NEW'::text, 'IN_PROGRESS'::text, 'IN_REVIEW'::text, 'REVISION_REQUESTED'::text, 'DONE'::text])))"
+        }
+      ]
+    },
+    {
+      "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}",
+      "rls": true,
+      "name": "document_categories",
+      "schema": "public",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "default": "gen_random_uuid()",
+          "not_null": true
+        },
+        {
+          "name": "code",
+          "type": "text",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "name",
+          "type": "text",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "is_active",
+          "type": "boolean",
+          "default": null,
+          "not_null": false
+        }
+      ],
+      "constraints": [
+        {
+          "name": "document_categories_code_key",
+          "definition": "UNIQUE (code)"
+        },
+        {
+          "name": "document_categories_pkey",
+          "definition": "PRIMARY KEY (id)"
+        }
+      ]
+    },
+    {
+      "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}",
+      "rls": true,
+      "name": "letter_attachments",
+      "schema": "public",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "default": "gen_random_uuid()",
+          "not_null": true
+        },
+        {
+          "name": "letter_id",
+          "type": "uuid",
+          "default": null,
+          "not_null": true
+        },
+        {
+          "name": "file_name",
+          "type": "text",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "storage_path",
+          "type": "text",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "mime_type",
+          "type": "text",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "size_bytes",
+          "type": "bigint",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "uploaded_by",
+          "type": "uuid",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "default": "now()",
+          "not_null": true
+        }
+      ],
+      "constraints": [
+        {
+          "name": "letter_attachments_letter_id_fkey",
+          "definition": "FOREIGN KEY (letter_id) REFERENCES letters(id)"
+        },
+        {
+          "name": "letter_attachments_pkey",
+          "definition": "PRIMARY KEY (id)"
+        },
+        {
+          "name": "letter_attachments_uploaded_by_fkey",
+          "definition": "FOREIGN KEY (uploaded_by) REFERENCES profiles(id)"
+        }
+      ]
+    },
+    {
+      "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}",
+      "rls": true,
+      "name": "letter_distributions",
+      "schema": "public",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "default": "gen_random_uuid()",
+          "not_null": true
+        },
+        {
+          "name": "letter_id",
+          "type": "uuid",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "method",
+          "type": "text",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "distributed_at",
+          "type": "timestamp with time zone",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "recorded_by",
+          "type": "uuid",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "proof_attachment_id",
+          "type": "uuid",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "received_at",
+          "type": "timestamp with time zone",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "received_by",
+          "type": "uuid",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "note",
+          "type": "text",
+          "default": null,
+          "not_null": false
+        }
+      ],
+      "constraints": [
+        {
+          "name": "letter_distributions_letter_id_fkey",
+          "definition": "FOREIGN KEY (letter_id) REFERENCES letters(id)"
+        },
+        {
+          "name": "letter_distributions_method_check",
+          "definition": "CHECK ((method = ANY (ARRAY['IN_APP'::text, 'EMAIL'::text, 'PRINT'::text, 'COURIER'::text, 'HAND_DELIVERY'::text, 'OTHER'::text])))"
+        },
+        {
+          "name": "letter_distributions_pkey",
+          "definition": "PRIMARY KEY (id)"
+        },
+        {
+          "name": "letter_distributions_proof_attachment_id_fkey",
+          "definition": "FOREIGN KEY (proof_attachment_id) REFERENCES letter_attachments(id)"
+        },
+        {
+          "name": "letter_distributions_recorded_by_fkey",
+          "definition": "FOREIGN KEY (recorded_by) REFERENCES profiles(id)"
+        }
+      ]
+    },
+    {
+      "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}",
+      "rls": true,
+      "name": "letter_templates",
+      "schema": "public",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "default": "gen_random_uuid()",
+          "not_null": true
+        },
+        {
+          "name": "letter_type_id",
+          "type": "uuid",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "category_id",
+          "type": "uuid",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "unit_id",
+          "type": "uuid",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "name",
+          "type": "text",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "content_html",
+          "type": "text",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "version",
+          "type": "integer",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "is_active",
+          "type": "boolean",
+          "default": null,
+          "not_null": false
+        }
+      ],
+      "constraints": [
+        {
+          "name": "letter_templates_category_id_fkey",
+          "definition": "FOREIGN KEY (category_id) REFERENCES document_categories(id)"
+        },
+        {
+          "name": "letter_templates_letter_type_id_fkey",
+          "definition": "FOREIGN KEY (letter_type_id) REFERENCES letter_types(id)"
+        },
+        {
+          "name": "letter_templates_pkey",
+          "definition": "PRIMARY KEY (id)"
+        },
+        {
+          "name": "letter_templates_unit_id_fkey",
+          "definition": "FOREIGN KEY (unit_id) REFERENCES organizational_units(id)"
+        }
+      ]
+    },
+    {
+      "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}",
+      "rls": true,
+      "name": "letter_types",
+      "schema": "public",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "default": "gen_random_uuid()",
+          "not_null": true
+        },
+        {
+          "name": "code",
+          "type": "text",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "name",
+          "type": "text",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "category",
+          "type": "text",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "series_basis",
+          "type": "text",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "creator_unit_id",
+          "type": "uuid",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "required_attachment",
+          "type": "boolean",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "default_signature_count",
+          "type": "integer",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "is_active",
+          "type": "boolean",
+          "default": null,
+          "not_null": false
+        }
+      ],
+      "constraints": [
+        {
+          "name": "letter_types_category_check",
+          "definition": "CHECK ((category = ANY (ARRAY['INTERNAL'::text, 'EXTERNAL'::text, 'BILLING'::text])))"
+        },
+        {
+          "name": "letter_types_code_key",
+          "definition": "UNIQUE (code)"
+        },
+        {
+          "name": "letter_types_creator_unit_id_fkey",
+          "definition": "FOREIGN KEY (creator_unit_id) REFERENCES organizational_units(id)"
+        },
+        {
+          "name": "letter_types_pkey",
+          "definition": "PRIMARY KEY (id)"
+        },
+        {
+          "name": "letter_types_series_basis_check",
+          "definition": "CHECK ((series_basis = ANY (ARRAY['SIGNER_POSITION'::text, 'CREATOR_UNIT'::text])))"
+        }
+      ]
+    },
+    {
+      "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}",
+      "rls": true,
+      "name": "letter_versions",
+      "schema": "public",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "default": "gen_random_uuid()",
+          "not_null": true
+        },
+        {
+          "name": "letter_id",
+          "type": "uuid",
+          "default": null,
+          "not_null": true
+        },
+        {
+          "name": "version_no",
+          "type": "integer",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "version_kind",
+          "type": "text",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "content_html",
+          "type": "text",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "storage_path",
+          "type": "text",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "file_format",
+          "type": "text",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "file_hash",
+          "type": "text",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "number_position_mode",
+          "type": "text",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "number_position",
+          "type": "jsonb",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "position_checked_at",
+          "type": "timestamp with time zone",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "is_substantive_change",
+          "type": "boolean",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "created_by",
+          "type": "uuid",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "is_current",
+          "type": "boolean",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "default": "now()",
+          "not_null": true
+        },
+        {
+          "name": "original_name",
+          "type": "text",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "content_format",
+          "type": "text",
+          "default": "'TEXT'::text",
+          "not_null": true
+        }
+      ],
+      "constraints": [
+        {
+          "name": "letter_versions_content_format_check",
+          "definition": "CHECK ((content_format = ANY (ARRAY['TEXT'::text, 'HTML'::text])))"
+        },
+        {
+          "name": "letter_versions_created_by_fkey",
+          "definition": "FOREIGN KEY (created_by) REFERENCES profiles(id)"
+        },
+        {
+          "name": "letter_versions_file_format_check",
+          "definition": "CHECK ((file_format = ANY (ARRAY['PDF'::text, 'DOCX'::text])))"
+        },
+        {
+          "name": "letter_versions_letter_id_fkey",
+          "definition": "FOREIGN KEY (letter_id) REFERENCES letters(id)"
+        },
+        {
+          "name": "letter_versions_number_position_mode_check",
+          "definition": "CHECK ((number_position_mode = ANY (ARRAY['TEMPLATE'::text, 'MARKER'::text, 'COORDINATE'::text])))"
+        },
+        {
+          "name": "letter_versions_pkey",
+          "definition": "PRIMARY KEY (id)"
+        },
+        {
+          "name": "letter_versions_version_kind_check",
+          "definition": "CHECK ((version_kind = ANY (ARRAY['DRAFT'::text, 'NUMBERED'::text, 'SIGNED'::text])))"
+        }
+      ]
+    },
+    {
+      "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}",
+      "rls": true,
+      "name": "letters",
+      "schema": "public",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "default": "gen_random_uuid()",
+          "not_null": true
+        },
+        {
+          "name": "letter_type_id",
+          "type": "uuid",
+          "default": null,
+          "not_null": true
+        },
+        {
+          "name": "category_id",
+          "type": "uuid",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "creation_method",
+          "type": "text",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "status",
+          "type": "text",
+          "default": "'DRAFT'::text",
+          "not_null": true
+        },
+        {
+          "name": "signature_mode",
+          "type": "text",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "signature_status",
+          "type": "text",
+          "default": "'NOT_STARTED'::text",
+          "not_null": true
+        },
+        {
+          "name": "distribution_status",
+          "type": "text",
+          "default": "'NOT_SENT'::text",
+          "not_null": false
+        },
+        {
+          "name": "subject",
+          "type": "text",
+          "default": null,
+          "not_null": true
+        },
+        {
+          "name": "creator_id",
+          "type": "uuid",
+          "default": null,
+          "not_null": true
+        },
+        {
+          "name": "creator_unit_id",
+          "type": "uuid",
+          "default": null,
+          "not_null": true
+        },
+        {
+          "name": "signer_id",
+          "type": "uuid",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "recipient_type",
+          "type": "text",
+          "default": null,
+          "not_null": true
+        },
+        {
+          "name": "recipient_user_id",
+          "type": "uuid",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "recipient_external_name",
+          "type": "text",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "recipient_external_org",
+          "type": "text",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "required_signature_count",
+          "type": "integer",
+          "default": "0",
+          "not_null": true
+        },
+        {
+          "name": "current_version_id",
+          "type": "uuid",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "official_number",
+          "type": "text",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "issued_at",
+          "type": "timestamp with time zone",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "status_reason",
+          "type": "text",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "copied_from_id",
+          "type": "uuid",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "default": "now()",
+          "not_null": true
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "default": "now()",
+          "not_null": true
+        },
+        {
+          "name": "source",
+          "type": "text",
+          "default": "'CREATE'::text",
+          "not_null": false
+        },
+        {
+          "name": "letter_date",
+          "type": "date",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "date_change_reason",
+          "type": "text",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "recipient_external_address",
+          "type": "text",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "signer_ids",
+          "type": "uuid[]",
+          "default": "'{}'::uuid[]",
+          "not_null": true
+        },
+        {
+          "name": "signature_areas",
+          "type": "jsonb",
+          "default": "'[]'::jsonb",
+          "not_null": true
+        },
+        {
+          "name": "stamp_area",
+          "type": "jsonb",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "number_area",
+          "type": "jsonb",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "revision",
+          "type": "integer",
+          "default": "0",
+          "not_null": true
+        },
+        {
+          "name": "finalized_at",
+          "type": "timestamp with time zone",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "finalized_by",
+          "type": "uuid",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "previewed_revision",
+          "type": "integer",
+          "default": null,
+          "not_null": false
+        }
+      ],
+      "constraints": [
+        {
+          "name": "letters_category_id_fkey",
+          "definition": "FOREIGN KEY (category_id) REFERENCES document_categories(id)"
+        },
+        {
+          "name": "letters_copied_from_id_fkey",
+          "definition": "FOREIGN KEY (copied_from_id) REFERENCES letters(id)"
+        },
+        {
+          "name": "letters_creation_method_check",
+          "definition": "CHECK ((creation_method = ANY (ARRAY['EDITOR'::text, 'UPLOAD'::text])))"
+        },
+        {
+          "name": "letters_creator_id_fkey",
+          "definition": "FOREIGN KEY (creator_id) REFERENCES profiles(id)"
+        },
+        {
+          "name": "letters_creator_unit_id_fkey",
+          "definition": "FOREIGN KEY (creator_unit_id) REFERENCES organizational_units(id)"
+        },
+        {
+          "name": "letters_current_version_id_fkey",
+          "definition": "FOREIGN KEY (current_version_id) REFERENCES letter_versions(id)"
+        },
+        {
+          "name": "letters_distribution_status_check",
+          "definition": "CHECK ((distribution_status = ANY (ARRAY['NOT_SENT'::text, 'SENT'::text, 'RECEIVED'::text])))"
+        },
+        {
+          "name": "letters_finalized_by_fkey",
+          "definition": "FOREIGN KEY (finalized_by) REFERENCES profiles(id)"
+        },
+        {
+          "name": "letters_letter_type_id_fkey",
+          "definition": "FOREIGN KEY (letter_type_id) REFERENCES letter_types(id)"
+        },
+        {
+          "name": "letters_number_state_chk",
+          "definition": "CHECK ((((official_number IS NULL) AND (issued_at IS NULL) AND (status <> 'NUMBERED'::text)) OR ((official_number IS NOT NULL) AND (issued_at IS NOT NULL) AND (status = ANY (ARRAY['NUMBERED'::text, 'CANCELLED'::text])))))"
+        },
+        {
+          "name": "letters_official_number_key",
+          "definition": "UNIQUE (official_number)"
+        },
+        {
+          "name": "letters_pkey",
+          "definition": "PRIMARY KEY (id)"
+        },
+        {
+          "name": "letters_recipient_type_check",
+          "definition": "CHECK ((recipient_type = ANY (ARRAY['INTERNAL_USER'::text, 'EXTERNAL'::text])))"
+        },
+        {
+          "name": "letters_recipient_user_id_fkey",
+          "definition": "FOREIGN KEY (recipient_user_id) REFERENCES profiles(id)"
+        },
+        {
+          "name": "letters_signature_count_chk",
+          "definition": "CHECK (((required_signature_count >= 0) AND (required_signature_count <= 2)))"
+        },
+        {
+          "name": "letters_signature_mode_check",
+          "definition": "CHECK ((signature_mode = ANY (ARRAY['IN_APP'::text, 'EXTERNAL'::text])))"
+        },
+        {
+          "name": "letters_signature_status_check",
+          "definition": "CHECK ((signature_status = ANY (ARRAY['NOT_STARTED'::text, 'NOT_REQUIRED'::text, 'WAITING'::text, 'UPLOADED'::text, 'EXTERNAL'::text])))"
+        },
+        {
+          "name": "letters_signer_id_fkey",
+          "definition": "FOREIGN KEY (signer_id) REFERENCES profiles(id)"
+        },
+        {
+          "name": "letters_source_check",
+          "definition": "CHECK ((source = ANY (ARRAY['CREATE'::text, 'UPLOAD'::text])))"
+        },
+        {
+          "name": "letters_status_check",
+          "definition": "CHECK ((status = ANY (ARRAY['DRAFT'::text, 'IN_REVIEW'::text, 'REVISION_REQUESTED'::text, 'REJECTED'::text, 'READY_TO_ISSUE'::text, 'NUMBERED'::text, 'CANCELLED'::text])))"
+        }
+      ]
+    },
+    {
+      "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}",
+      "rls": true,
+      "name": "master_bank",
+      "schema": "public",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "default": "gen_random_uuid()",
+          "not_null": true
+        },
+        {
+          "name": "name",
+          "type": "text",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "is_active",
+          "type": "boolean",
+          "default": null,
+          "not_null": false
+        }
+      ],
+      "constraints": [
+        {
+          "name": "master_bank_pkey",
+          "definition": "PRIMARY KEY (id)"
+        }
+      ]
+    },
+    {
+      "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}",
+      "rls": true,
+      "name": "notifications",
+      "schema": "public",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "default": "gen_random_uuid()",
+          "not_null": true
+        },
+        {
+          "name": "recipient_id",
+          "type": "uuid",
+          "default": null,
+          "not_null": true
+        },
+        {
+          "name": "letter_id",
+          "type": "uuid",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "disposition_id",
+          "type": "uuid",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "event_type",
+          "type": "text",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "title",
+          "type": "text",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "is_read",
+          "type": "boolean",
+          "default": "false",
+          "not_null": true
+        },
+        {
+          "name": "read_at",
+          "type": "timestamp with time zone",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "channels_sent",
+          "type": "jsonb",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "default": "now()",
+          "not_null": true
+        }
+      ],
+      "constraints": [
+        {
+          "name": "notifications_disposition_id_fkey",
+          "definition": "FOREIGN KEY (disposition_id) REFERENCES dispositions(id)"
+        },
+        {
+          "name": "notifications_letter_id_fkey",
+          "definition": "FOREIGN KEY (letter_id) REFERENCES letters(id)"
+        },
+        {
+          "name": "notifications_pkey",
+          "definition": "PRIMARY KEY (id)"
+        },
+        {
+          "name": "notifications_recipient_id_fkey",
+          "definition": "FOREIGN KEY (recipient_id) REFERENCES profiles(id)"
+        }
+      ]
+    },
+    {
+      "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}",
+      "rls": true,
+      "name": "number_counters",
+      "schema": "public",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "default": "gen_random_uuid()",
+          "not_null": true
+        },
+        {
+          "name": "series_id",
+          "type": "uuid",
+          "default": null,
+          "not_null": true
+        },
+        {
+          "name": "year",
+          "type": "integer",
+          "default": null,
+          "not_null": true
+        },
+        {
+          "name": "last_value",
+          "type": "integer",
+          "default": "0",
+          "not_null": true
+        }
+      ],
+      "constraints": [
+        {
+          "name": "number_counters_last_value_chk",
+          "definition": "CHECK ((last_value >= 0))"
+        },
+        {
+          "name": "number_counters_pkey",
+          "definition": "PRIMARY KEY (id)"
+        },
+        {
+          "name": "number_counters_series_id_fkey",
+          "definition": "FOREIGN KEY (series_id) REFERENCES number_series(id)"
+        },
+        {
+          "name": "number_counters_series_year_key",
+          "definition": "UNIQUE (series_id, year)"
+        }
+      ]
+    },
+    {
+      "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}",
+      "rls": true,
+      "name": "number_issuances",
+      "schema": "public",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "default": "gen_random_uuid()",
+          "not_null": true
+        },
+        {
+          "name": "letter_id",
+          "type": "uuid",
+          "default": null,
+          "not_null": true
+        },
+        {
+          "name": "series_id",
+          "type": "uuid",
+          "default": null,
+          "not_null": true
+        },
+        {
+          "name": "year",
+          "type": "integer",
+          "default": null,
+          "not_null": true
+        },
+        {
+          "name": "sequence_number",
+          "type": "integer",
+          "default": null,
+          "not_null": true
+        },
+        {
+          "name": "official_number",
+          "type": "text",
+          "default": null,
+          "not_null": true
+        },
+        {
+          "name": "pattern_snapshot",
+          "type": "text",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "status",
+          "type": "text",
+          "default": "'ISSUED'::text",
+          "not_null": true
+        },
+        {
+          "name": "idempotency_key",
+          "type": "text",
+          "default": null,
+          "not_null": true
+        },
+        {
+          "name": "issued_by",
+          "type": "uuid",
+          "default": null,
+          "not_null": true
+        },
+        {
+          "name": "issued_at",
+          "type": "timestamp with time zone",
+          "default": "now()",
+          "not_null": true
+        },
+        {
+          "name": "verified_at",
+          "type": "timestamp with time zone",
+          "default": null,
+          "not_null": false
+        }
+      ],
+      "constraints": [
+        {
+          "name": "number_issuances_idem_key",
+          "definition": "UNIQUE (idempotency_key)"
+        },
+        {
+          "name": "number_issuances_issued_by_fkey",
+          "definition": "FOREIGN KEY (issued_by) REFERENCES profiles(id)"
+        },
+        {
+          "name": "number_issuances_letter_id_fkey",
+          "definition": "FOREIGN KEY (letter_id) REFERENCES letters(id)"
+        },
+        {
+          "name": "number_issuances_letter_key",
+          "definition": "UNIQUE (letter_id)"
+        },
+        {
+          "name": "number_issuances_number_key",
+          "definition": "UNIQUE (official_number)"
+        },
+        {
+          "name": "number_issuances_pkey",
+          "definition": "PRIMARY KEY (id)"
+        },
+        {
+          "name": "number_issuances_seq_key",
+          "definition": "UNIQUE (series_id, year, sequence_number)"
+        },
+        {
+          "name": "number_issuances_series_id_fkey",
+          "definition": "FOREIGN KEY (series_id) REFERENCES number_series(id)"
+        },
+        {
+          "name": "number_issuances_status_check",
+          "definition": "CHECK ((status = ANY (ARRAY['ISSUED'::text, 'ALLOCATED'::text, 'COMPLETED'::text, 'CANCELLED'::text])))"
+        }
+      ]
+    },
+    {
+      "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}",
+      "rls": true,
+      "name": "number_series",
+      "schema": "public",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "default": "gen_random_uuid()",
+          "not_null": true
+        },
+        {
+          "name": "letter_type_id",
+          "type": "uuid",
+          "default": null,
+          "not_null": true
+        },
+        {
+          "name": "unit_id",
+          "type": "uuid",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "position_id",
+          "type": "uuid",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "pattern",
+          "type": "text",
+          "default": null,
+          "not_null": true
+        },
+        {
+          "name": "status",
+          "type": "text",
+          "default": "'ACTIVE'::text",
+          "not_null": true
+        }
+      ],
+      "constraints": [
+        {
+          "name": "number_series_letter_type_id_fkey",
+          "definition": "FOREIGN KEY (letter_type_id) REFERENCES letter_types(id)"
+        },
+        {
+          "name": "number_series_pkey",
+          "definition": "PRIMARY KEY (id)"
+        },
+        {
+          "name": "number_series_position_id_fkey",
+          "definition": "FOREIGN KEY (position_id) REFERENCES positions(id)"
+        },
+        {
+          "name": "number_series_status_check",
+          "definition": "CHECK ((status = ANY (ARRAY['ACTIVE'::text, 'INACTIVE'::text])))"
+        },
+        {
+          "name": "number_series_unit_id_fkey",
+          "definition": "FOREIGN KEY (unit_id) REFERENCES organizational_units(id)"
+        }
+      ]
+    },
+    {
+      "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}",
+      "rls": true,
+      "name": "organizational_units",
+      "schema": "public",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "default": "gen_random_uuid()",
+          "not_null": true
+        },
+        {
+          "name": "code",
+          "type": "text",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "name",
+          "type": "text",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "parent_id",
+          "type": "uuid",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "head_assignment_id",
+          "type": "uuid",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "is_active",
+          "type": "boolean",
+          "default": null,
+          "not_null": false
+        }
+      ],
+      "constraints": [
+        {
+          "name": "organizational_units_code_key",
+          "definition": "UNIQUE (code)"
+        },
+        {
+          "name": "organizational_units_head_assignment_id_fkey",
+          "definition": "FOREIGN KEY (head_assignment_id) REFERENCES user_assignments(id)"
+        },
+        {
+          "name": "organizational_units_parent_id_fkey",
+          "definition": "FOREIGN KEY (parent_id) REFERENCES organizational_units(id)"
+        },
+        {
+          "name": "organizational_units_pkey",
+          "definition": "PRIMARY KEY (id)"
+        }
+      ]
+    },
+    {
+      "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}",
+      "rls": true,
+      "name": "permissions",
+      "schema": "public",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "default": "gen_random_uuid()",
+          "not_null": true
+        },
+        {
+          "name": "code",
+          "type": "text",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "description",
+          "type": "text",
+          "default": null,
+          "not_null": false
+        }
+      ],
+      "constraints": [
+        {
+          "name": "permissions_code_key",
+          "definition": "UNIQUE (code)"
+        },
+        {
+          "name": "permissions_pkey",
+          "definition": "PRIMARY KEY (id)"
+        }
+      ]
+    },
+    {
+      "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}",
+      "rls": true,
+      "name": "positions",
+      "schema": "public",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "default": "gen_random_uuid()",
+          "not_null": true
+        },
+        {
+          "name": "code",
+          "type": "text",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "name",
+          "type": "text",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "level",
+          "type": "integer",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "role_id",
+          "type": "uuid",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "is_active",
+          "type": "boolean",
+          "default": null,
+          "not_null": false
+        }
+      ],
+      "constraints": [
+        {
+          "name": "positions_code_key",
+          "definition": "UNIQUE (code)"
+        },
+        {
+          "name": "positions_pkey",
+          "definition": "PRIMARY KEY (id)"
+        },
+        {
+          "name": "positions_role_id_fkey",
+          "definition": "FOREIGN KEY (role_id) REFERENCES roles(id)"
+        }
+      ]
+    },
+    {
+      "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}",
+      "rls": true,
+      "name": "profiles",
+      "schema": "public",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "default": "gen_random_uuid()",
+          "not_null": true
+        },
+        {
+          "name": "full_name",
+          "type": "text",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "email",
+          "type": "text",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "system_role",
+          "type": "text",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "is_active",
+          "type": "boolean",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "default": "now()",
+          "not_null": true
+        }
+      ],
+      "constraints": [
+        {
+          "name": "profiles_id_fk",
+          "definition": "FOREIGN KEY (id) REFERENCES auth.users(id) ON DELETE CASCADE"
+        },
+        {
+          "name": "profiles_pkey",
+          "definition": "PRIMARY KEY (id)"
+        },
+        {
+          "name": "profiles_system_role_check",
+          "definition": "CHECK ((system_role = ANY (ARRAY['USER'::text, 'SUPER_ADMIN'::text])))"
+        }
+      ]
+    },
+    {
+      "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}",
+      "rls": true,
+      "name": "push_subscriptions",
+      "schema": "public",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "default": "gen_random_uuid()",
+          "not_null": true
+        },
+        {
+          "name": "profile_id",
+          "type": "uuid",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "endpoint",
+          "type": "text",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "keys",
+          "type": "text",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "default": "now()",
+          "not_null": true
+        }
+      ],
+      "constraints": [
+        {
+          "name": "push_subscriptions_pkey",
+          "definition": "PRIMARY KEY (id)"
+        },
+        {
+          "name": "push_subscriptions_profile_id_fkey",
+          "definition": "FOREIGN KEY (profile_id) REFERENCES profiles(id)"
+        }
+      ]
+    },
+    {
+      "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}",
+      "rls": true,
+      "name": "role_permissions",
+      "schema": "public",
+      "columns": [
+        {
+          "name": "role_id",
+          "type": "uuid",
+          "default": null,
+          "not_null": true
+        },
+        {
+          "name": "permission_id",
+          "type": "uuid",
+          "default": null,
+          "not_null": true
+        }
+      ],
+      "constraints": [
+        {
+          "name": "role_permissions_permission_id_fkey",
+          "definition": "FOREIGN KEY (permission_id) REFERENCES permissions(id)"
+        },
+        {
+          "name": "role_permissions_pkey",
+          "definition": "PRIMARY KEY (role_id, permission_id)"
+        },
+        {
+          "name": "role_permissions_role_id_fkey",
+          "definition": "FOREIGN KEY (role_id) REFERENCES roles(id)"
+        }
+      ]
+    },
+    {
+      "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}",
+      "rls": true,
+      "name": "roles",
+      "schema": "public",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "default": "gen_random_uuid()",
+          "not_null": true
+        },
+        {
+          "name": "code",
+          "type": "text",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "name",
+          "type": "text",
+          "default": null,
+          "not_null": false
+        }
+      ],
+      "constraints": [
+        {
+          "name": "roles_code_key",
+          "definition": "UNIQUE (code)"
+        },
+        {
+          "name": "roles_pkey",
+          "definition": "PRIMARY KEY (id)"
+        }
+      ]
+    },
+    {
+      "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}",
+      "rls": true,
+      "name": "signature_requests",
+      "schema": "public",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "default": "gen_random_uuid()",
+          "not_null": true
+        },
+        {
+          "name": "letter_id",
+          "type": "uuid",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "numbered_version_id",
+          "type": "uuid",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "signer_id",
+          "type": "uuid",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "sign_order",
+          "type": "integer",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "signer_role",
+          "type": "text",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "status",
+          "type": "text",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "signed_version_id",
+          "type": "uuid",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "stamp_included",
+          "type": "boolean",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "uploaded_at",
+          "type": "timestamp with time zone",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "signature_image_path",
+          "type": "text",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "stamp_image_path",
+          "type": "text",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "method",
+          "type": "text",
+          "default": null,
+          "not_null": false
+        }
+      ],
+      "constraints": [
+        {
+          "name": "signature_requests_letter_id_fkey",
+          "definition": "FOREIGN KEY (letter_id) REFERENCES letters(id)"
+        },
+        {
+          "name": "signature_requests_numbered_version_id_fkey",
+          "definition": "FOREIGN KEY (numbered_version_id) REFERENCES letter_versions(id)"
+        },
+        {
+          "name": "signature_requests_pkey",
+          "definition": "PRIMARY KEY (id)"
+        },
+        {
+          "name": "signature_requests_signed_version_id_fkey",
+          "definition": "FOREIGN KEY (signed_version_id) REFERENCES letter_versions(id)"
+        },
+        {
+          "name": "signature_requests_signer_id_fkey",
+          "definition": "FOREIGN KEY (signer_id) REFERENCES profiles(id)"
+        },
+        {
+          "name": "signature_requests_status_check",
+          "definition": "CHECK ((status = ANY (ARRAY['WAITING'::text, 'PENDING'::text, 'UPLOADED'::text, 'SUPERSEDED'::text, 'CANCELLED'::text])))"
+        }
+      ]
+    },
+    {
+      "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}",
+      "rls": true,
+      "name": "system_settings",
+      "schema": "public",
+      "columns": [
+        {
+          "name": "key",
+          "type": "text",
+          "default": null,
+          "not_null": true
+        },
+        {
+          "name": "value",
+          "type": "text",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "description",
+          "type": "text",
+          "default": null,
+          "not_null": false
+        }
+      ],
+      "constraints": [
+        {
+          "name": "system_settings_pkey",
+          "definition": "PRIMARY KEY (key)"
+        }
+      ]
+    },
+    {
+      "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}",
+      "rls": true,
+      "name": "user_assignments",
+      "schema": "public",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "default": "gen_random_uuid()",
+          "not_null": true
+        },
+        {
+          "name": "profile_id",
+          "type": "uuid",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "unit_id",
+          "type": "uuid",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "position_id",
+          "type": "uuid",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "supervisor_assignment_id",
+          "type": "uuid",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "is_official_signer",
+          "type": "boolean",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "start_date",
+          "type": "date",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "end_date",
+          "type": "date",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "is_active",
+          "type": "boolean",
+          "default": null,
+          "not_null": false
+        }
+      ],
+      "constraints": [
+        {
+          "name": "user_assignments_pkey",
+          "definition": "PRIMARY KEY (id)"
+        },
+        {
+          "name": "user_assignments_position_id_fkey",
+          "definition": "FOREIGN KEY (position_id) REFERENCES positions(id)"
+        },
+        {
+          "name": "user_assignments_profile_id_fkey",
+          "definition": "FOREIGN KEY (profile_id) REFERENCES profiles(id)"
+        },
+        {
+          "name": "user_assignments_supervisor_assignment_id_fkey",
+          "definition": "FOREIGN KEY (supervisor_assignment_id) REFERENCES user_assignments(id)"
+        },
+        {
+          "name": "user_assignments_unit_id_fkey",
+          "definition": "FOREIGN KEY (unit_id) REFERENCES organizational_units(id)"
+        }
+      ]
+    }
+  ],
+  "policies": [
+    {
+      "cmd": "SELECT",
+      "qual": "app.can_read_letter(letter_id)",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "approval_steps",
+      "permissive": "PERMISSIVE",
+      "policyname": "approval_steps_read",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "app.is_super_admin()",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "audit_logs",
+      "permissive": "PERMISSIVE",
+      "policyname": "audit_logs_admin_read",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "ALL",
+      "qual": "app.is_super_admin()",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "authority_delegations",
+      "permissive": "PERMISSIVE",
+      "policyname": "authority_delegations_admin",
+      "schemaname": "public",
+      "with_check": "app.is_super_admin()"
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "(app.is_super_admin() OR (grantor_assignment_id IN ( SELECT user_assignments.id\n   FROM user_assignments\n  WHERE (user_assignments.profile_id = auth.uid()))) OR (grantee_assignment_id IN ( SELECT user_assignments.id\n   FROM user_assignments\n  WHERE (user_assignments.profile_id = auth.uid()))))",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "authority_delegations",
+      "permissive": "PERMISSIVE",
+      "policyname": "authority_delegations_read",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "app.can_read_letter(letter_id)",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "billing_details",
+      "permissive": "PERMISSIVE",
+      "policyname": "billing_details_read",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "ALL",
+      "qual": "(EXISTS ( SELECT 1\n   FROM letters l\n  WHERE ((l.id = billing_details.letter_id) AND (l.creator_id = auth.uid()) AND (l.status = ANY (ARRAY['DRAFT'::text, 'REVISION_REQUESTED'::text])))))",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "billing_details",
+      "permissive": "PERMISSIVE",
+      "policyname": "billing_details_write",
+      "schemaname": "public",
+      "with_check": "(EXISTS ( SELECT 1\n   FROM letters l\n  WHERE ((l.id = billing_details.letter_id) AND (l.creator_id = auth.uid()) AND (l.status = ANY (ARRAY['DRAFT'::text, 'REVISION_REQUESTED'::text])))))"
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "app.can_read_letter(letter_id)",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "billing_items",
+      "permissive": "PERMISSIVE",
+      "policyname": "billing_items_read",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "ALL",
+      "qual": "(EXISTS ( SELECT 1\n   FROM letters l\n  WHERE ((l.id = billing_items.letter_id) AND (l.creator_id = auth.uid()) AND (l.status = ANY (ARRAY['DRAFT'::text, 'REVISION_REQUESTED'::text])))))",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "billing_items",
+      "permissive": "PERMISSIVE",
+      "policyname": "billing_items_write",
+      "schemaname": "public",
+      "with_check": "(EXISTS ( SELECT 1\n   FROM letters l\n  WHERE ((l.id = billing_items.letter_id) AND (l.creator_id = auth.uid()) AND (l.status = ANY (ARRAY['DRAFT'::text, 'REVISION_REQUESTED'::text])))))"
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "(app.is_super_admin() OR (authorizer_id = auth.uid()) OR app.is_cancellation_requester(request_id))",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "cancellation_authorizations",
+      "permissive": "PERMISSIVE",
+      "policyname": "cancellation_authorizations_read",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "app.can_read_cancellation(id)",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "cancellation_requests",
+      "permissive": "PERMISSIVE",
+      "policyname": "cancellation_requests_read",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "((giver_id = auth.uid()) OR (recipient_id = auth.uid()))",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "dispositions",
+      "permissive": "PERMISSIVE",
+      "policyname": "dispositions_select",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "ALL",
+      "qual": "app.is_super_admin()",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "document_categories",
+      "permissive": "PERMISSIVE",
+      "policyname": "document_categories_admin",
+      "schemaname": "public",
+      "with_check": "app.is_super_admin()"
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "true",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "document_categories",
+      "permissive": "PERMISSIVE",
+      "policyname": "document_categories_read",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "app.can_read_letter(letter_id)",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "letter_attachments",
+      "permissive": "PERMISSIVE",
+      "policyname": "letter_attachments_read",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "ALL",
+      "qual": "(EXISTS ( SELECT 1\n   FROM letters l\n  WHERE ((l.id = letter_attachments.letter_id) AND (l.creator_id = auth.uid()) AND (l.status = ANY (ARRAY['DRAFT'::text, 'REVISION_REQUESTED'::text])))))",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "letter_attachments",
+      "permissive": "PERMISSIVE",
+      "policyname": "letter_attachments_write",
+      "schemaname": "public",
+      "with_check": "(EXISTS ( SELECT 1\n   FROM letters l\n  WHERE ((l.id = letter_attachments.letter_id) AND (l.creator_id = auth.uid()) AND (l.status = ANY (ARRAY['DRAFT'::text, 'REVISION_REQUESTED'::text])))))"
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "app.can_read_letter(letter_id)",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "letter_distributions",
+      "permissive": "PERMISSIVE",
+      "policyname": "letter_distributions_read",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "ALL",
+      "qual": "app.is_super_admin()",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "letter_templates",
+      "permissive": "PERMISSIVE",
+      "policyname": "letter_templates_admin",
+      "schemaname": "public",
+      "with_check": "app.is_super_admin()"
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "true",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "letter_templates",
+      "permissive": "PERMISSIVE",
+      "policyname": "letter_templates_read",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "ALL",
+      "qual": "app.is_super_admin()",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "letter_types",
+      "permissive": "PERMISSIVE",
+      "policyname": "letter_types_admin",
+      "schemaname": "public",
+      "with_check": "app.is_super_admin()"
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "true",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "letter_types",
+      "permissive": "PERMISSIVE",
+      "policyname": "letter_types_read",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "app.can_read_letter(letter_id)",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "letter_versions",
+      "permissive": "PERMISSIVE",
+      "policyname": "letter_versions_read",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "app.can_read_letter(id)",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "letters",
+      "permissive": "PERMISSIVE",
+      "policyname": "letters_read",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "ALL",
+      "qual": "app.is_super_admin()",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "master_bank",
+      "permissive": "PERMISSIVE",
+      "policyname": "master_bank_admin",
+      "schemaname": "public",
+      "with_check": "app.is_super_admin()"
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "true",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "master_bank",
+      "permissive": "PERMISSIVE",
+      "policyname": "master_bank_read",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "UPDATE",
+      "qual": "(recipient_id = auth.uid())",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "notifications",
+      "permissive": "PERMISSIVE",
+      "policyname": "notifications_mark_read",
+      "schemaname": "public",
+      "with_check": "(recipient_id = auth.uid())"
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "(recipient_id = auth.uid())",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "notifications",
+      "permissive": "PERMISSIVE",
+      "policyname": "notifications_own",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "app.is_super_admin()",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "number_counters",
+      "permissive": "PERMISSIVE",
+      "policyname": "number_counters_admin_read",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "(app.is_super_admin() OR (EXISTS ( SELECT 1\n   FROM letters l\n  WHERE ((l.id = number_issuances.letter_id) AND app.can_read_letter(l.id)))))",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "number_issuances",
+      "permissive": "PERMISSIVE",
+      "policyname": "number_issuances_admin_read",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "ALL",
+      "qual": "app.is_super_admin()",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "number_series",
+      "permissive": "PERMISSIVE",
+      "policyname": "number_series_admin",
+      "schemaname": "public",
+      "with_check": "app.is_super_admin()"
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "true",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "number_series",
+      "permissive": "PERMISSIVE",
+      "policyname": "number_series_read",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "ALL",
+      "qual": "app.is_super_admin()",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "organizational_units",
+      "permissive": "PERMISSIVE",
+      "policyname": "organizational_units_admin",
+      "schemaname": "public",
+      "with_check": "app.is_super_admin()"
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "true",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "organizational_units",
+      "permissive": "PERMISSIVE",
+      "policyname": "organizational_units_read",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "ALL",
+      "qual": "app.is_super_admin()",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "permissions",
+      "permissive": "PERMISSIVE",
+      "policyname": "permissions_admin",
+      "schemaname": "public",
+      "with_check": "app.is_super_admin()"
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "true",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "permissions",
+      "permissive": "PERMISSIVE",
+      "policyname": "permissions_read",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "ALL",
+      "qual": "app.is_super_admin()",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "positions",
+      "permissive": "PERMISSIVE",
+      "policyname": "positions_admin",
+      "schemaname": "public",
+      "with_check": "app.is_super_admin()"
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "true",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "positions",
+      "permissive": "PERMISSIVE",
+      "policyname": "positions_read",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "ALL",
+      "qual": "app.is_super_admin()",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "profiles",
+      "permissive": "PERMISSIVE",
+      "policyname": "profiles_admin",
+      "schemaname": "public",
+      "with_check": "app.is_super_admin()"
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "true",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "profiles",
+      "permissive": "PERMISSIVE",
+      "policyname": "profiles_read",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "ALL",
+      "qual": "(profile_id = auth.uid())",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "push_subscriptions",
+      "permissive": "PERMISSIVE",
+      "policyname": "push_subscriptions_own",
+      "schemaname": "public",
+      "with_check": "(profile_id = auth.uid())"
+    },
+    {
+      "cmd": "ALL",
+      "qual": "app.is_super_admin()",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "role_permissions",
+      "permissive": "PERMISSIVE",
+      "policyname": "role_permissions_admin",
+      "schemaname": "public",
+      "with_check": "app.is_super_admin()"
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "true",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "role_permissions",
+      "permissive": "PERMISSIVE",
+      "policyname": "role_permissions_read",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "ALL",
+      "qual": "app.is_super_admin()",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "roles",
+      "permissive": "PERMISSIVE",
+      "policyname": "roles_admin",
+      "schemaname": "public",
+      "with_check": "app.is_super_admin()"
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "true",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "roles",
+      "permissive": "PERMISSIVE",
+      "policyname": "roles_read",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "app.can_read_letter(letter_id)",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "signature_requests",
+      "permissive": "PERMISSIVE",
+      "policyname": "signature_requests_read",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "ALL",
+      "qual": "app.is_super_admin()",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "system_settings",
+      "permissive": "PERMISSIVE",
+      "policyname": "system_settings_admin",
+      "schemaname": "public",
+      "with_check": "app.is_super_admin()"
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "true",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "system_settings",
+      "permissive": "PERMISSIVE",
+      "policyname": "system_settings_read",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "ALL",
+      "qual": "app.is_super_admin()",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "user_assignments",
+      "permissive": "PERMISSIVE",
+      "policyname": "user_assignments_admin",
+      "schemaname": "public",
+      "with_check": "app.is_super_admin()"
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "true",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "user_assignments",
+      "permissive": "PERMISSIVE",
+      "policyname": "user_assignments_read",
+      "schemaname": "public",
+      "with_check": null
+    }
+  ],
+  "triggers": [
+    {
+      "name": "audit_logs_no_update",
+      "table": "audit_logs",
+      "schema": "public",
+      "definition": "CREATE TRIGGER audit_logs_no_update BEFORE DELETE OR UPDATE ON public.audit_logs FOR EACH ROW EXECUTE FUNCTION audit_logs_immutable()"
+    },
+    {
+      "name": "disposition_completion_trg",
+      "table": "dispositions",
+      "schema": "public",
+      "definition": "CREATE TRIGGER disposition_completion_trg BEFORE INSERT OR UPDATE ON public.dispositions FOR EACH ROW EXECUTE FUNCTION check_disposition_completion()"
+    },
+    {
+      "name": "protect_final_version_trg",
+      "table": "letter_versions",
+      "schema": "public",
+      "definition": "CREATE TRIGGER protect_final_version_trg BEFORE DELETE OR UPDATE ON public.letter_versions FOR EACH ROW EXECUTE FUNCTION protect_final_version()"
+    },
+    {
+      "name": "letters_guard_trg",
+      "table": "letters",
+      "schema": "public",
+      "definition": "CREATE TRIGGER letters_guard_trg BEFORE DELETE OR UPDATE ON public.letters FOR EACH ROW EXECUTE FUNCTION letters_guard()"
+    },
+    {
+      "name": "letters_updated_at",
+      "table": "letters",
+      "schema": "public",
+      "definition": "CREATE TRIGGER letters_updated_at BEFORE UPDATE ON public.letters FOR EACH ROW EXECUTE FUNCTION set_updated_at()"
+    },
+    {
+      "name": "protect_final_letter_trg",
+      "table": "letters",
+      "schema": "public",
+      "definition": "CREATE TRIGGER protect_final_letter_trg BEFORE UPDATE ON public.letters FOR EACH ROW EXECUTE FUNCTION protect_final_letter()"
+    }
+  ],
+  "functions": [
+    {
+      "acl": null,
+      "args": "p_actor uuid",
+      "name": "active_assignment",
+      "schema": "app",
+      "definition": "CREATE OR REPLACE FUNCTION app.active_assignment(p_actor uuid)\n RETURNS user_assignments\n LANGUAGE sql\n STABLE SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\n select a from user_assignments a join profiles p on p.id=a.profile_id join positions po on po.id=a.position_id and po.is_active join organizational_units u on u.id=a.unit_id and u.is_active\n where a.profile_id=p_actor and p.is_active and a.is_active\n and (a.start_date is null or a.start_date<=(now() at time zone 'Asia/Jakarta')::date) and (a.end_date is null or a.end_date>=(now() at time zone 'Asia/Jakarta')::date)\n order by a.start_date desc nulls last limit 1\n$function$\n",
+      "security_definer": true
+    },
+    {
+      "acl": null,
+      "args": "p_actor uuid",
+      "name": "can_backdate",
+      "schema": "app",
+      "definition": "CREATE OR REPLACE FUNCTION app.can_backdate(p_actor uuid)\n RETURNS boolean\n LANGUAGE sql\n STABLE SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\n select exists(select 1 from app.active_assignment(p_actor) a join positions p on p.id=a.position_id\n where p.is_active and p.code in ('GM','SM','DIR'))\n$function$\n",
+      "security_definer": true
+    },
+    {
+      "acl": "{postgres=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+      "args": "p_request uuid",
+      "name": "can_read_cancellation",
+      "schema": "app",
+      "definition": "CREATE OR REPLACE FUNCTION app.can_read_cancellation(p_request uuid)\n RETURNS boolean\n LANGUAGE sql\n STABLE SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\n select exists(select 1 from profiles where id=auth.uid() and is_active) and exists(\n select 1 from cancellation_requests cr where cr.id=p_request and (\n app.is_super_admin() or cr.requested_by=auth.uid()\n or exists(select 1 from cancellation_authorizations ca where ca.request_id=cr.id and ca.authorizer_id=auth.uid())\n or app.can_read_letter_for(auth.uid(),cr.letter_id)))\n$function$\n",
+      "security_definer": true
+    },
+    {
+      "acl": null,
+      "args": "p_letter uuid",
+      "name": "can_read_letter",
+      "schema": "app",
+      "definition": "CREATE OR REPLACE FUNCTION app.can_read_letter(p_letter uuid)\n RETURNS boolean\n LANGUAGE sql\n STABLE SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\n select app.can_read_letter_for(auth.uid(),p_letter)\n$function$\n",
+      "security_definer": true
+    },
+    {
+      "acl": "{postgres=X/postgres,service_role=X/postgres}",
+      "args": "p_actor uuid, p_letter uuid",
+      "name": "can_read_letter_for",
+      "schema": "app",
+      "definition": "CREATE OR REPLACE FUNCTION app.can_read_letter_for(p_actor uuid, p_letter uuid)\n RETURNS boolean\n LANGUAGE sql\n STABLE SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\nselect exists(select 1 from profiles where id=p_actor and is_active) and exists (\n select 1 from letters l where l.id=p_letter and (\n l.creator_id=p_actor or l.signer_id=p_actor\n or (l.recipient_user_id=p_actor and l.status in ('NUMBERED','CANCELLED'))\n or exists(select 1 from approval_steps a where a.letter_id=l.id and a.approver_id=p_actor and a.status<>'WAITING')\n or exists(select 1 from signature_requests s where s.letter_id=l.id and s.signer_id=p_actor)\n or exists(select 1 from cancellation_requests cr where cr.letter_id=l.id and (cr.requested_by=p_actor or exists(select 1 from cancellation_authorizations ca where ca.request_id=cr.id and ca.authorizer_id=p_actor)))\n or exists(select 1 from dispositions d where (d.letter_id=l.id and d.recipient_id=p_actor) or (d.response_letter_id=l.id and d.giver_id=p_actor and d.submitted_at is not null))\n ))\n$function$\n",
+      "security_definer": true
+    },
+    {
+      "acl": "{postgres=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+      "args": "p_request uuid",
+      "name": "is_cancellation_requester",
+      "schema": "app",
+      "definition": "CREATE OR REPLACE FUNCTION app.is_cancellation_requester(p_request uuid)\n RETURNS boolean\n LANGUAGE sql\n STABLE SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\n select exists(select 1 from profiles where id=auth.uid() and is_active) and exists(select 1 from cancellation_requests cr where cr.id=p_request and cr.requested_by=auth.uid())\n$function$\n",
+      "security_definer": true
+    },
+    {
+      "acl": null,
+      "args": "",
+      "name": "is_super_admin",
+      "schema": "app",
+      "definition": "CREATE OR REPLACE FUNCTION app.is_super_admin()\n RETURNS boolean\n LANGUAGE sql\n STABLE SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\r\n  select exists (select 1 from profiles p where p.id = auth.uid() and p.system_role = 'SUPER_ADMIN' and p.is_active)\r\n$function$\n",
+      "security_definer": true
+    },
+    {
+      "acl": null,
+      "args": "p_actor uuid",
+      "name": "valid_signer",
+      "schema": "app",
+      "definition": "CREATE OR REPLACE FUNCTION app.valid_signer(p_actor uuid)\n RETURNS boolean\n LANGUAGE sql\n STABLE SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\n select exists(select 1 from app.active_assignment(p_actor) a join positions p on p.id=a.position_id\n where a.is_official_signer and p.is_active and p.code in ('SM','DIR'))\n$function$\n",
+      "security_definer": true
+    },
+    {
+      "acl": "{=X/postgres,postgres=X/postgres,anon=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+      "args": "",
+      "name": "audit_logs_immutable",
+      "schema": "public",
+      "definition": "CREATE OR REPLACE FUNCTION public.audit_logs_immutable()\n RETURNS trigger\n LANGUAGE plpgsql\n SET search_path TO 'public'\nAS $function$\r\nbegin raise exception 'audit_logs bersifat append-only' using errcode = 'P0001'; end $function$\n",
+      "security_definer": false
+    },
+    {
+      "acl": "{=X/postgres,postgres=X/postgres,anon=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+      "args": "p_pattern text, p_seq integer, p_issued_at timestamp with time zone, p_unit text, p_position text, p_type text",
+      "name": "build_official_number",
+      "schema": "public",
+      "definition": "CREATE OR REPLACE FUNCTION public.build_official_number(p_pattern text, p_seq integer, p_issued_at timestamp with time zone, p_unit text, p_position text, p_type text)\n RETURNS text\n LANGUAGE sql\n IMMUTABLE\n SET search_path TO 'public'\nAS $function$\r\n  select replace(replace(replace(replace(replace(replace(replace(p_pattern,\r\n    '{URUT}', lpad(p_seq::text, 3, '0')),\r\n    '{TGL}',  to_char(p_issued_at at time zone 'Asia/Jakarta', 'DD')),\r\n    '{BLN}',  to_char(p_issued_at at time zone 'Asia/Jakarta', 'MM')),\r\n    '{THN}',  to_char(p_issued_at at time zone 'Asia/Jakarta', 'YYYY')),\r\n    '{UNIT}', coalesce(p_unit, '')),\r\n    '{JABATAN}', coalesce(p_position, '')),\r\n    '{JENIS}', coalesce(p_type, ''))\r\n$function$\n",
+      "security_definer": false
+    },
+    {
+      "acl": "{postgres=X/postgres,service_role=X/postgres}",
+      "args": "p_actor uuid, p_letter uuid, p_action text, p_reason text",
+      "name": "cancel_letter_workflow",
+      "schema": "public",
+      "definition": "CREATE OR REPLACE FUNCTION public.cancel_letter_workflow(p_actor uuid, p_letter uuid, p_action text, p_reason text DEFAULT NULL::text)\n RETURNS text\n LANGUAGE plpgsql\n SET search_path TO 'public'\nAS $function$\ndeclare l letters; t letter_types; r cancellation_requests; head uuid; basis text; needed integer; target uuid; done_count integer;\nbegin\n select * into l from letters where id=p_letter for update;\n if l.id is null or (app.active_assignment(p_actor)).id is null then raise exception 'Akun/surat tidak valid.'; end if;\n if p_action='CANCEL_DRAFT' then\n   if l.creator_id<>p_actor or l.status not in ('DRAFT','REVISION_REQUESTED') then raise exception 'Hanya pembuat dapat membatalkan draft yang dapat diedit.'; end if;\n   if nullif(trim(p_reason),'') is null then raise exception 'Alasan pembatalan wajib.'; end if;\n   update letters set status='CANCELLED',status_reason=p_reason where id=l.id;\n   insert into audit_logs(actor_id,letter_id,action,entity_type,entity_id,status_before,status_after,reason) values(p_actor,l.id,'CANCEL_DRAFT','letters',l.id::text,l.status,'CANCELLED',p_reason);\n   return 'CANCELLED';\n end if;\n if l.status<>'NUMBERED' then raise exception 'Surat belum bernomor atau sudah dibatalkan.'; end if;\n select * into t from letter_types where id=l.letter_type_id;\n select * into r from cancellation_requests where letter_id=l.id and status='PENDING' order by created_at desc limit 1 for update;\n if p_action='REQUEST' then\n   if l.creator_id<>p_actor then raise exception 'Hanya pembuat dapat mengajukan pembatalan.'; end if;\n   if r.id is not null then return 'PENDING'; end if;\n   if nullif(trim(p_reason),'') is null then raise exception 'Alasan pembatalan wajib.'; end if;\n   insert into cancellation_requests(letter_id,requested_by,reason,status) values(l.id,p_actor,p_reason,'PENDING') returning * into r;\n   if t.category='INTERNAL' then\n     select a.profile_id into head from organizational_units u join user_assignments a on a.id=u.head_assignment_id where u.id=l.creator_unit_id and a.is_active;\n     if head is null then raise exception 'Kepala unit belum ditetapkan untuk otorisasi pembatalan.'; end if;\n     insert into cancellation_authorizations(request_id,authorizer_id,authority_basis) values(r.id,head,'UNIT_HEAD');\n     insert into cancellation_authorizations(request_id,authorizer_id,authority_basis,delegation_id)\n     select r.id,a.profile_id,'DESIGNATED_OFFICIAL',d.id from authority_delegations d join user_assignments a on a.id=d.grantee_assignment_id join organizational_units u on u.head_assignment_id=d.grantor_assignment_id\n     where d.scope_unit_id=l.creator_unit_id and u.id=l.creator_unit_id and d.is_active and a.is_active and d.authority_type='LETTER_CANCELLATION' and (d.valid_from is null or d.valid_from<=(now() at time zone 'Asia/Jakarta')::date) and (d.valid_until is null or d.valid_until>=(now() at time zone 'Asia/Jakarta')::date) and a.profile_id<>head;\n   else\n     if cardinality(l.signer_ids)<>(case when t.category='BILLING' then 2 else 1 end) then raise exception 'Penandatangan surat lama belum lengkap untuk otorisasi.'; end if;\n     insert into cancellation_authorizations(request_id,authorizer_id,authority_basis)\n     select r.id,s,case when t.category='BILLING' then case when ord=1 then 'SM_FINANCE' else 'DIRECTOR' end else 'SIGNING_OFFICIAL' end from unnest(l.signer_ids) with ordinality a(s,ord);\n   end if;\n   insert into audit_logs(actor_id,letter_id,action,entity_type,entity_id,reason) values(p_actor,l.id,'CANCELLATION_REQUESTED','cancellation_requests',r.id::text,p_reason);\n   return 'PENDING';\n end if;\n if r.id is null or coalesce(p_action,'') not in ('APPROVE','DECLINE') then raise exception 'Permohonan pembatalan tidak aktif.'; end if;\n if not exists(select 1 from cancellation_authorizations where request_id=r.id and authorizer_id=p_actor and decision is null) then raise exception 'Akun ini bukan pemegang otorisasi pembatalan.'; end if;\n if t.category='INTERNAL' then\n   if not exists(select 1 from cancellation_authorizations ca left join authority_delegations d on d.id=ca.delegation_id where ca.request_id=r.id and ca.authorizer_id=p_actor and ((ca.authority_basis='UNIT_HEAD' and exists(select 1 from organizational_units u join user_assignments a on a.id=u.head_assignment_id where u.id=l.creator_unit_id and a.profile_id=p_actor and a.is_active)) or (ca.authority_basis='DESIGNATED_OFFICIAL' and d.scope_unit_id=l.creator_unit_id and d.grantor_assignment_id=(select head_assignment_id from organizational_units where id=l.creator_unit_id) and exists(select 1 from user_assignments a where a.id=d.grantee_assignment_id and a.profile_id=p_actor and a.is_active) and d.is_active and (d.valid_from is null or d.valid_from<=(now() at time zone 'Asia/Jakarta')::date) and (d.valid_until is null or d.valid_until>=(now() at time zone 'Asia/Jakarta')::date)))) then raise exception 'Kewenangan pembatalan sudah tidak aktif.'; end if;\n elsif not app.valid_signer(p_actor) then raise exception 'Pejabat penandatangan sudah tidak aktif.'; end if;\n if p_action='DECLINE' and nullif(trim(p_reason),'') is null then raise exception 'Alasan penolakan wajib.'; end if;\n update cancellation_authorizations set decision=case when p_action='APPROVE' then 'APPROVED' else 'DECLINED' end,note=p_reason,decided_at=now() where request_id=r.id and authorizer_id=p_actor and decision is null;\n insert into audit_logs(actor_id,letter_id,action,entity_type,entity_id,reason) values(p_actor,l.id,'CANCELLATION_'||p_action,'cancellation_requests',r.id::text,p_reason);\n if p_action='DECLINE' then update cancellation_requests set status='DECLINED' where id=r.id; return 'DECLINED'; end if;\n needed:=case when t.category='BILLING' then 2 else 1 end;\n select count(distinct authorizer_id) into done_count from cancellation_authorizations where request_id=r.id and decision='APPROVED';\n if done_count>=needed then\n   perform cancel_numbered_letter(l.id,p_actor,r.reason);\n   update cancellation_requests set status='EXECUTED',executed_at=now() where id=r.id;\n   update signature_requests set status='CANCELLED' where letter_id=l.id and status in ('PENDING','WAITING');\n   return 'EXECUTED';\n end if;\n return 'PENDING';\nend $function$\n",
+      "security_definer": false
+    },
+    {
+      "acl": "{postgres=X/postgres,service_role=X/postgres}",
+      "args": "p_letter_id uuid, p_actor uuid, p_reason text",
+      "name": "cancel_numbered_letter",
+      "schema": "public",
+      "definition": "CREATE OR REPLACE FUNCTION public.cancel_numbered_letter(p_letter_id uuid, p_actor uuid, p_reason text)\n RETURNS letters\n LANGUAGE plpgsql\n SET search_path TO 'public'\nAS $function$\r\ndeclare v_letter letters;\r\nbegin\r\n  if coalesce(trim(p_reason), '') = '' then raise exception 'REASON_REQUIRED' using errcode = 'P0001'; end if;\r\n  select * into v_letter from letters where id = p_letter_id for update;\r\n  if v_letter.status <> 'NUMBERED' then raise exception 'LETTER_NOT_NUMBERED' using errcode = 'P0001'; end if;\r\n  update number_issuances set status = 'CANCELLED' where letter_id = p_letter_id;\r\n  update letters set status = 'CANCELLED', status_reason = p_reason where id = p_letter_id returning * into v_letter;\r\n  insert into audit_logs (actor_id, letter_id, action, entity_type, entity_id, status_before, status_after, official_number, reason)\r\n  values (p_actor, p_letter_id, 'LETTER_CANCELLED', 'letters', p_letter_id::text, 'NUMBERED', 'CANCELLED', v_letter.official_number, p_reason);\r\n  return v_letter;\r\nend $function$\n",
+      "security_definer": false
+    },
+    {
+      "acl": "{=X/postgres,postgres=X/postgres,anon=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+      "args": "",
+      "name": "check_disposition_completion",
+      "schema": "public",
+      "definition": "CREATE OR REPLACE FUNCTION public.check_disposition_completion()\n RETURNS trigger\n LANGUAGE plpgsql\n SET search_path TO 'public'\nAS $function$\nbegin\n if new.status in ('IN_REVIEW','DONE') and new.requires_letter then\n   if not exists(select 1 from letters l where l.id=new.response_letter_id and l.creator_id=new.recipient_id and l.status='NUMBERED' and l.finalized_at is not null) then\n     raise exception 'Selesaikan surat tindak lanjut beserta pengesahannya sebelum mengirim hasil.';\n   end if;\n end if;\n return new;\nend $function$\n",
+      "security_definer": false
+    },
+    {
+      "acl": "{postgres=X/postgres,service_role=X/postgres}",
+      "args": "p_issuance_id uuid, p_version_id uuid, p_actor uuid",
+      "name": "complete_number_issuance",
+      "schema": "public",
+      "definition": "CREATE OR REPLACE FUNCTION public.complete_number_issuance(p_issuance_id uuid, p_version_id uuid, p_actor uuid)\n RETURNS letters\n LANGUAGE plpgsql\n SET search_path TO 'public'\nAS $function$\r\ndeclare\r\n  v_iss number_issuances;\r\n  v_letter letters;\r\nbegin\r\n  select * into v_iss from number_issuances where id = p_issuance_id;\r\n  if not found then raise exception 'ISSUANCE_NOT_FOUND' using errcode = 'P0002'; end if;\r\n  select * into v_letter from letters where id = v_iss.letter_id;\r\n  return v_letter;\r\nend $function$\n",
+      "security_definer": false
+    },
+    {
+      "acl": "{postgres=X/postgres,service_role=X/postgres}",
+      "args": "p_actor uuid, p_action text, p_id uuid, p_revision integer, p_data jsonb",
+      "name": "disposition_workflow",
+      "schema": "public",
+      "definition": "CREATE OR REPLACE FUNCTION public.disposition_workflow(p_actor uuid, p_action text, p_id uuid DEFAULT NULL::uuid, p_revision integer DEFAULT NULL::integer, p_data jsonb DEFAULT '{}'::jsonb)\n RETURNS uuid\n LANGUAGE plpgsql\n SET search_path TO 'public'\nAS $function$\ndeclare d dispositions; a user_assignments; r user_assignments; lvl integer; rlv integer; target uuid; old_status text; src uuid;\nbegin\n a:=app.active_assignment(p_actor);\n if a.id is null then raise exception 'Akun tidak memiliki penugasan aktif.'; end if;\n if p_action='CREATE' then\n   select level into lvl from positions where id=a.position_id;\n   r:=app.active_assignment((p_data->>'recipientId')::uuid);\n   select level into rlv from positions where id=r.position_id;\n   if lvl<=1 or r.id is null or rlv>=lvl or (p_data->>'recipientId')::uuid=p_actor or (lvl=2 and a.unit_id<>r.unit_id) then raise exception 'Pilih penerima dengan jabatan di bawah Anda sesuai kewenangan unit.'; end if;\n   if length(trim(coalesce(p_data->>'subject','')))=0 or length(trim(coalesce(p_data->>'instruction','')))=0 then raise exception 'Perihal dan arahan wajib diisi.'; end if;\n   src:=nullif(p_data->>'letterId','')::uuid;\n   if src is not null and (not app.can_read_letter_for(p_actor,src) or not exists(select 1 from letters where id=src and status='NUMBERED')) then raise exception 'Surat acuan harus sudah bernomor dan dapat Anda akses.'; end if;\n   insert into dispositions(giver_id,recipient_id,letter_id,subject,instruction,priority,due_date,status,requires_letter)\n   values(p_actor,r.profile_id,src,trim(p_data->>'subject'),trim(p_data->>'instruction'),p_data->>'priority',nullif(p_data->>'dueDate','')::date,'NEW',coalesce((p_data->>'requiresLetter')::boolean,true)) returning * into d;\n   target:=d.recipient_id;\n else\n   select * into d from dispositions where id=p_id for update;\n   if d.id is null or p_actor not in (d.giver_id,d.recipient_id) then raise exception 'Anda tidak berwenang mengakses disposisi ini.'; end if;\n   if p_revision is distinct from d.revision then raise exception 'Disposisi telah berubah. Muat ulang halaman.'; end if;\n   old_status:=d.status;\n   if p_action='START' and p_actor=d.recipient_id and d.status in ('NEW','REVISION_REQUESTED') then\n     update dispositions set status='IN_PROGRESS',read_at=coalesce(read_at,now()),revision=revision+1 where id=d.id returning * into d;\n     target:=d.giver_id;\n   elsif p_action='SUBMIT' and p_actor=d.recipient_id and d.status in ('NEW','IN_PROGRESS','REVISION_REQUESTED') then\n     if nullif(trim(p_data->>'note'),'') is null then raise exception 'Catatan hasil pekerjaan wajib diisi.'; end if;\n     update dispositions set status='IN_REVIEW',follow_up_note=trim(p_data->>'note'),submitted_at=now(),reviewed_at=null,revision=revision+1 where id=d.id returning * into d;\n     target:=d.giver_id;\n   elsif p_action in ('ACCEPT','RETURN') and p_actor=d.giver_id and d.status='IN_REVIEW' then\n     if p_action='RETURN' and nullif(trim(p_data->>'note'),'') is null then raise exception 'Tuliskan bagian yang perlu diperbaiki.'; end if;\n     update dispositions set status=case when p_action='ACCEPT' then 'DONE' else 'REVISION_REQUESTED' end,review_note=nullif(trim(p_data->>'note'),''),reviewed_at=now(),completed_at=case when p_action='ACCEPT' then now() else null end,revision=revision+1 where id=d.id returning * into d;\n     target:=d.recipient_id;\n   else raise exception 'Tindakan tidak sesuai tahap atau kewenangan Anda.';\n   end if;\n end if;\n insert into audit_logs(actor_id,letter_id,action,entity_type,entity_id,status_before,status_after,reason,metadata) values(p_actor,d.response_letter_id,'DISPOSITION_'||p_action,'dispositions',d.id::text,old_status,d.status,nullif(p_data->>'note',''),jsonb_build_object('source_letter_id',d.letter_id));\n insert into notifications(recipient_id,letter_id,disposition_id,event_type,title,is_read) values(target,d.response_letter_id,d.id,'DISPOSITION',case p_action when 'CREATE' then 'Disposisi baru diterima' when 'START' then 'Disposisi mulai dikerjakan' when 'SUBMIT' then 'Hasil disposisi menunggu pemeriksaan Anda' when 'RETURN' then 'Hasil disposisi perlu diperbaiki' else 'Hasil disposisi telah diterima' end,false);\n return d.id;\nend $function$\n",
+      "security_definer": false
+    },
+    {
+      "acl": "{postgres=X/postgres,service_role=X/postgres}",
+      "args": "p_actor uuid, p_letter uuid, p_revision integer, p_external_confirmed boolean",
+      "name": "finalize_letter",
+      "schema": "public",
+      "definition": "CREATE OR REPLACE FUNCTION public.finalize_letter(p_actor uuid, p_letter uuid, p_revision integer, p_external_confirmed boolean)\n RETURNS void\n LANGUAGE plpgsql\n SET search_path TO 'public'\nAS $function$\ndeclare l letters;\nbegin\n select * into l from letters where id=p_letter for update;\n if l.id is null or l.creator_id<>p_actor or (app.active_assignment(p_actor)).id is null or l.status<>'NUMBERED' or l.revision is distinct from p_revision then raise exception 'Surat/versi tidak dapat difinalisasi oleh akun ini.'; end if;\n if l.finalized_at is not null then return; end if;\n if not exists(select 1 from letter_versions where id=l.current_version_id and version_kind in ('NUMBERED','SIGNED') and storage_path is not null and file_hash is not null) then raise exception 'La­ngkah penyimpanan dokumen bernomor belum selesai.'; end if;\n if l.required_signature_count>0 then\n   if l.signature_mode='IN_APP' and (l.signature_status<>'UPLOADED' or (select count(*) from signature_requests where letter_id=l.id and status='UPLOADED')<>l.required_signature_count) then raise exception 'Seluruh TTD wajib belum selesai.'; end if;\n   if l.signature_mode='EXTERNAL' and p_external_confirmed is distinct from true then raise exception 'Konfirmasi pengesahan di luar sistem wajib.'; end if;\n end if;\n update letters set finalized_at=now(),finalized_by=p_actor,revision=revision+1,updated_at=now() where id=l.id;\n insert into audit_logs(actor_id,letter_id,action,entity_type,entity_id,version_id,metadata) values(p_actor,l.id,'FINALIZE','letters',l.id::text,l.current_version_id,jsonb_build_object('external_confirmation',p_external_confirmed));\nend $function$\n",
+      "security_definer": false
+    },
+    {
+      "acl": "{postgres=X/postgres,service_role=X/postgres}",
+      "args": "p_letter_id uuid, p_actor uuid, p_idempotency_key text",
+      "name": "issue_letter_number",
+      "schema": "public",
+      "definition": "CREATE OR REPLACE FUNCTION public.issue_letter_number(p_letter_id uuid, p_actor uuid, p_idempotency_key text)\n RETURNS number_issuances\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\ndeclare l letters; iss number_issuances; i integer; series number_series; t letter_types; pos uuid; floor_value integer; yr integer;\nbegin\n select * into l from letters where id=p_letter_id for update;\n if l.id is null or l.creator_id<>p_actor or (app.active_assignment(p_actor)).id is null then raise exception 'Hanya pembuat aktif dapat menerbitkan nomor.'; end if;\n if l.official_number is not null then select * into iss from number_issuances where letter_id=l.id; if iss.id is null or iss.status='CANCELLED' then raise exception 'Penerbitan lama perlu ditinjau pengelola.'; end if; return iss; end if;\n if l.current_version_id is null or l.status<>'READY_TO_ISSUE' or cardinality(l.signer_ids)<>l.required_signature_count then raise exception 'Surat belum siap diterbitkan.'; end if;\n if (select count(*) from approval_steps where letter_id=l.id and version_id=l.current_version_id and status='APPROVED')<>l.required_signature_count\n or exists(select 1 from unnest(l.signer_ids) x where not app.valid_signer(x)) then raise exception 'Persetujuan/kewenangan wajib belum lengkap.'; end if;\n select * into t from letter_types where id=l.letter_type_id;\n pos:=(app.active_assignment(l.signer_id)).position_id;\n select * into series from number_series where letter_type_id=t.id and status='ACTIVE' and\n ((t.series_basis='SIGNER_POSITION' and position_id=pos) or (t.series_basis='CREATOR_UNIT' and unit_id=l.creator_unit_id)) limit 1;\n if series.id is null then raise exception 'Tidak ada seri nomor aktif sesuai unit/jabatan.'; end if;\n yr:=extract(year from now() at time zone 'Asia/Jakarta');\n -- Nomor lama dibuat tanpa issuance. Counter tidak boleh menggunakan ulang nomor tersebut.\n select coalesce(max((regexp_match(x.official_number,'^([0-9]{3,})[0-9]{2}[-/]'))[1]::integer),0) into floor_value\n from letters x where x.letter_type_id=t.id and right(x.official_number,4)=yr::text and\n ((t.series_basis='CREATOR_UNIT' and x.creator_unit_id=l.creator_unit_id) or\n (t.series_basis='SIGNER_POSITION' and (app.active_assignment(x.signer_id)).position_id=pos));\n insert into number_counters(series_id,year,last_value) values(series.id,yr,floor_value)\n on conflict(series_id,year) do update set last_value=greatest(number_counters.last_value,excluded.last_value);\n iss:=issue_letter_number_core(p_letter_id,p_actor,p_idempotency_key);\n if l.signature_mode='IN_APP' then\n   for i in 1..cardinality(l.signer_ids) loop\n     insert into signature_requests(letter_id,numbered_version_id,signer_id,sign_order,signer_role,status)\n     values(l.id,l.current_version_id,l.signer_ids[i],i,(select p.name from app.active_assignment(l.signer_ids[i]) a join positions p on p.id=a.position_id),case when i=1 then 'PENDING' else 'WAITING' end);\n   end loop;\n end if;\n return iss;\nend $function$\n",
+      "security_definer": true
+    },
+    {
+      "acl": "{postgres=X/postgres}",
+      "args": "p_letter_id uuid, p_actor uuid, p_idempotency_key text",
+      "name": "issue_letter_number_core",
+      "schema": "public",
+      "definition": "CREATE OR REPLACE FUNCTION public.issue_letter_number_core(p_letter_id uuid, p_actor uuid, p_idempotency_key text)\n RETURNS number_issuances\n LANGUAGE plpgsql\n SET search_path TO 'public'\nAS $function$\r\ndeclare\r\n  v_letter letters;\r\n  v_type letter_types;\r\n  v_series number_series;\r\n  v_issuance number_issuances;\r\n  v_year integer;\r\n  v_seq integer;\r\n  v_now timestamptz := now();\r\n  v_unit text;\r\n  v_pos text;\r\n  v_number text;\r\n  v_signer_pos uuid;\r\n  v_sig_status text;\r\nbegin\r\n  -- Kunci baris surat\r\n  select * into v_letter from letters where id = p_letter_id for update;\r\n  if not found then raise exception 'LETTER_NOT_FOUND' using errcode = 'P0002'; end if;\r\n\r\n  -- Idempoten: bila sudah pernah diterbitkan untuk surat ini, kembalikan record yang sama\r\n  select * into v_issuance from number_issuances where letter_id = p_letter_id;\r\n  if found then\r\n    if v_issuance.status = 'CANCELLED' then\r\n      raise exception 'ISSUANCE_CANCELLED' using errcode = 'P0001';\r\n    end if;\r\n    return v_issuance;\r\n  end if;\r\n\r\n  -- Nomor hanya dapat diterbitkan bila berstatus READY_TO_ISSUE\r\n  if v_letter.status <> 'READY_TO_ISSUE' then\r\n    raise exception 'LETTER_NOT_READY: status %', v_letter.status using errcode = 'P0001';\r\n  end if;\r\n\r\n  select * into v_type from letter_types where id = v_letter.letter_type_id;\r\n\r\n  if v_type.series_basis = 'SIGNER_POSITION' then\r\n    select ua.position_id into v_signer_pos from user_assignments ua\r\n      where ua.profile_id = v_letter.signer_id and ua.is_active order by ua.start_date desc nulls last limit 1;\r\n    select * into v_series from number_series\r\n      where letter_type_id = v_type.id and position_id = v_signer_pos and status = 'ACTIVE' limit 1;\r\n  else\r\n    select * into v_series from number_series\r\n      where letter_type_id = v_type.id and unit_id = v_letter.creator_unit_id and status = 'ACTIVE' limit 1;\r\n  end if;\r\n  if v_series.id is null then raise exception 'NO_ACTIVE_SERIES' using errcode = 'P0001'; end if;\r\n\r\n  -- Counter per seri dan tahun Asia/Jakarta\r\n  v_year := extract(year from v_now at time zone 'Asia/Jakarta')::integer;\r\n  insert into number_counters (series_id, year, last_value) values (v_series.id, v_year, 0)\r\n    on conflict (series_id, year) do nothing;\r\n  update number_counters set last_value = last_value + 1\r\n    where series_id = v_series.id and year = v_year returning last_value into v_seq;\r\n\r\n  select code into v_unit from organizational_units where id = v_letter.creator_unit_id;\r\n  select p.code into v_pos from positions p where p.id = coalesce(v_signer_pos, v_series.position_id);\r\n  v_number := build_official_number(v_series.pattern, v_seq, v_now, v_unit, v_pos, v_type.code);\r\n\r\n  -- Hitung status tanda tangan\r\n  v_sig_status := case\r\n    when v_letter.required_signature_count = 0 then 'NOT_REQUIRED'\r\n    when v_letter.signature_mode = 'IN_APP' then 'WAITING'\r\n    when v_letter.signature_mode = 'EXTERNAL' then 'EXTERNAL'\r\n    else 'NOT_REQUIRED' end;\r\n\r\n  -- 1 Transaksi: Simpan number_issuances\r\n  insert into number_issuances (\r\n    letter_id, series_id, year, sequence_number, official_number, pattern_snapshot,\r\n    status, idempotency_key, issued_by, issued_at, verified_at\r\n  )\r\n  values (\r\n    p_letter_id, v_series.id, v_year, v_seq, v_number,\r\n    jsonb_build_object('pattern', v_series.pattern, 'unit', v_unit, 'position', v_pos, 'type', v_type.code)::text,\r\n    'ISSUED', p_idempotency_key, p_actor, v_now, v_now\r\n  )\r\n  returning * into v_issuance;\r\n\r\n  -- 1 Transaksi: Update letters menjadi NUMBERED\r\n  update letters set\r\n    status = 'NUMBERED',\r\n    official_number = v_number,\r\n    issued_at = v_now,\r\n    signature_status = v_sig_status,\r\n    updated_at = v_now\r\n  where id = v_letter.id;\r\n\r\n  -- 1 Transaksi: Catat audit_logs\r\n  insert into audit_logs (\r\n    actor_id, letter_id, action, entity_type, entity_id, status_before, status_after, official_number\r\n  )\r\n  values (\r\n    p_actor, p_letter_id, 'NUMBER_ISSUED', 'letters', v_letter.id::text, 'READY_TO_ISSUE', 'NUMBERED', v_number\r\n  );\r\n\r\n  return v_issuance;\r\nend $function$\n",
+      "security_definer": false
+    },
+    {
+      "acl": "{=X/postgres,postgres=X/postgres,anon=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+      "args": "",
+      "name": "letters_guard",
+      "schema": "public",
+      "definition": "CREATE OR REPLACE FUNCTION public.letters_guard()\n RETURNS trigger\n LANGUAGE plpgsql\n SET search_path TO 'public'\nAS $function$\r\nbegin\r\n  if tg_op = 'DELETE' then\r\n    if old.official_number is not null then raise exception 'surat bernomor tidak dapat dihapus' using errcode = 'P0001'; end if;\r\n    return old;\r\n  end if;\r\n  if old.official_number is not null and (new.official_number is distinct from old.official_number or new.issued_at is distinct from old.issued_at) then\r\n    raise exception 'nomor resmi dan tanggal terbit tidak dapat diubah' using errcode = 'P0001';\r\n  end if;\r\n  return new;\r\nend $function$\n",
+      "security_definer": false
+    },
+    {
+      "acl": "{=X/postgres,postgres=X/postgres,anon=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+      "args": "",
+      "name": "protect_final_letter",
+      "schema": "public",
+      "definition": "CREATE OR REPLACE FUNCTION public.protect_final_letter()\n RETURNS trigger\n LANGUAGE plpgsql\n SET search_path TO 'public'\nAS $function$\nbegin\n if old.finalized_at is not null and (new.subject,new.letter_date,new.recipient_user_id,new.recipient_external_name,new.recipient_external_org,new.recipient_external_address,new.current_version_id,new.signer_ids,new.signature_areas,new.stamp_area,new.number_area,new.finalized_at) is distinct from (old.subject,old.letter_date,old.recipient_user_id,old.recipient_external_name,old.recipient_external_org,old.recipient_external_address,old.current_version_id,old.signer_ids,old.signature_areas,old.stamp_area,old.number_area,old.finalized_at) then raise exception 'Dokumen final terkunci.'; end if;\n if old.official_number is not null and (new.official_number,new.issued_at) is distinct from (old.official_number,old.issued_at) then raise exception 'Nomor resmi tidak dapat diubah.'; end if;\n return new;\nend $function$\n",
+      "security_definer": false
+    },
+    {
+      "acl": "{=X/postgres,postgres=X/postgres,anon=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+      "args": "",
+      "name": "protect_final_version",
+      "schema": "public",
+      "definition": "CREATE OR REPLACE FUNCTION public.protect_final_version()\n RETURNS trigger\n LANGUAGE plpgsql\n SET search_path TO 'public'\nAS $function$\nbegin\n if exists(select 1 from letters where id=old.letter_id and finalized_at is not null) then raise exception 'Versi dokumen final terkunci.'; end if;\n if tg_op='DELETE' then return old; end if;\n return new;\nend $function$\n",
+      "security_definer": false
+    },
+    {
+      "acl": "{postgres=X/postgres,service_role=X/postgres}",
+      "args": "p_actor uuid, p_letter uuid, p_previous_version uuid, p_document jsonb",
+      "name": "record_numbered_document",
+      "schema": "public",
+      "definition": "CREATE OR REPLACE FUNCTION public.record_numbered_document(p_actor uuid, p_letter uuid, p_previous_version uuid, p_document jsonb)\n RETURNS void\n LANGUAGE plpgsql\n SET search_path TO 'public'\nAS $function$\ndeclare l letters; v uuid; no integer; kind text;\nbegin\n select * into l from letters where id=p_letter for update;\n if l.creator_id is distinct from p_actor or l.status<>'NUMBERED' or l.finalized_at is not null then raise exception 'Tidak berwenang menyimpan salinan bernomor.'; end if;\n select version_kind into kind from letter_versions where id=l.current_version_id;\n if kind in ('NUMBERED','SIGNED') then return; end if;\n if l.current_version_id is distinct from p_previous_version or nullif(p_document->>'hash','') is null then raise exception 'Versi berubah.'; end if;\n select coalesce(max(version_no),0)+1 into no from letter_versions where letter_id=l.id;\n update letter_versions set is_current=false where letter_id=l.id and is_current;\n insert into letter_versions(letter_id,version_no,version_kind,storage_path,file_format,file_hash,created_by,is_current)\n values(l.id,no,'NUMBERED',p_document->>'path',p_document->>'format',p_document->>'hash',p_actor,true) returning id into v;\n update letters set current_version_id=v,revision=revision+1 where id=l.id;\n update signature_requests set numbered_version_id=v where letter_id=l.id and status in ('PENDING','WAITING');\n insert into audit_logs(actor_id,letter_id,action,entity_type,entity_id,version_id) values(p_actor,l.id,'NUMBERED_DOCUMENT_STORED','letters',l.id::text,v);\nend $function$\n",
+      "security_definer": false
+    },
+    {
+      "acl": "{postgres=X/postgres,service_role=X/postgres}",
+      "args": "p_actor uuid, p_request uuid, p_revision integer, p_previous_version uuid, p_document jsonb, p_method text, p_image_path text, p_stamp_path text",
+      "name": "record_signature",
+      "schema": "public",
+      "definition": "CREATE OR REPLACE FUNCTION public.record_signature(p_actor uuid, p_request uuid, p_revision integer, p_previous_version uuid, p_document jsonb, p_method text, p_image_path text DEFAULT NULL::text, p_stamp_path text DEFAULT NULL::text)\n RETURNS uuid\n LANGUAGE plpgsql\n SET search_path TO 'public'\nAS $function$\ndeclare l letters; s signature_requests; v uuid; no integer; remaining integer;\nbegin\n select * into s from signature_requests where id=p_request;\n select * into l from letters where id=s.letter_id for update;\n select * into s from signature_requests where id=p_request for update;\n if s.id is null or s.signer_id<>p_actor or not app.valid_signer(p_actor) or s.status<>'PENDING' or l.status<>'NUMBERED' or l.signature_mode<>'IN_APP' or l.finalized_at is not null then raise exception 'Anda bukan penandatangan aktif.'; end if;\n if not exists(select 1 from letter_versions where id=l.current_version_id and version_kind in ('NUMBERED','SIGNED')) then raise exception 'Dokumen bernomor belum tersimpan.'; end if;\n if l.revision is distinct from p_revision or l.current_version_id is distinct from p_previous_version then raise exception 'Dokumen telah berubah. Preview ulang sebelum tanda tangan.'; end if;\n if exists(select 1 from signature_requests where letter_id=l.id and sign_order<s.sign_order and status<>'UPLOADED') then raise exception 'Tanda tangan sebelumnya belum selesai.'; end if;\n if coalesce(p_method,'') not in ('IMAGE','WET_UPLOAD') or nullif(p_document->>'path','') is null or nullif(p_document->>'hash','') is null then raise exception 'Berkas hasil belum tersimpan.'; end if;\n if p_method='IMAGE' and nullif(p_image_path,'') is null then raise exception 'Gambar TTD wajib.'; end if;\n select coalesce(max(version_no),0)+1 into no from letter_versions where letter_id=l.id;\n update letter_versions set is_current=false where letter_id=l.id and is_current;\n insert into letter_versions(letter_id,version_no,version_kind,storage_path,file_format,file_hash,created_by,is_current)\n values(l.id,no,'SIGNED',p_document->>'path',p_document->>'format',p_document->>'hash',p_actor,true) returning id into v;\n update signature_requests set status='UPLOADED',signed_version_id=v,uploaded_at=now(),stamp_included=p_stamp_path is not null,signature_image_path=p_image_path,stamp_image_path=p_stamp_path,method=p_method where id=s.id;\n select count(*) into remaining from signature_requests where letter_id=l.id and status in ('PENDING','WAITING');\n update signature_requests set status='PENDING' where id=(select id from signature_requests where letter_id=l.id and status='WAITING' order by sign_order limit 1);\n update letters set current_version_id=v,revision=revision+1,signature_status=case when remaining=0 then 'UPLOADED' else 'WAITING' end,updated_at=now() where id=l.id;\n insert into audit_logs(actor_id,letter_id,action,entity_type,entity_id,version_id,metadata) values(p_actor,l.id,'SIGNATURE_APPLIED','signature_requests',s.id::text,v,jsonb_build_object('method',p_method,'hash',p_document->>'hash','order',s.sign_order));\n if p_stamp_path is not null then insert into audit_logs(actor_id,letter_id,action,entity_type,entity_id,version_id) values(p_actor,l.id,'STAMP_APPLIED','letters',l.id::text,v); end if;\n insert into notifications(recipient_id,letter_id,event_type,title,is_read) values(l.creator_id,l.id,'SIGNATURE_APPLIED','Dokumen bertanda tangan telah tersimpan.',false);\n return v;\nend $function$\n",
+      "security_definer": false
+    },
+    {
+      "acl": "{postgres=X/postgres,service_role=X/postgres}",
+      "args": "p_actor uuid, p_letter uuid, p_action text, p_revision integer, p_note text",
+      "name": "review_letter",
+      "schema": "public",
+      "definition": "CREATE OR REPLACE FUNCTION public.review_letter(p_actor uuid, p_letter uuid, p_action text, p_revision integer, p_note text DEFAULT NULL::text)\n RETURNS text\n LANGUAGE plpgsql\n SET search_path TO 'public'\nAS $function$\ndeclare l letters; s approval_steps; nxt approval_steps; i integer; c integer; dest text;\nbegin\n select * into l from letters where id=p_letter for update;\n if l.id is null or (app.active_assignment(p_actor)).id is null then raise exception 'Akun/surat tidak valid.'; end if;\n if l.finalized_at is not null or l.revision is distinct from p_revision then raise exception 'Versi surat berubah atau telah final.'; end if;\n if p_action='PREVIEW' then\n   if l.creator_id<>p_actor or l.status not in ('DRAFT','REVISION_REQUESTED') then raise exception 'Preview draft hanya oleh pembuat.'; end if;\n   update letters set previewed_revision=revision where id=l.id; return l.status;\n elsif p_action='SUBMIT' then\n   if l.creator_id<>p_actor or l.status not in ('DRAFT','REVISION_REQUESTED') or l.current_version_id is null or l.previewed_revision is distinct from l.revision then raise exception 'Simpan dan preview draft terkini sebelum mengajukan.'; end if;\n   if exists(select 1 from unnest(l.signer_ids) x where not app.valid_signer(x)) then raise exception 'Kewenangan penandatangan berubah.'; end if;\n   if exists(select 1 from letter_types where id=l.letter_type_id and required_attachment) and not exists(select 1 from letter_attachments where letter_id=l.id) then raise exception 'Lampiran bukti wajib sebelum pengajuan.'; end if;\n   select coalesce(max(cycle),0)+1 into c from approval_steps where letter_id=l.id;\n   update approval_steps set status='SUPERSEDED' where letter_id=l.id and status in ('PENDING','WAITING');\n   for i in 1..cardinality(l.signer_ids) loop\n     insert into approval_steps(letter_id,cycle,step_order,approver_id,step_source,status,version_id)\n     values(l.id,c,i,l.signer_ids[i],case when cardinality(l.signer_ids)=2 then case when i=1 then 'BILLING_SUBMITTER' else 'BILLING_APPROVER' end else 'SIGNER_CONFIRMATION' end,case when i=1 then 'PENDING' else 'WAITING' end,l.current_version_id);\n   end loop;\n   dest:=case when cardinality(l.signer_ids)=0 then 'READY_TO_ISSUE' else 'IN_REVIEW' end;\n else\n   if l.status<>'IN_REVIEW' then raise exception 'Surat tidak dalam persetujuan.'; end if;\n   select * into s from approval_steps where letter_id=l.id and approver_id=p_actor and status='PENDING' order by cycle desc limit 1 for update;\n   if s.id is null or s.version_id is distinct from l.current_version_id or not app.valid_signer(p_actor) then raise exception 'Bukan penyetuju aktif pada versi ini.'; end if;\n   if p_action not in ('APPROVE','REJECT','REQUEST_REVISION') then raise exception 'Aksi tidak valid.'; end if;\n   if p_action<>'APPROVE' and nullif(trim(p_note),'') is null then raise exception 'Alasan wajib diisi.'; end if;\n   update approval_steps set status=case p_action when 'APPROVE' then 'APPROVED' when 'REJECT' then 'REJECTED' else 'REVISION_REQUESTED' end,decided_at=now(),decision_note=p_note where id=s.id;\n   if p_action='APPROVE' then\n     select * into nxt from approval_steps where letter_id=l.id and cycle=s.cycle and step_order>s.step_order and status='WAITING' order by step_order limit 1;\n     if nxt.id is not null then update approval_steps set status='PENDING' where id=nxt.id; dest:='IN_REVIEW'; else dest:='READY_TO_ISSUE'; end if;\n   else\n     dest:=case p_action when 'REJECT' then 'REJECTED' else 'REVISION_REQUESTED' end;\n     update approval_steps set status='SUPERSEDED' where letter_id=l.id and cycle=s.cycle and status in ('PENDING','WAITING');\n   end if;\n end if;\n update letters set status=dest,status_reason=p_note,updated_at=now() where id=l.id;\n insert into audit_logs(actor_id,letter_id,action,entity_type,entity_id,status_before,status_after,version_id,reason)\n values(p_actor,l.id,p_action,'letters',l.id::text,l.status,dest,l.current_version_id,p_note);\n insert into notifications(recipient_id,letter_id,event_type,title,is_read) values(l.creator_id,l.id,p_action,'Status surat diperbarui: '||dest,false);\n insert into notifications(recipient_id,letter_id,event_type,title,is_read)\n select approver_id,l.id,'APPROVAL_REQUEST','Surat menunggu persetujuan Anda.',false from approval_steps where letter_id=l.id and status='PENDING';\n return dest;\nend $function$\n",
+      "security_definer": false
+    },
+    {
+      "acl": "{postgres=X/postgres,service_role=X/postgres}",
+      "args": "p_actor uuid, p_data jsonb, p_document jsonb",
+      "name": "save_letter_draft",
+      "schema": "public",
+      "definition": "CREATE OR REPLACE FUNCTION public.save_letter_draft(p_actor uuid, p_data jsonb, p_document jsonb)\n RETURNS uuid\n LANGUAGE plpgsql\n SET search_path TO 'public'\nAS $function$\ndeclare d dispositions; v uuid; did uuid; old_id uuid;\nbegin\n did:=nullif(p_data->>'dispositionId','')::uuid;\n -- Edit surat yang sudah terhubung juga tidak boleh melewati tahap pemeriksaan.\n if did is null and nullif(p_data->>'id','') is not null then select id into did from dispositions where response_letter_id=(p_data->>'id')::uuid; end if;\n if did is not null then\n   select * into d from dispositions where id=did for update;\n   if d.id is null or d.recipient_id<>p_actor or d.status not in ('NEW','IN_PROGRESS','REVISION_REQUESTED') then raise exception 'Surat tindak lanjut hanya dapat dikerjakan oleh penerima sebelum dikirim untuk pemeriksaan.'; end if;\n   if d.response_letter_id is not null and nullif(p_data->>'id','') is null and exists(select 1 from letters where id=d.response_letter_id and finalized_at is null and status not in ('REJECTED','CANCELLED')) then raise exception 'Lanjutkan surat tindak lanjut yang sudah dibuat.'; end if;\n   if nullif(p_data->>'id','') is not null and d.response_letter_id is distinct from (p_data->>'id')::uuid then raise exception 'Surat tidak sesuai disposisi.'; end if;\n end if;\n v:=save_letter_draft_core(p_actor,p_data,p_document);\n if did is not null then\n   old_id:=d.response_letter_id;\n   update dispositions set response_letter_id=v,submitted_at=case when response_letter_id is distinct from v then null else submitted_at end,status=case when status='NEW' then 'IN_PROGRESS' else status end,revision=revision+1 where id=did;\n   insert into audit_logs(actor_id,letter_id,action,entity_type,entity_id,metadata) values(p_actor,v,'DISPOSITION_LETTER_SAVED','dispositions',did::text,jsonb_build_object('previous_letter_id',old_id));\n end if;\n return v;\nend $function$\n",
+      "security_definer": false
+    },
+    {
+      "acl": "{postgres=X/postgres,service_role=X/postgres}",
+      "args": "p_actor uuid, p_data jsonb, p_document jsonb",
+      "name": "save_letter_draft_core",
+      "schema": "public",
+      "definition": "CREATE OR REPLACE FUNCTION public.save_letter_draft_core(p_actor uuid, p_data jsonb, p_document jsonb)\n RETURNS uuid\n LANGUAGE plpgsql\n SET search_path TO 'public'\nAS $function$\ndeclare\n l letters; t letter_types; a user_assignments; s uuid; n integer; v uuid; no integer;\n d date; ids uuid[]; b jsonb; old_date date; new_id uuid; expected integer; bank uuid;\nbegin\n a:=app.active_assignment(p_actor);\n if a.id is null then raise exception 'Akun tidak memiliki penugasan aktif.'; end if;\n select * into t from letter_types where code=p_data->>'letterTypeCode' and is_active;\n if t.id is null or nullif(trim(p_data->>'subject'),'') is null then raise exception 'Jenis surat dan perihal wajib diisi.'; end if;\n d:=(p_data->>'letterDate')::date;\n if d is null then raise exception 'Tanggal surat wajib diisi.'; end if;\n if nullif(p_data->>'id','') is not null then\n   select * into l from letters where id=(p_data->>'id')::uuid for update;\n   if l.id is null or l.creator_id<>p_actor or l.status not in ('DRAFT','REVISION_REQUESTED') or l.finalized_at is not null then raise exception 'Draft tidak dapat diubah oleh akun ini.'; end if;\n   expected:=(p_data->>'revision')::integer;\n   if expected is distinct from l.revision then raise exception 'Draft telah berubah. Muat ulang sebelum menyimpan.'; end if;\n   if l.letter_type_id<>t.id then raise exception 'Jenis surat tidak dapat diganti setelah draft dibuat.'; end if;\n   old_date:=l.letter_date;\n end if;\n if d < (now() at time zone 'Asia/Jakarta')::date and (l.id is null or d is distinct from old_date) then\n   if not app.can_backdate(p_actor) or nullif(trim(p_data->>'dateReason'),'') is null then raise exception 'Tanggal mundur memerlukan kewenangan GM/SM/Direktur dan alasan.'; end if;\n end if;\n select coalesce(array_agg(x::uuid),'{}') into ids from jsonb_array_elements_text(coalesce(p_data->'signerIds','[]')) x;\n n:=cardinality(ids);\n if n<>(select count(distinct x) from unnest(ids) x) then raise exception 'Penandatangan harus berbeda.'; end if;\n foreach s in array ids loop\n   if not app.valid_signer(s) then raise exception 'Penandatangan harus pejabat SM/Direktur aktif yang berwenang.'; end if;\n end loop;\n if t.category='INTERNAL' then\n   if n>1 or not exists(select 1 from profiles where id=(p_data->>'recipientUserId')::uuid and is_active) then raise exception 'Pilih penerima internal aktif; maksimal satu TTD formal.'; end if;\n else\n   if nullif(trim(p_data->>'recipientName'),'') is null or nullif(trim(p_data->>'recipientOrg'),'') is null or nullif(trim(p_data->>'recipientAddress'),'') is null then raise exception 'Nama, instansi, dan alamat penerima eksternal wajib diisi.'; end if;\n   if t.category='EXTERNAL' and n<>1 then raise exception 'Surat eksternal wajib satu penandatangan.'; end if;\n end if;\n if t.category='BILLING' then\n   if t.creator_unit_id is distinct from a.unit_id or n<>2 then raise exception 'Tagihan khusus Finance dan wajib dua penandatangan.'; end if;\n   if not exists(select 1 from app.active_assignment(ids[1]) x join positions p on p.id=x.position_id join organizational_units u on u.id=x.unit_id where p.code='SM')\n   or not exists(select 1 from app.active_assignment(ids[2]) x join positions p on p.id=x.position_id where p.code='DIR') then raise exception 'Urutan tagihan: Senior Manager lalu Direktur.'; end if;\n   b:=p_data->'billing';\n   bank:=nullif(b->>'bankId','')::uuid;\n   if bank is null and nullif(trim(b->>'bankName'),'') is not null then\n     select id into bank from master_bank where lower(name)=lower(trim(b->>'bankName')) and is_active limit 1;\n     if bank is null then insert into master_bank(name,is_active) values(trim(b->>'bankName'),true) returning id into bank; end if;\n   end if;\n   if b is null or coalesce(jsonb_array_length(b->'items'),0)<2 or nullif(b->>'accountNumber','') is null or nullif(b->>'accountHolder','') is null\n   or not exists(select 1 from master_bank where id=bank and is_active)\n   or exists(select 1 from jsonb_array_elements(b->'items') i where (i->>'amount')::numeric<=0 or nullif(trim(i->>'description'),'') is null) then raise exception 'Rincian tagihan dan rekening tidak lengkap.'; end if;\n end if;\n if coalesce(p_data->>'signatureMode','') not in ('IN_APP','EXTERNAL') then raise exception 'Pilih jalur TTD.'; end if;\n if nullif(p_document->>'path','') is null or nullif(p_document->>'hash','') is null or p_document->>'format' not in ('PDF','DOCX') then raise exception 'Dokumen belum tersimpan di Supabase.'; end if;\n if coalesce((select sum((i->>'size')::bigint) from jsonb_array_elements(coalesce(p_document->'attachments','[]')) i),0)+coalesce((select sum(size_bytes) from letter_attachments where letter_id=l.id),0)>26214400 then raise exception 'Total lampiran maksimal 25 MB.'; end if;\n if l.id is null then\n   insert into letters(letter_type_id,source,subject,creator_id,creator_unit_id,recipient_type,status,required_signature_count)\n   values(t.id,p_data->>'source',p_data->>'subject',p_actor,a.unit_id,case when t.category='INTERNAL' then 'INTERNAL_USER' else 'EXTERNAL' end,'DRAFT',n) returning * into l;\n end if;\n update letters set subject=trim(p_data->>'subject'), letter_date=d, date_change_reason=p_data->>'dateReason',\n recipient_user_id=case when t.category='INTERNAL' then (p_data->>'recipientUserId')::uuid else null end,\n recipient_external_name=case when t.category<>'INTERNAL' then p_data->>'recipientName' else null end,\n recipient_external_org=case when t.category<>'INTERNAL' then p_data->>'recipientOrg' else null end,\n recipient_external_address=case when t.category<>'INTERNAL' then p_data->>'recipientAddress' else null end,\n signer_id=ids[1], signer_ids=ids, required_signature_count=n, signature_mode=p_data->>'signatureMode',\n signature_status='NOT_STARTED',signature_areas=coalesce(p_data->'areas','[]'),stamp_area=nullif(p_data->'stampArea','null'),number_area=nullif(p_data->'numberArea','null'),\n revision=revision+1, previewed_revision=null, updated_at=now() where id=l.id;\n select coalesce(max(version_no),0)+1 into no from letter_versions where letter_id=l.id;\n update letter_versions set is_current=false where letter_id=l.id and is_current;\n insert into letter_versions(letter_id,version_no,version_kind,storage_path,file_format,file_hash,content_html,content_format,created_by,is_current,original_name)\n values(l.id,no,'DRAFT',p_document->>'path',p_document->>'format',p_document->>'hash',p_data->>'content',coalesce(p_data->>'contentFormat','TEXT'),p_actor,true,p_document->>'name') returning id into v;\n update letters set current_version_id=v where id=l.id;\n insert into letter_attachments(letter_id,file_name,storage_path,mime_type,size_bytes,uploaded_by)\n select l.id,i->>'name',i->>'path',i->>'mime',(i->>'size')::bigint,p_actor from jsonb_array_elements(coalesce(p_document->'attachments','[]')) i;\n if b is not null then\n   insert into billing_details(letter_id,bank_id,payee_name,account_number,total_amount,total_in_words)\n   values(l.id,bank,b->>'accountHolder',b->>'accountNumber',(select sum((i->>'amount')::numeric) from jsonb_array_elements(b->'items') i),b->>'totalInWords')\n   on conflict(letter_id) do update set bank_id=excluded.bank_id,payee_name=excluded.payee_name,account_number=excluded.account_number,total_amount=excluded.total_amount,total_in_words=excluded.total_in_words;\n   delete from billing_items where letter_id=l.id;\n   insert into billing_items(letter_id,line_no,description,amount) select l.id,ord,i->>'description',(i->>'amount')::numeric from jsonb_array_elements(b->'items') with ordinality as j(i,ord);\n end if;\n insert into audit_logs(actor_id,letter_id,action,entity_type,entity_id,version_id,metadata)\n values(p_actor,l.id,case when old_date is distinct from d then 'LETTER_DATE_SET' else 'SAVE_DRAFT' end,'letters',l.id::text,v,jsonb_build_object('date_before',old_date,'date_after',d,'reason',p_data->>'dateReason','revision',l.revision+1));\n return l.id;\nend $function$\n",
+      "security_definer": false
+    },
+    {
+      "acl": "{=X/postgres,postgres=X/postgres,anon=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+      "args": "",
+      "name": "set_updated_at",
+      "schema": "public",
+      "definition": "CREATE OR REPLACE FUNCTION public.set_updated_at()\n RETURNS trigger\n LANGUAGE plpgsql\n SET search_path TO 'public'\nAS $function$\r\nbegin new.updated_at = now(); return new; end $function$\n",
+      "security_definer": false
+    }
+  ]
+}

@@ -16,7 +16,7 @@ export const DOCUMENT_BUCKET = "letter-documents";
 export const ASSET_BUCKET = "signature-assets";
 export async function readLetter(id: string) {
   await requireUser();
-  const db = createClient();
+  const db = await createClient();
   const { data, error } = await db
     .from("letters")
     .select(
@@ -31,7 +31,7 @@ export async function readLetter(id: string) {
   return data;
 }
 export async function readVersion(letter: any) {
-  const { data, error } = await createClient()
+  const { data, error } = await (await createClient())
     .from("letter_versions")
     .select("*")
     .eq("id", letter.current_version_id)
@@ -86,7 +86,7 @@ export async function storeBytes(
 }
 export async function peopleOptions() {
   const user = await requireUser();
-  const db = createClient();
+  const db = await createClient();
   const [
     { data: profiles, error },
     { data: assignments, error: ae },

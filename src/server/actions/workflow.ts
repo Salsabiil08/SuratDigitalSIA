@@ -18,7 +18,7 @@ export async function getWorkflowOptions() {
 export async function getWorkflowLetter(id: string) {
   const user = await requireUser();
   const l = await readLetter(id);
-  const db = createClient();
+  const db = await createClient();
   const [
     { data: versions, error: ve },
     { data: approvals, error: ae },

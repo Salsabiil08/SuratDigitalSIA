@@ -1,4 +1,4 @@
-> **Panduan historis — bukan kontrak aktif.** Ikuti `AGENTS.md`, `docs/INDEX.md`, dan `docs/spec/08-alur-ndo-r04.md` di root repo. PR-07 disetujui untuk implementasi dan pengujian lokal; jangan mulai PR-08, ubah database production, merge atau deploy tanpa persetujuan. Bagian lama yang melarang editor, gambar TTD/stempel, pengiriman atau Kotak Masuk tidak mengalahkan keputusan pengguna terbaru. Panduan visual yang tidak bertentangan tetap dapat digunakan.
+> **Panduan historis — bukan kontrak aktif.** Ikuti `AGENTS.md`, `docs/INDEX.md`, dan `docs/spec/08-alur-ndo-r04.md` di root repo. PR-08 FINAL disetujui untuk implementasi dan pengujian lokal; jangan membuat fase PR-09, ubah database production, merge atau deploy tanpa persetujuan. Bagian lama yang melarang editor, gambar TTD/stempel, pengiriman atau Kotak Masuk tidak mengalahkan keputusan pengguna terbaru. Panduan visual yang tidak bertentangan tetap dapat digunakan.
 
 > Revisi aktif: instruksi pengguna REV-01–07 tanggal 18 November 2026 pada `docs/spec/00-revisi-alur.md` berlaku di atas batasan lama yang bertentangan di dokumen ini.
 

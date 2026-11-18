@@ -1,3 +1,3 @@
 import {PreparedMailbox} from '@/components/mailbox/prepared-mailbox';
 export const dynamic='force-dynamic';
-export default function Page({searchParams}:{searchParams:Record<string,string|string[]|undefined>}){return <PreparedMailbox folder="OUTBOX" searchParams={searchParams}/>;}
+export default async function Page({searchParams}:{searchParams:Promise<Record<string,string|string[]|undefined>>}){return <PreparedMailbox folder="OUTBOX" searchParams={await searchParams}/>;}

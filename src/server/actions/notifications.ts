@@ -41,7 +41,7 @@ export async function getNotificationsAction(): Promise<{
 export async function markNotificationAsReadAction(notificationId: string) {
   try {
     const user = await requireUser();
-    const supabase = createClient();
+    const supabase = await createClient();
     const { data, error } = await supabase
       .from('notifications')
       .update({
@@ -66,7 +66,7 @@ export async function markAllNotificationsAsReadAction() {
   try {
     const user = await requireUser();
     const recipientId = user.id;
-    const supabase = createClient();
+    const supabase = await createClient();
 
     const { error } = await supabase
       .from('notifications')

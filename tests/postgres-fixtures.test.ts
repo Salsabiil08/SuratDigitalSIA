@@ -22,3 +22,5 @@ it('fixture kotak masuk/keluar, filter/pagination, otorisasi/CC dan error',async
 it('fixture balasan resmi, relasi/RLS, nomor baru, retry dan rollback',async()=>{await db.exec(sql('supabase/tests/06_official_replies_test.sql'));});
 
 it('fixture integrasi disposisi, bukti hasil, RLS, revisi, retry dan rollback',async()=>{await db.exec(sql('supabase/tests/07_disposition_integration_test.sql'));});
+
+it('fixture grant workflow dan TRUNCATE, penandaan notifikasi tetap sah',async()=>{await db.exec(sql('supabase/tests/08_privileges_test.sql'));});

@@ -30,7 +30,7 @@ export interface DashboardMetrics {
 }
 
 export async function getDashboardDataAction(): Promise<DashboardMetrics> {
-  const supabase = createClient();
+  const supabase = await createClient();
   const user = await getCurrentUser();
   if(!user) return {draftCount:0,numberedCount:0,waitingSignatureCount:0,activeDispositionsCount:0,pendingActions:[],recentActivities:[]};
   const currentUserId = user.id;

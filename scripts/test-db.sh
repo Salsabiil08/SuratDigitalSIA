@@ -14,8 +14,12 @@ run() { if [ -n "$RUN" ]; then su postgres -c "$*"; else bash -c "$*"; fi; }
 cleanup() { run "$PGBIN/pg_ctl -D $DIR/data stop -m immediate >/dev/null 2>&1" || true; rm -rf "$DIR"; }
 trap cleanup EXIT
 run "$PGBIN/initdb -D $DIR/data -A trust -U postgres >/dev/null"
-run "$PGBIN/pg_ctl -D $DIR/data -o '-p $PORT -k $DIR' -l $DIR/log -w start >/dev/null"
-PSQL="psql -h $DIR -p $PORT -U postgres -v ON_ERROR_STOP=1 -q"
+cat >> "$DIR/data/postgresql.conf" <<'PGCONF'
+unix_socket_directories = ''
+listen_addresses = '127.0.0.1'
+PGCONF
+run "$PGBIN/pg_ctl -D $DIR/data -o '-p $PORT' -l $DIR/log -w start >/dev/null"
+PSQL="psql -h 127.0.0.1 -p $PORT -U postgres -v ON_ERROR_STOP=1 -q"
 $PSQL -d postgres -c "create database siadocs_test" >/dev/null
 export PGOPTIONS='--client-min-messages=notice'
 $PSQL -d siadocs_test -f "$ROOT/supabase/tests/00_stub_supabase.sql"
@@ -30,5 +34,6 @@ $PSQL -d siadocs_test -f "$ROOT/supabase/tests/04_internal_delivery_test.sql"
 $PSQL -d siadocs_test -f "$ROOT/supabase/tests/05_mailbox_test.sql"
 $PSQL -d siadocs_test -f "$ROOT/supabase/tests/06_official_replies_test.sql"
 $PSQL -d siadocs_test -f "$ROOT/supabase/tests/07_disposition_integration_test.sql"
-bash "$ROOT/scripts/test-db-concurrency.sh" "$DIR" "$PORT"
+$PSQL -d siadocs_test -f "$ROOT/supabase/tests/08_privileges_test.sql"
+bash "$ROOT/scripts/test-db-concurrency.sh" "127.0.0.1" "$PORT"
 echo "UJI DATABASE LULUS"

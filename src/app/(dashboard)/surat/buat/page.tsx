@@ -1,8 +1,8 @@
 import { PreparedLetterEditor } from "@/components/letters/prepared-letter-editor";
-export default function Page({
+export default async function Page({
   searchParams,
 }: {
-  searchParams: { disposisi?: string };
+  searchParams: Promise<{ disposisi?: string }>;
 }) {
-  return <PreparedLetterEditor dispositionId={searchParams.disposisi} />;
+  return <PreparedLetterEditor dispositionId={(await searchParams).disposisi} />;
 }

@@ -28,7 +28,7 @@ async function decide(
 ) {
   try {
     const user = await requireUser();
-    const { data, error } = await createClient()
+    const { data, error } = await (await createClient())
       .from("approval_steps")
       .select("letter_id")
       .eq("id", stepId)
@@ -99,7 +99,7 @@ export async function getPendingApprovalsAction(): Promise<
   PendingApprovalData[]
 > {
   const user = await requireUser();
-  const { data, error } = await createClient()
+  const { data, error } = await (await createClient())
     .from("approval_steps")
     .select(
       "id,letter_id,step_order,version_id,cycle,letter:letters!approval_steps_letter_id_fkey(id,subject,revision,current_version_id,approval_cycle,approval_plan,required_signature_count,recipient_external_name,letter_types(name),creator:profiles!letters_creator_id_fkey(full_name))",

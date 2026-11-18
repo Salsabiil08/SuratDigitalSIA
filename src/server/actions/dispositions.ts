@@ -76,7 +76,7 @@ export async function getDispositionsAction(sourceLetterId?:string): Promise<{
   };
   try {
     const user = await requireUser();
-    const db = createClient();
+    const db = await createClient();
     const opts = await peopleOptions();
     const canCreate = (user.position?.level || 0) > 1;
     const [{ data: disps, error }, { data: letters, error: le }] =

@@ -3,9 +3,9 @@ import {createClient} from '@/lib/supabase/server';
 import {createAdminClient} from '@/lib/supabase/admin';
 import {hashBytes,DOCUMENT_BUCKET} from '@/server/letter-workflow';
 import {DOCUMENT_MIME} from '@/lib/letter-document';
-export async function GET(_request:Request,{params}:{params:{id:string;fileId:string}}){
+export async function GET(_request:Request,{params}:{params:Promise<{id:string;fileId:string}>}){
  try{
-  await requireUser();const {data:f,error}=await createClient().from('disposition_result_files').select('file_name,storage_path,file_hash,size_bytes,file_format').eq('id',params.fileId).eq('disposition_id',params.id).single();
+  await requireUser();const {data:f,error}=await (await createClient()).from('disposition_result_files').select('file_name,storage_path,file_hash,size_bytes,file_format').eq('id',(await params).fileId).eq('disposition_id',(await params).id).single();
   if(error||!f)throw new Error('Lampiran tidak dapat diakses.');
   const {data,error:downloadError}=await createAdminClient().storage.from(DOCUMENT_BUCKET).download(f.storage_path);if(downloadError||!data)throw new Error('Lampiran tidak tersedia.');
   const bytes=new Uint8Array(await data.arrayBuffer());if(bytes.length!==f.size_bytes||hashBytes(bytes)!==f.file_hash)throw new Error('Bukti berkas tidak sesuai.');

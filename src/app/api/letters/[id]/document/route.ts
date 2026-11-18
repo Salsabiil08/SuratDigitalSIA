@@ -8,18 +8,18 @@ import { readLetter, downloadVersion } from "@/server/letter-workflow";
 import { fillOfficialNumber, DOCUMENT_MIME } from "@/lib/letter-document";
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const user=await requireUser();
-    const letter = await readLetter(params.id);
+    const letter = await readLetter((await params).id);
     const {data:context,error:contextError}=await createAdminClient().rpc('get_internal_delivery_context',{p_actor:user.id,p_letter:letter.id});
     if(contextError||!context)throw new Error('Anda tidak berwenang melihat dokumen ini.');
     const blank = new URL(request.url).searchParams.get("blank") === "1";
     if(blank&&!context.fullVersionAccess)throw new Error('Salinan sebelum pengesahan tidak tersedia melalui hak penerima/pengiriman.');
     let sourceLetter = {...letter,current_version_id:context.documentVersionId};
     if (blank) {
-      const { data: version } = await createClient()
+      const { data: version } = await (await createClient())
         .from("letter_versions")
         .select("id")
         .eq("letter_id", letter.id)

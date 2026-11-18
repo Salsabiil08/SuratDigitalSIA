@@ -4,7 +4,7 @@ import { requireUser } from "@/server/auth";
 import { createClient } from "@/lib/supabase/server";
 export const readNotifications = cache(async () => {
   const user = await requireUser(),
-    db = createClient();
+    db = await createClient();
   const [{ data, error }, { count, error: ce }] = await Promise.all([
     db
       .from("notifications")

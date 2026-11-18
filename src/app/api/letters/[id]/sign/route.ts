@@ -21,14 +21,14 @@ import {
 import { revalidatePath } from "next/cache";
 export async function POST(
   request: Request,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ) {
   const uploaded: { bucket: string; path: string }[] = [];
   try {
     assertSameOrigin(request);
     const user = await requireUser();
     const form = await request.formData();
-    const letter = await readLetter(params.id);
+    const letter = await readLetter((await params).id);
     if (
       !user.isOfficialSigner ||
       !["SM", "DIR"].includes(user.position?.code || "")
@@ -36,7 +36,7 @@ export async function POST(
       throw new Error(
         "Akun tidak berwenang menandatangani atau menerapkan stempel.",
       );
-    const { data: s, error } = await createClient()
+    const { data: s, error } = await (await createClient())
       .from("signature_requests")
       .select("*")
       .eq("id", String(form.get("requestId")))

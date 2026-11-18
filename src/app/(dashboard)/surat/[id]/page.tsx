@@ -1,9 +1,9 @@
 import { getWorkflowLetter } from "@/server/actions/workflow";
 import { LetterDetailClient } from "./letter-detail-client";
-export default async function Page({ params }: { params: { id: string } }) {
+export default async function Page({ params }: { params: Promise<{ id: string }> }) {
   try {
-    const data = await getWorkflowLetter(params.id);
-    return <LetterDetailClient id={params.id} initialData={data} />;
+    const data = await getWorkflowLetter((await params).id);
+    return <LetterDetailClient id={(await params).id} initialData={data} />;
   } catch (e) {
     return (
       <p role="alert">

@@ -1,6 +1,6 @@
 # Rencana migrasi aditif dan pembagian PR — R.04 adaptasi NDO
 
-Status: **rencana bertahap; PR-07 diizinkan untuk implementasi dan pengujian lokal, bukan production**. PR-00 tidak membuat atau menjalankan migrasi. Basis: [baseline production](../baselines/production-2026-11-18.md) dan [keputusan target](../spec/08-alur-ndo-r04.md). Persetujuan saat ini berhenti pada PR-07; merge, database production dan deployment belum diizinkan.
+Status: **rencana bertahap; PR-08 FINAL diizinkan untuk integrasi/perbaikan dan pengujian terisolasi, bukan production**. PR-00 tidak membuat atau menjalankan migrasi. Basis: [baseline production](../baselines/production-2026-11-18.md) dan [keputusan target](../spec/08-alur-ndo-r04.md). Persetujuan saat ini berhenti pada PR-08; merge, database production dan deployment belum diizinkan.
 
 ## 1. Syarat sebelum menulis/menerapkan migrasi berikutnya
 
@@ -40,10 +40,10 @@ Setiap tabel baru memerlukan RLS, FK, indeks dan ACL sempit. RPC mutasi sensitif
 | PR-04 | Pengiriman + penerimaan transaksi | Modul distribusi/domain, API privat dokumen, RPC/RLS aditif | Final/TTD lengkap; kirim/terima idempoten; penerima pra-kirim dan aktor salah ditolak | Selesai, draft PR #5 belum di-merge |
 | PR-05 | Kotak Masuk/Keluar dan status alur | Rute baru, sidebar, dashboard, detail, notifikasi | Dokumen terkirim hanya ke penerima; dibaca ≠ diterima; final ≠ selesai alur | Selesai dalam Draft PR #6; CI lulus |
 | PR-06 | Balasan resmi berelasi | Editor/detail/relasi/workflow, FK/RLS aditif | Asal utuh, balasan surat/nomor baru, hak baca tidak bocor, draft bukan pemenuhan kewajiban | Selesai dalam Draft PR #7; CI lulus |
-| PR-07 | Integrasi disposisi dari Inbox dan hasil berelasi | Inbox/detail/disposisi dan perluasan RPC | RETURN → perbaikan → ACCEPT oleh pemberi; hasil belum sah ditolak; nomor/dokumen final lama utuh | **Implementasi PR-07 disetujui; lihat laporan PR-07** |
+| PR-07 | Integrasi disposisi dari Inbox dan hasil berelasi | Inbox/detail/disposisi dan perluasan RPC | RETURN → perbaikan → ACCEPT oleh pemberi; hasil belum sah ditolak; nomor/dokumen final lama utuh | Selesai dalam Draft PR #8; CI lulus |
 | PR-08 | UAT lintas akun, regresi dan panduan hasil | Tes review/distribusi/balasan/workflow/dokumen dan laporan | Seluruh actor dan jalur negatif, concurrency PostgreSQL, data lama terlindungi | Menunggu |
 
-Ketergantungan: PR-00 → PR-01 → PR-02 → PR-03 → PR-04 → PR-05 → PR-06/PR-07 → PR-08. PR-07 dimulai setelah persetujuan eksplisit pengguna; menyelesaikan PR-07 tidak mengizinkan PR-08. Setiap branch berikutnya juga harus menghormati larangan deploy otomatis sampai diizinkan.
+Ketergantungan: PR-00 → PR-01 → PR-02 → PR-03 → PR-04 → PR-05 → PR-06/PR-07 → PR-08. PR-08 dimulai setelah persetujuan eksplisit pengguna; menyelesaikan tes tidak mengizinkan production. Setiap branch berikutnya juga harus menghormati larangan deploy otomatis sampai diizinkan.
 
 ## 4. Perlindungan khusus 13 surat lama
 
