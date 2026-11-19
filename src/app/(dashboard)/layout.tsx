@@ -1,3 +1,4 @@
+import {QueueAutoRefresh} from "@/components/letters/queue-auto-refresh";
 import * as React from 'react';
 export const dynamic = 'force-dynamic';
 import { redirect } from 'next/navigation';
@@ -52,6 +53,7 @@ export default async function DashboardLayout({
       initialNotifications={notifications.data}
       initialNotificationError={notifications.error}
     >
+      <QueueAutoRefresh/>
       {navigation.error&&<p role="alert" className="text-sm text-red-700">{navigation.error}</p>}
       {children}
     </DashboardShell>

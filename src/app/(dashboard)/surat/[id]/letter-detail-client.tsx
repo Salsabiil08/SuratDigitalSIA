@@ -5,7 +5,7 @@ import { decideReviewAction } from "@/server/actions/reviews";
 import { sendInternalLetterAction,receiveInternalLetterAction } from "@/server/actions/delivery";
 import {useSearchParams} from "next/navigation";
 import { displayLabel } from "@/domain/display-labels";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import {
   getWorkflowLetter,
@@ -21,6 +21,8 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { DocumentDownloads } from "@/components/letters/document-downloads";
 import { DocumentPreview } from "@/components/letters/document-preview";
+import {startLiveUpdates} from "@/domain/live-updates";
+import {letterNextStep} from "@/domain/letter-next-step";
 import { RefreshStatusButton } from "@/components/letters/refresh-status-button";
 import { SignPanel } from "@/components/letters/sign-panel";
 export function LetterDetailClient({
@@ -47,8 +49,7 @@ export function LetterDetailClient({
   useEffect(() => { setPreviewed(false); }, [data.letter.current_version_id,data.letter.revision]);
   const reload = useCallback(async () => {
     const result = await getWorkflowLetter(id);
-    setData(result);
-    setConfirmSelf(false);
+    setData(previous=>JSON.stringify(previous)===JSON.stringify(result)?previous:result);
   }, [id]);
   async function act(
     fn: () => Promise<{ success: boolean; error?: string }>,
@@ -68,6 +69,16 @@ export function LetterDetailClient({
       setBusy(false);
     }
   }
+  const busyRef=useRef(busy);busyRef.current=busy;
+  const [syncError,setSyncError]=useState('');
+  useEffect(()=>{
+    let active=true;
+    const waiting=['IN_REVIEW','READY_TO_ISSUE','NUMBERED'].includes(data.letter.status)||data.letter.review_status==='WAITING';
+    const stop=startLiveUpdates({poll:waiting,blocked:()=>busyRef.current,onError:()=>setSyncError('Pembaruan otomatis tertunda. Sambungan akan dicoba kembali.'),refresh:async()=>{
+      const result=await getWorkflowLetter(id);if(active){setData(previous=>JSON.stringify(previous)===JSON.stringify(result)?previous:result);setSyncError('');}
+    }},{window,document,navigator});
+    return ()=>{active=false;stop();};
+  },[id,data.letter.status,data.letter.review_status]);
   const l = data.letter;
   const v = data.versions.find((v) => v.id === l.current_version_id);
   const editable =
@@ -80,6 +91,7 @@ export function LetterDetailClient({
   const signing = data.signatures.find(
     (s) => s.signer_id === data.userId && s.status === "PENDING",
   );
+  const next=letterNextStep(l,{creator:data.isCreator,review:!!activeReview,approval:!!activeApproval,signing:!!signing,sent:!!data.delivery?.dispatch,recipient:!!data.delivery?.recipientRole,received:!!data.delivery?.recipients.find((r:any)=>r.profile_id===data.userId)?.received_at});
   const documentUrl = `/api/letters/${id}/document?areas=1&revision=${l.revision}`;
   return (
     <div className="max-w-5xl space-y-5">
@@ -87,6 +99,13 @@ export function LetterDetailClient({
         Kembali ke {origin==='kotak-masuk'?'Kotak Masuk':origin==='kotak-keluar'?'Kotak Keluar':'Surat Saya'}
       </Link>
       <PageHeader title={l.subject} actions={<RefreshStatusButton refresh={reload} disabled={busy}/>}/>
+      <Card className="p-5 border-l-4 border-brand-red space-y-2">
+        <p className="text-xs font-semibold text-neutral-500">LANGKAH BERIKUTNYA</p>
+        <h2 className="font-bold text-lg">{next.title}</h2><p className="text-sm">{next.description}</p>
+        {next.target&&<a href={`#${next.target}`} className="inline-block text-brand-red font-semibold underline text-sm">{next.title} ↓</a>}
+        <p className="text-xs text-neutral-500">Status diperbarui otomatis saat halaman aktif.</p>
+        {syncError&&<p role="status" className="text-xs text-amber-800">{syncError}</p>}
+      </Card>
       <OfficialReplyPanel letterId={id} context={data.replyContext}/>
       <DispositionLetterPanel letterId={id} context={data.dispositionContext}/>
       {error && (
@@ -163,7 +182,7 @@ export function LetterDetailClient({
           </p>
         )}
       </Card>
-      {l.type.category==='INTERNAL' && <Card className="p-5 space-y-3">
+      {l.type.category==='INTERNAL' && <Card id="delivery" className="p-5 space-y-3 scroll-mt-24">
         <h2 className="font-bold">Pengiriman dan Penerimaan</h2>
         <p className="text-sm">Dokumen: {l.finalized_at?'Final dan terkunci':'Belum final'} · Pengiriman: {data.delivery?.dispatch?'Terkirim':'Belum dikirim'}</p>
         {data.delivery?.dispatch && <>
@@ -178,7 +197,7 @@ export function LetterDetailClient({
           <Button disabled={!sendConfirmed} isLoading={busy} onClick={()=>act(()=>sendInternalLetterAction(id,ccIds),'Surat resmi telah dikirim. Penerimaan menunggu konfirmasi penerima.')}>Kirim Surat Internal</Button>
         </>}
       </Card>}
-      <Card className="p-5 space-y-4">
+      <Card id="preview" className="p-5 space-y-4 scroll-mt-24">
         <h2 className="font-bold">Pratinjau Dokumen</h2>
         {v ? (
           <>
@@ -208,26 +227,16 @@ export function LetterDetailClient({
             <Link href={`/surat/${id}/edit`}>
               <Button variant="secondary">Edit / Koreksi Draft</Button>
             </Link>
+            {creatorApprovalRequired && ["PASSED","NOT_REQUIRED"].includes(l.review_status) && <label className="text-sm flex items-start gap-2"><input type="checkbox" checked={confirmSelf} onChange={e=>setConfirmSelf(e.target.checked)}/>Saya mengajukan dan menyetujui versi ini sesuai kewenangan saya. Persetujuan pejabat lain, nomor resmi, dan tanda tangan tetap melalui tahapnya.</label>}
             <Button
-              variant="secondary"
               disabled={!previewed}
               isLoading={busy}
               onClick={() =>
                 act(
-                  () => reviewLetterAction(id, "PREVIEW", l.revision),
-                  "Pratinjau versi terkini tercatat. Anda dapat mengajukan persetujuan.",
-                )
-              }
-            >
-              Konfirmasi Pratinjau
-            </Button>
-            {creatorApprovalRequired && ["PASSED","NOT_REQUIRED"].includes(l.review_status) && <label className="text-sm flex items-start gap-2"><input type="checkbox" checked={confirmSelf} onChange={e=>setConfirmSelf(e.target.checked)}/>Saya mengajukan dan menyetujui versi ini sesuai kewenangan saya. Persetujuan pejabat lain, nomor resmi, dan tanda tangan tetap melalui tahapnya.</label>}
-            <Button
-              disabled={l.previewed_revision !== l.revision}
-              isLoading={busy}
-              onClick={() =>
-                act(
-                  () => reviewLetterAction(id, "SUBMIT", l.revision, undefined, confirmSelf),
+                  async () => {
+                    if(l.previewed_revision!==l.revision){const checked=await reviewLetterAction(id,"PREVIEW",l.revision);if(!checked.success)return checked;}
+                    return reviewLetterAction(id,"SUBMIT",l.revision,undefined,confirmSelf);
+                  },
                   "Surat berhasil diajukan sesuai alur kewenangan.",
                 )
               }
@@ -237,7 +246,7 @@ export function LetterDetailClient({
           </>
         )}
         {data.isCreator && l.status === "READY_TO_ISSUE" && (
-          <Button
+          <Button id="number"
             isLoading={busy}
             onClick={() =>
               act(
@@ -309,20 +318,20 @@ export function LetterDetailClient({
         </Card>
       )}
       {signing && (
-        <Card className="p-5">
+        <Card id="signing" className="p-5 scroll-mt-24">
           <SignPanel
             key={`${l.revision}-${signing.id}`}
             letter={l}
             request={signing}
             onSaved={() => {
               setMsg("Tanda tangan dan versi hasil tersimpan di Supabase.");
-              void reload();
+              void reload().catch(()=>setError("Status belum dapat diperbarui. Coba lagi."));
             }}
           />
         </Card>
       )}
       {data.isCreator && l.status === "NUMBERED" && !l.finalized_at && (
-        <Card className="p-5 space-y-4">
+        <Card id="finalize" className="p-5 space-y-4 scroll-mt-24">
           <h2 className="font-bold">Finalisasi</h2>
           <p className="text-sm">
             Periksa dokumen resmi sebelum mengunci. Dokumen final tidak dapat
@@ -361,7 +370,7 @@ export function LetterDetailClient({
         </Card>
       )}
       {(editable || l.status === "NUMBERED") && (
-        <Card className="p-5 space-y-3">
+        <details><summary className="cursor-pointer text-sm text-neutral-600">Opsi pembatalan surat</summary><Card className="p-5 space-y-3">
           <h2 className="font-bold">Pembatalan Surat</h2>
           <p className="text-sm">
             Nomor resmi tetap disimpan dan tidak dipakai ulang. Surat bernomor
@@ -433,7 +442,7 @@ export function LetterDetailClient({
                 )}
             </div>
           ))}
-        </Card>
+        </Card></details>
       )}
       <Card className="p-5 space-y-3">
         <h2 className="font-bold">Riwayat Persetujuan dan TTD</h2>

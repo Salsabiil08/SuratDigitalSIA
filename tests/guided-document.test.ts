@@ -1,0 +1,19 @@
+import {it,expect} from 'vitest';
+import {mkdir,writeFile} from 'node:fs/promises';
+import JSZip from 'jszip';
+import {generateLetterDocx} from '../src/lib/docx-generator';
+import {applyDocumentImages} from '../src/lib/letter-document';
+import {CANONICAL_HEADER_SHA256} from '../src/lib/letterhead-preview';
+import {createHash} from 'node:crypto';
+const png=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScLbtAAAAABJRU5ErkJggg==','base64');
+it('keeps original header and positions stamp as an overlapping layer only within the signature paragraph',async()=>{
+ const bytes=await generateLetterDocx({officialNumber:'UJI',contentText:'Uji pratinjau lokal',signatureCount:1,signaturePlaceholders:true});
+ const zip=await JSZip.loadAsync(bytes);const xml=await zip.file('word/document.xml')!.async('string');
+ const p=(xml.match(/<w:p[ >][\s\S]*?<\/w:p>/g)||[]).find(p=>p.includes('{{STAMP}}'))!;
+ expect(p).toContain('{{SIGNATURE_1}}');
+ expect(createHash('sha256').update(await zip.file('word/header1.xml')!.async('nodebuffer')).digest('hex')).toBe(CANONICAL_HEADER_SHA256);
+ const signed=await applyDocumentImages(bytes,'DOCX',[{marker:'{{SIGNATURE_1}}',bytes:png},{marker:'{{STAMP}}',bytes:png}]);
+ const result=await (await JSZip.loadAsync(signed)).file('word/document.xml')!.async('string');
+ expect(result).toContain('<wp:anchor');expect(result).toContain('behindDoc="0"');expect(result).not.toContain('{{STAMP}}');
+ await mkdir('test-results/editor-harness',{recursive:true});await writeFile('test-results/editor-harness/guided-signed.docx',signed);
+});

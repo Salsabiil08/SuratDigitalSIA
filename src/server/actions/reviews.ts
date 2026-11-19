@@ -1,4 +1,6 @@
 'use server';
+import {assertReviewerHierarchy} from "@/server/reviewer-hierarchy";
+import {readLetter} from "@/server/letter-workflow";
 import { requireUser } from '@/server/auth';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
@@ -17,6 +19,10 @@ export async function getPendingReviewsAction() {
 export async function decideReviewAction(stepId: string, versionId: string, revision: number, action: 'COMMENT' | 'PASS' | 'REQUEST_REVISION', note?: string) {
   try {
     const user = await requireUser();
+    const {data:step,error:stepError}=await (await createClient()).from('review_steps').select('letter_id').eq('id',stepId).eq('reviewer_id',user.id).single();
+    if(stepError||!step)throw new Error('Anda bukan pemeriksa aktif.');
+    const letter=await readLetter(step.letter_id);
+    await assertReviewerHierarchy(letter.creator_id,user.id);
     const { error } = await createAdminClient().rpc('decide_letter_review', {
       p_actor: user.id, p_step: stepId, p_version: versionId, p_revision: revision,
       p_action: action, p_note: note || null,

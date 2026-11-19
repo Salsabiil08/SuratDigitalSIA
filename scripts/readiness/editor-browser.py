@@ -19,6 +19,7 @@ async def main():
     data=next(part for part in message.iter_parts() if part.get_param('name',header='content-disposition')=='data')
     saved.append(json.loads(data.get_payload(decode=True)));await route.fulfill(status=200,json={'id':'synthetic-local-only'})
    await page.route('**/api/letters/draft',draft)
+   await page.route('**/guided-document',lambda route:route.fulfill(path='test-results/editor-harness/guided-signed.docx'))
    await page.goto('http://127.0.0.1:3121')
    await page.get_by_label('Kategori Surat',exact=False).select_option('PEMBERITAHUAN')
    await page.get_by_label('Penerima Internal',exact=False).select_option('receiver')
@@ -48,10 +49,17 @@ async def main():
    await button.click();await page.get_by_role('alert').get_by_text('Jaringan terputus. Coba lagi.',exact=True).wait_for();assert await button.is_enabled()
    await button.click();await page.get_by_role('status').get_by_text('Status surat sudah diperbarui.',exact=True).wait_for()
    assert await page.get_by_label('Hasil pembaruan').inner_text()=='3' and len(refresh_calls)==3
+   frame=page.frame_locator('iframe[title="Pratinjau dokumen surat"]')
+   await page.locator('iframe[title="Pratinjau dokumen surat"]').scroll_into_view_if_needed()
+   logo=frame.get_by_alt_text('Kop resmi PT Semen Indonesia Aceh');await logo.wait_for()
+   assert await logo.evaluate('(img)=>img.complete&&img.naturalWidth>0')
+   overlapping=await frame.locator('div[style]').evaluate_all("els=>els.filter(e=>e.style.width==='0px'&&e.style.height==='0px'&&e.style.zIndex==='2').some(e=>{const stamp=e.querySelector('img');const signature=e.closest('p')?.querySelectorAll('img');if(!stamp||!signature||signature.length<2)return false;const a=stamp.getBoundingClientRect(),b=signature[1].getBoundingClientRect();return a.left<b.right&&a.right>b.left&&a.top<b.bottom&&a.bottom>b.top;})")
+   assert overlapping,'Stamp is not layered in signature paragraph'
+   await page.screenshot(path=str(out/f'guided-preview-{name}.png'),full_page=True)
    assert not errors,errors
    assert await page.evaluate('document.documentElement.scrollWidth<=innerWidth'),'Overflow horizontal'
    await page.screenshot(path=str(out/f'editor-{name}.png'),full_page=True)
-   results.append({'viewport':name,'typing_cursor_format_draft':'PASS','refresh_success_failure_retry':'PASS','backend':'mock-local-only','js_errors':errors})
+   results.append({'viewport':name,'typing_cursor_format_draft':'PASS','refresh_success_failure_retry':'PASS','canonical_letterhead_stamp_layer':'PASS','backend':'mock-local-only','js_errors':errors})
    await page.close()
   await browser.close();(out/'editor-result.json').write_text(json.dumps(results,indent=2));print(json.dumps(results))
 

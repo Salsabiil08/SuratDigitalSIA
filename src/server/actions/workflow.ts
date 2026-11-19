@@ -1,4 +1,5 @@
 "use server";
+import {assertReviewerHierarchy} from "@/server/reviewer-hierarchy";
 import {readDispositionLetterContext} from "@/server/disposition-integration";
 import {readReplyContext} from "@/server/official-replies";
 import { requireUser } from "@/server/auth";
@@ -101,6 +102,7 @@ export async function reviewLetterAction(
     const user = await requireUser();
     const l = await readLetter(id);
     if (action === "SUBMIT") {
+      if(l.reviewer_id)await assertReviewerHierarchy(l.creator_id,l.reviewer_id);
       const doc = await downloadVersion(l, false);
       await inspectDocument(
         doc.bytes,

@@ -1,11 +1,13 @@
 import { beforeEach, expect, it, vi } from 'vitest';
-const m=vi.hoisted(()=>({user:vi.fn(),admin:vi.fn(),client:vi.fn(),rpc:vi.fn(),revalidate:vi.fn()}));
+const m=vi.hoisted(()=>({user:vi.fn(),admin:vi.fn(),client:vi.fn(),rpc:vi.fn(),revalidate:vi.fn(),hierarchy:vi.fn(),read:vi.fn()}));
 vi.mock('@/server/auth',()=>({requireUser:m.user}));
 vi.mock('@/lib/supabase/admin',()=>({createAdminClient:m.admin}));
 vi.mock('@/lib/supabase/server',()=>({createClient:m.client}));
+vi.mock('@/server/reviewer-hierarchy',()=>({assertReviewerHierarchy:m.hierarchy}));
+vi.mock('@/server/letter-workflow',()=>({readLetter:m.read}));
 vi.mock('next/cache',()=>({revalidatePath:m.revalidate}));
 import { decideReviewAction, getPendingReviewsAction } from '../src/server/actions/reviews';
-beforeEach(()=>{vi.resetAllMocks();m.user.mockResolvedValue({id:'reviewer-from-session'});m.admin.mockReturnValue({rpc:m.rpc});m.rpc.mockResolvedValue({error:null});});
+beforeEach(()=>{vi.resetAllMocks();m.user.mockResolvedValue({id:'reviewer-from-session'});m.admin.mockReturnValue({rpc:m.rpc});m.rpc.mockResolvedValue({error:null});m.read.mockResolvedValue({creator_id:'author'});m.hierarchy.mockResolvedValue(undefined);const q:any={select:vi.fn().mockReturnThis(),eq:vi.fn().mockReturnThis(),single:vi.fn().mockResolvedValue({data:{letter_id:'letter'},error:null})};m.client.mockReturnValue({from:()=>q});});
 it('aktor keputusan berasal sesi, versi dan revisi diteruskan untuk validasi database',async()=>{
  expect((await decideReviewAction('step','version',3,'PASS')).success).toBe(true);
  expect(m.rpc).toHaveBeenCalledWith('decide_letter_review',expect.objectContaining({p_actor:'reviewer-from-session',p_step:'step',p_version:'version',p_revision:3,p_action:'PASS'}));
@@ -27,3 +29,5 @@ it('inbox mengecualikan penugasan versi lama, akses dicabut dan milik reviewer l
  ]})};m.client.mockReturnValue({from:()=>q});
  expect(await getPendingReviewsAction()).toEqual([{id:'valid',letterId:'l',subject:'Surat'}]);expect(q.eq).toHaveBeenCalledWith('reviewer_id','reviewer-from-session');
 });
+
+it('refuse lower reviewer before invoking privileged decision RPC',async()=>{m.hierarchy.mockRejectedValue(new Error('Pemeriksa harus lebih tinggi'));expect((await decideReviewAction('step','version',3,'PASS')).success).toBe(false);expect(m.rpc).not.toHaveBeenCalled();});

@@ -12,7 +12,8 @@
       "feat/pr-07-disposition-integration": false,
       "feat/pr-08-production-readiness": false,
       "fix/pr08-beta-editor": false,
-      "fix/pr08-role-menus": false
+      "fix/pr08-role-menus": false,
+      "fix/pr08-guided-flow": false
     }
   }
 }

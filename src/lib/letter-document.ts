@@ -58,8 +58,12 @@ export async function inspectDocument(
         );
   return [];
 }
-function drawImageXml(rel: string, id: number, width = 140, height = 55) {
-  return `<w:drawing><wp:inline xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing" distT="0" distB="0" distL="0" distR="0"><wp:extent cx="${width * 9525}" cy="${height * 9525}"/><wp:docPr id="${id}" name="Pengesahan ${id}"/><a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:nvPicPr><pic:cNvPr id="0" name="Pengesahan"/><pic:cNvPicPr/></pic:nvPicPr><pic:blipFill><a:blip xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" r:embed="${rel}"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="${width * 9525}" cy="${height * 9525}"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing>`;
+function drawImageXml(rel: string, id: number, width = 140, height = 55, stamp=false) {
+  const xml = `<w:drawing><wp:inline xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing" distT="0" distB="0" distL="0" distR="0"><wp:extent cx="${Math.round(width * 9525)}" cy="${Math.round(height * 9525)}"/><wp:docPr id="${id}" name="Pengesahan ${id}"/><a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:nvPicPr><pic:cNvPr id="0" name="Pengesahan"/><pic:cNvPicPr/></pic:nvPicPr><pic:blipFill><a:blip xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" r:embed="${rel}"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="${Math.round(width * 9525)}" cy="${Math.round(height * 9525)}"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing>`;
+  if(!stamp)return xml;
+  return xml.replace('<wp:inline ', '<wp:anchor simplePos="0" relativeHeight="251658240" behindDoc="0" locked="0" layoutInCell="1" allowOverlap="1" ')
+    .replace('<wp:extent', '<wp:simplePos x="0" y="0"/><wp:positionH relativeFrom="character"><wp:posOffset>0</wp:posOffset></wp:positionH><wp:positionV relativeFrom="line"><wp:posOffset>0</wp:posOffset></wp:positionV><wp:extent')
+    .replace('<wp:docPr', '<wp:wrapNone/><wp:docPr').replace('</wp:inline>','</wp:anchor>');
 }
 export async function applyDocumentImages(
   bytes: Uint8Array,
@@ -115,6 +119,12 @@ export async function applyDocumentImages(
       throw new Error(
         `Posisi ${image.marker} belum dikenali atau lebih dari satu. Perbaiki draft terlebih dahulu.`,
       );
+    const pngWidth=Buffer.from(image.bytes).readUInt32BE(16),pngHeight=Buffer.from(image.bytes).readUInt32BE(20);
+    const isStamp=image.marker==='{{STAMP}}';
+    // Imported documents retain their explicit marker position; overlay is only for a shared template paragraph.
+    const paragraph=(xml.match(/<w:p[ >][\s\S]*?<\/w:p>/g)||[]).find(p=>p.includes(image.marker))||'';
+    const overlay=isStamp&&/<wp:docPr[^>]*name="Pengesahan [^"]+"/.test(paragraph);
+    const scale=Math.min((isStamp?85:140)/pngWidth,55/pngHeight);
     const key = `siadocs${createHash("sha256").update(image.bytes).update(image.marker).digest("hex").slice(0, 24)}`;
     const media = `${key}.png`;
     const re = new RegExp(
@@ -131,6 +141,7 @@ export async function applyDocumentImages(
             createHash("sha256").update(image.marker).digest("hex").slice(0, 6),
             16,
           ),
+        pngWidth*scale,pngHeight*scale,overlay,
       ),
     );
     rels = rels.replace(

@@ -356,9 +356,9 @@ export async function generateLetterDocx(data: LetterDocxData): Promise<Buffer> 
     let slot = 0;
     finalBody = finalBody.replace(/(<w:p><w:pPr><w:jc w:val="center"\/><w:spacing w:after="720"\/>[\s\S]*?<\/w:p>)/g, (block) => {
       slot++;
-      return block.replace('w:after="720"', 'w:after="80"') + `<w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:t>{{SIGNATURE_${slot}}}</w:t></w:r></w:p>`;
+      return block.replace('w:after="720"', 'w:after="80"') + `<w:p><w:pPr><w:jc w:val="center"/></w:pPr>${slot === 1 ? '<w:r><w:t>{{STAMP}}</w:t></w:r>' : ''}<w:r><w:t>{{SIGNATURE_${slot}}}</w:t></w:r></w:p>`;
     });
-    finalBody = finalBody.replace(sectPrXml, `<w:p><w:r><w:t>{{STAMP}}</w:t></w:r></w:p>${sectPrXml}`);
+
   }
   const newDocXml = originalDocXml.replace(/<w:body>[\s\S]*?<\/w:body>/i, finalBody);
   zip.file('word/document.xml', newDocXml);

@@ -46,6 +46,7 @@ jobs:
           trap 'kill "$task_server_pid" 2>/dev/null || true' EXIT
           python scripts/readiness/browser-public.py
       - run: |
+          ./node_modules/.bin/vitest run tests/guided-document.test.ts
           ./node_modules/.bin/vite --config tests/browser/editor/vite.config.ts > test-results/editor-server.log 2>&1 &
           editor_server_pid=$!
           trap 'kill "$editor_server_pid" 2>/dev/null || true' EXIT

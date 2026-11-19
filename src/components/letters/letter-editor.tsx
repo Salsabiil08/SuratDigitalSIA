@@ -13,6 +13,7 @@ import { PageHeader } from "@/components/ui/page-header";
 import { Card } from "@/components/ui/card";
 import { Field, Input, Select, Textarea } from "@/components/ui/field";
 import { Button } from "@/components/ui/button";
+import { higherReviewer } from "@/domain/reviewer-hierarchy";
 import { terbilangRupiah } from "@/domain/terbilang";
 
 function draftFromData(
@@ -157,7 +158,7 @@ export function LetterEditor({
   const count = internal ? (formal ? 1 : 0) : isBill ? 2 : 1;
   const reviewRule = options.reviewRules.find(r => r.category_code === input.categoryCode && r.typeCode === input.letterTypeCode)
     || options.reviewRules.find(r => r.category_code === input.categoryCode && !r.typeCode);
-  const reviewers = options.people.filter(p => p.id !== options.user.id && options.reviewerGrants.some(g => g.reviewerId === p.id && (!g.typeCode || g.typeCode === input.letterTypeCode)));
+  const reviewers = options.people.filter(p => p.id !== options.user.id && higherReviewer(options.user.position?.level || 0,p.level) && options.reviewerGrants.some(g => g.reviewerId === p.id && (!g.typeCode || g.typeCode === input.letterTypeCode)));
   const signers = options?.people.filter((p) => p.signer) || [];
   function updateSigner(index: number, value: string) {
     const ids = [...input.signerIds];
@@ -259,7 +260,7 @@ export function LetterEditor({
             </Select>
           </Field>
           <Field label={`Pemeriksa Surat${reviewRule?.requires_review ? ' (wajib sebelum pengajuan)' : ' (opsional)'}`} htmlFor="letter-reviewer"
-            hint="Pemeriksa hanya memberi catatan atau hasil pemeriksaan. Anda tetap yang mengedit isi surat. Aturan awal perlu validasi perusahaan.">
+            hint="Pilih pejabat di atas jabatan Anda yang memiliki mandat pemeriksaan. Isi tetap diedit oleh pembuat surat.">
             <Select id="letter-reviewer" value={input.reviewerId || ""} onChange={e => change('reviewerId', e.target.value)}>
               <option value="">{reviewRule?.requires_review ? 'Pilih pemeriksa berwenang' : 'Tanpa pemeriksa'}</option>
               {reviewers.map(p => <option key={p.id} value={p.id}>{p.name} — {p.title}</option>)}

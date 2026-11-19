@@ -1,3 +1,4 @@
+import {assertReviewerHierarchy} from "@/server/reviewer-hierarchy";
 import {sanitizeLetterHtml,plainTextHtml,letterText} from '@/domain/rich-text';
 import { randomUUID, createHash } from "node:crypto";
 import { createClient } from "@/lib/supabase/server";
@@ -188,6 +189,7 @@ export async function saveDraft(
   if (old && input.source !== old.source)
     throw new Error("Sumber dokumen tidak dapat diganti.");
   const { people, banks, categories, reviewerGrants } = await peopleOptions();
+  if(input.reviewerId)await assertReviewerHierarchy(user.id,input.reviewerId);
   if (!categories.some(c => c.code === input.categoryCode)) throw new Error('Pilih kategori surat yang aktif.');
   if (input.reviewerId && (input.reviewerId === user.id || !people.some(p => p.id === input.reviewerId) || !reviewerGrants.some(g => g.reviewerId === input.reviewerId && (!g.typeCode || g.typeCode === input.letterTypeCode))))
     throw new Error('Pilih pemeriksa berbeda yang berwenang untuk jenis dan unit surat.');
