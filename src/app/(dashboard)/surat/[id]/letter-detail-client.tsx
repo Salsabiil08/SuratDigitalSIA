@@ -236,7 +236,7 @@ export function LetterDetailClient({
                 )
               }
             >
-              {l.review_status === "PASSED" ? "Ajukan Persetujuan" : "Ajukan Surat"}
+              {l.review_status === "PASSED" ? ((l.mandatory_approver_ids||l.signer_ids||[]).length+(l.additional_approver_ids||[]).length===0?"Lanjutkan ke Penomoran":"Ajukan Persetujuan") : "Ajukan Surat"}
             </Button>
           </>
         )}

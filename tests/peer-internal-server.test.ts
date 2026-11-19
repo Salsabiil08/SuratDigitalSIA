@@ -1,0 +1,10 @@
+import {it,expect,vi,beforeEach} from 'vitest';
+const m=vi.hoisted(()=>({rows:[] as any[],error:null as any}));
+vi.mock('@/lib/supabase/admin',()=>({createAdminClient:()=>({from:()=>{const q:any={};for(const name of ['select','in','eq'])q[name]=()=>q;q.order=async()=>({data:m.rows,error:m.error});return q;}})}));
+import {assertPeerLetterPlan} from '../src/server/peer-internal';
+const row=(id:string,level:number)=>({profile_id:id,start_date:'2020-01-01',end_date:null,position:{level,is_active:true},unit:{is_active:true}});
+const letter={type:{code:'IN'},creator_id:'author',recipient_user_id:'receiver',required_signature_count:0,signer_ids:[],mandatory_approver_ids:[],additional_approver_ids:[]};
+beforeEach(()=>{m.rows=[row('author',1),row('receiver',1)];m.error=null;});
+it.each([1,2])('uses active assignment level %s and rejects forged approvers before submit',async level=>{m.rows=[row('author',level),row('receiver',level)];await expect(assertPeerLetterPlan(letter)).resolves.toBeUndefined();await expect(assertPeerLetterPlan({...letter,additional_approver_ids:['x']})).rejects.toThrow(/sesama jabatan/);});
+it('does not remove approval requirements from external, billing or non-peer formal letters',async()=>{m.rows[1]=row('receiver',2);await expect(assertPeerLetterPlan({...letter,required_signature_count:1,signer_ids:['signer']})).resolves.toBeUndefined();for(const code of ['KRE','Tag'])await expect(assertPeerLetterPlan({...letter,type:{code},required_signature_count:2})).resolves.toBeUndefined();});
+it('fails closed if assignments cannot be queried',async()=>{m.error={message:'unavailable'};await expect(assertPeerLetterPlan(letter)).rejects.toThrow(/belum dapat/);});

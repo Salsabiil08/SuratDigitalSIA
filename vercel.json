@@ -15,7 +15,8 @@
       "fix/pr08-role-menus": false,
       "fix/pr08-guided-flow": false,
       "fix/pr08-download-options": false,
-      "fix/pr08-action-popups": false
+      "fix/pr08-action-popups": false,
+      "fix/pr08-peer-internal": false
     }
   }
 }

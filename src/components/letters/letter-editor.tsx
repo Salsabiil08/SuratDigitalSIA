@@ -14,6 +14,7 @@ import { PageHeader } from "@/components/ui/page-header";
 import { Card } from "@/components/ui/card";
 import { Field, Input, Select, Textarea } from "@/components/ui/field";
 import { Button } from "@/components/ui/button";
+import {peerInternal} from "@/domain/peer-internal";
 import { higherReviewer } from "@/domain/reviewer-hierarchy";
 import { terbilangRupiah } from "@/domain/terbilang";
 
@@ -156,7 +157,9 @@ export function LetterEditor({
   }
   const internal = input.letterTypeCode === "IN";
   const isBill = input.letterTypeCode === "Tag";
-  const count = internal ? (formal ? 1 : 0) : isBill ? 2 : 1;
+  const recipient=options.people.find(p=>p.id===input.recipientUserId);
+  const peer=peerInternal(input.letterTypeCode,options.user.position?.level||0,recipient?.level||0);
+  const count = internal ? (peer ? 0 : formal ? 1 : 0) : isBill ? 2 : 1;
   const reviewRule = options.reviewRules.find(r => r.category_code === input.categoryCode && r.typeCode === input.letterTypeCode)
     || options.reviewRules.find(r => r.category_code === input.categoryCode && !r.typeCode);
   const reviewers = options.people.filter(p => p.id !== options.user.id && higherReviewer(options.user.position?.level || 0,p.level) && options.reviewerGrants.some(g => g.reviewerId === p.id && (!g.typeCode || g.typeCode === input.letterTypeCode)));
@@ -178,6 +181,8 @@ export function LetterEditor({
         ...input,
         signerIds: ids,
         mandatoryApproverIds: input.mandatoryApproverIds?.slice(0,count) || ids,
+        additionalApproverIds: peer ? [] : input.additionalApproverIds,
+        stampArea: peer ? undefined : input.stampArea,
         areas: currentFormat === "PDF" ? input.areas.slice(0, count) : [],
       };
       if(dispositionSeed&&!input.id){const keyName=`siadocs-disposition-draft-${dispositionSeed.dispositionId}`;let key=sessionStorage.getItem(keyName);if(!key){key=crypto.randomUUID();sessionStorage.setItem(keyName,key);}data.dispositionDraftKey=key;}
@@ -588,6 +593,7 @@ export function LetterEditor({
           </Card>
         )}
         <Card className="p-5 space-y-4">
+          {peer?<p className="text-sm font-semibold text-emerald-800">Surat internal sesama jabatan: tanpa persetujuan dan tanpa TTD. Nomor resmi dan pengiriman tetap dicatat.</p>:<>
           <h2 className="font-bold">Persetujuan Surat</h2>
           <p className="text-sm">Penyetuju memutuskan kelayakan surat. Penandatangan dipilih terpisah di bawah. Orang yang sama hanya mempunyai satu langkah persetujuan per pengajuan.</p>
           {Array.from({length:count},(_,index)=><Field key={`approval-${index}`} label={isBill?(index===0?'Penyetuju SM Finance':'Penyetuju Direktur'):'Penyetuju Formal (SM/Direktur)'} required>
@@ -599,9 +605,10 @@ export function LetterEditor({
             {additionalApprovers.map(p=><label key={p.id} className="flex gap-2 text-sm"><input type="checkbox" checked={input.additionalApproverIds?.includes(p.id)||false} onChange={e=>change('additionalApproverIds',e.target.checked?[...(input.additionalApproverIds||[]),p.id]:(input.additionalApproverIds||[]).filter(id=>id!==p.id))}/>{p.name} — {p.title}</label>)}
             {additionalApprovers.length===0&&<p className="text-xs text-neutral-500">Belum ada penugasan penyetuju tambahan. Super Admin tidak otomatis berwenang.</p>}
           </Field>
-          <h2 className="font-bold">Tanda Tangan Dokumen</h2>
+          </>}
+          {!peer&&<h2 className="font-bold">Tanda Tangan Dokumen</h2>}
 
-          {internal && (
+          {internal && !peer && (
             <label className="flex items-center gap-2 text-sm">
               <input
                 type="checkbox"

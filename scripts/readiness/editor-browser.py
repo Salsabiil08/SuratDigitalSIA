@@ -29,6 +29,9 @@ async def main():
    await page.goto('http://127.0.0.1:3121')
    await page.get_by_label('Kategori Surat',exact=False).select_option('PEMBERITAHUAN')
    await page.get_by_label('Penerima Internal',exact=False).select_option('receiver')
+   assert await page.get_by_text('Surat internal sesama jabatan: tanpa persetujuan dan tanpa TTD.',exact=False).is_visible()
+   assert await page.get_by_text('Penyetuju Tambahan (opsional)',exact=False).count()==0
+   assert await page.get_by_text('Perlu pengesahan formal (1 TTD).',exact=False).count()==0
    await page.get_by_label('Perihal',exact=False).fill('Uji editor lokal')
    editor=page.get_by_role('textbox',name='Isi surat',exact=True)
    await editor.click();await page.keyboard.type('Paragraf pertama.',delay=12);await page.keyboard.press('Enter');await page.keyboard.type('Paragraf kedua.',delay=12)
@@ -39,6 +42,7 @@ async def main():
    await page.get_by_role('button',name='Simpan Draft',exact=True).click()
    await page.wait_for_function('document.querySelector("button[type=submit]").disabled === false')
    assert len(saved)==1,await page.locator('body').inner_text()
+   assert saved[0]['signerIds']==[] and saved[0]['mandatoryApproverIds']==[] and saved[0]['additionalApproverIds']==[]
    content=saved[0]['content'];assert 'TEBAL' in content and ('<b>' in content or '<strong>' in content or 'font-weight' in content),content
    assert 'right' in content and saved[0]['contentFormat']=='HTML',content
    refresh_calls=[];gate=asyncio.Event()

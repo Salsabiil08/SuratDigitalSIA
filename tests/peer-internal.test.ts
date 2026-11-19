@@ -1,0 +1,5 @@
+import {it,expect} from 'vitest';
+import {peerInternal,assertPeerInternalAuthorization} from '../src/domain/peer-internal';
+it.each([1,2,3,4])('internal peers at level %s need no approval/signature',level=>{expect(peerInternal('IN',level,level)).toBe(true);expect(()=>assertPeerInternalAuthorization('IN',level,level,{})).not.toThrow();});
+it.each([{signerIds:['signer']},{mandatoryApproverIds:['approver']},{additionalApproverIds:['extra']},{signatureCount:1}])('rejects forged peer authorization plan %j',plan=>{expect(()=>assertPeerInternalAuthorization('IN',1,1,plan)).toThrow(/tidak memerlukan/);});
+it('preserves formal non-peer, external and billing requirements; absent assignment is not a peer',()=>{for(const type of ['KRE','Tag']){expect(peerInternal(type,1,1)).toBe(false);expect(()=>assertPeerInternalAuthorization(type,1,1,{signerIds:['a']})).not.toThrow();}expect(peerInternal('IN',0,0)).toBe(false);expect(peerInternal('IN',1,2)).toBe(false);expect(()=>assertPeerInternalAuthorization('IN',1,2,{signerIds:['a']})).not.toThrow();});

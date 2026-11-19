@@ -7,7 +7,7 @@ vi.mock('@/server/letter-workflow',()=>({readLetter:m.read,downloadVersion:m.dow
 vi.mock('@/lib/letter-document',()=>({inspectDocument:vi.fn().mockResolvedValue({})}));
 vi.mock('next/cache',()=>({revalidatePath:m.revalidate}));
 import {reviewLetterAction,restartApprovalAction} from '../src/server/actions/workflow';
-beforeEach(()=>{vi.resetAllMocks();m.user.mockResolvedValue({id:'session-actor'});m.admin.mockReturnValue({rpc:m.rpc});m.read.mockResolvedValue({required_signature_count:1,signature_areas:[]});m.download.mockResolvedValue({bytes:new Uint8Array(),format:'DOCX'});m.rpc.mockResolvedValue({data:'READY_TO_ISSUE',error:null});});
+beforeEach(()=>{vi.resetAllMocks();m.user.mockResolvedValue({id:'session-actor'});m.admin.mockReturnValue({rpc:m.rpc});m.read.mockResolvedValue({type:{code:'KRE'},required_signature_count:1,signature_areas:[]});m.download.mockResolvedValue({bytes:new Uint8Array(),format:'DOCX'});m.rpc.mockResolvedValue({data:'READY_TO_ISSUE',error:null});});
 it('konfirmasi pembuat eksplisit dan aktor dari sesi diteruskan ke RPC terpisah',async()=>{
  expect((await reviewLetterAction('l','SUBMIT',7,undefined,true)).success).toBe(true);
  expect(m.rpc).toHaveBeenCalledWith('submit_letter_for_approval',{p_actor:'session-actor',p_letter:'l',p_revision:7,p_confirm_self:true});
