@@ -34,10 +34,24 @@ async def main():
    assert len(saved)==1,await page.locator('body').inner_text()
    content=saved[0]['content'];assert 'TEBAL' in content and ('<b>' in content or '<strong>' in content or 'font-weight' in content),content
    assert 'right' in content and saved[0]['contentFormat']=='HTML',content
+   refresh_calls=[];gate=asyncio.Event()
+   async def refresh(route):
+    refresh_calls.append(1)
+    if len(refresh_calls)==1: await gate.wait()
+    if len(refresh_calls)==2: await route.fulfill(status=503,json={'error':'synthetic failure'})
+    else: await route.fulfill(status=200,json={'count':len(refresh_calls)})
+   await page.route('**/refresh-test',refresh)
+   button=page.get_by_role('button',name='Perbarui status',exact=True)
+   await button.click();assert await page.get_by_role('button',name='Memperbarui…',exact=True).is_disabled()
+   gate.set();await page.get_by_role('status').get_by_text('Status surat sudah diperbarui.',exact=True).wait_for()
+   assert await page.get_by_label('Hasil pembaruan').inner_text()=='1'
+   await button.click();await page.get_by_role('alert').get_by_text('Jaringan terputus. Coba lagi.',exact=True).wait_for();assert await button.is_enabled()
+   await button.click();await page.get_by_role('status').get_by_text('Status surat sudah diperbarui.',exact=True).wait_for()
+   assert await page.get_by_label('Hasil pembaruan').inner_text()=='3' and len(refresh_calls)==3
    assert not errors,errors
    assert await page.evaluate('document.documentElement.scrollWidth<=innerWidth'),'Overflow horizontal'
    await page.screenshot(path=str(out/f'editor-{name}.png'),full_page=True)
-   results.append({'viewport':name,'typing_cursor_format_draft':'PASS','backend':'mock-local-only','js_errors':errors})
+   results.append({'viewport':name,'typing_cursor_format_draft':'PASS','refresh_success_failure_retry':'PASS','backend':'mock-local-only','js_errors':errors})
    await page.close()
   await browser.close();(out/'editor-result.json').write_text(json.dumps(results,indent=2));print(json.dumps(results))
 

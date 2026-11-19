@@ -14,7 +14,7 @@ export default async function Page() {
       </p>
       {pending.length === 0 ? (
         <Card className="p-6">
-          Tidak ada surat yang menunggu tanda tangan Anda.
+          Belum ada tugas TTD. Surat muncul setelah disetujui, diberi nomor, dan menunjuk Anda sebagai penandatangan.
         </Card>
       ) : (
         pending.map((s: any) => (

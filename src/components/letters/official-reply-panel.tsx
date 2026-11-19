@@ -19,11 +19,12 @@ export function OfficialReplyPanel({letterId,context}:{letterId:string;context:R
    sessionStorage.removeItem(storageKey);router.push(`/surat/${encodeURIComponent(result.id)}/edit`);router.refresh();
   }catch(e){setError(e instanceof Error?e.message:'Balasan belum dapat dibuat.');}finally{setBusy(false);}
  }
+ if(!context.seed&&!context.links.length)return null;
  return <Card className="p-5 space-y-3">
   <h2 className="font-bold">Hubungan Surat dan Balasan Resmi</h2>
   {error&&<p role="alert" className="text-sm text-red-700">{error}</p>}
-  {context.seed&&<><p className="text-sm">Balasan dibuat sebagai draf baru untuk pengirim resmi surat asal. Kategori awal mengikuti surat asal; periksa kembali kategori, pemeriksa, persetujuan, dan kebutuhan TTD di editor. Nomor baru diterbitkan melalui proses biasa.</p><Button onClick={create} isLoading={busy}>Balas dengan Surat Resmi</Button></>}
-  <p className="text-xs text-neutral-600">Draf, pemeriksaan, persetujuan, nomor, atau dokumen final belum berarti sudah dibalas. Status dicatat sesudah balasan resmi dikirim. Kewajiban dan tenggat balasan menunggu ketetapan perusahaan.</p>
+  {context.seed&&<><p className="text-sm">Balasan menggunakan surat dan nomor baru. Kategori awal mengikuti surat asal; periksa sebelum mengajukan.</p><Button onClick={create} isLoading={busy}>Balas dengan Surat Resmi</Button></>}
+
   {context.links.length===0?<p className="text-sm text-neutral-500">Tidak ada hubungan surat yang dapat ditampilkan untuk akun ini.</p>:<ul className="space-y-3">{context.links.map(link=><li key={link.id} className="border rounded-xl p-3 text-sm break-words">
    <p className="font-semibold">{link.direction==='ORIGIN'?'Surat asal':'Surat balasan'}: {link.subject}</p>
    <p>Nomor: {link.officialNumber||'Belum diterbitkan'} · Identitas: {link.letterId}</p>

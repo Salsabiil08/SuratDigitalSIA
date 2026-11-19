@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic';
 import { redirect } from 'next/navigation';
 import { getCurrentUser } from '@/server/auth';
 import { getNotificationsAction } from '@/server/actions/notifications';
+import { readNavigationAccess } from '@/server/navigation-access';
 import { DashboardShell } from '@/components/layout/dashboard-shell';
 
 export default async function DashboardLayout({
@@ -16,10 +17,11 @@ export default async function DashboardLayout({
     redirect('/login');
   }
 
-  const notifications=await getNotificationsAction();
+  const [notifications,navigation]=await Promise.all([getNotificationsAction(),readNavigationAccess(user)]);
 
   const sidebarUser = user
     ? {
+        access: navigation.access,
         name: user.fullName,
         position: user.position?.name || 'Pengguna',
         positionCode: user.position?.code,
@@ -50,6 +52,7 @@ export default async function DashboardLayout({
       initialNotifications={notifications.data}
       initialNotificationError={notifications.error}
     >
+      {navigation.error&&<p role="alert" className="text-sm text-red-700">{navigation.error}</p>}
       {children}
     </DashboardShell>
   );

@@ -3,6 +3,7 @@
 import * as React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import type { NavigationAccess } from '@/domain/navigation-access';
 import { cn } from '@/lib/utils';
 import { logoutAction } from '@/server/actions/auth';
 
@@ -26,6 +27,7 @@ export interface SidebarProps {
     unit?: string;
     initials?: string;
     isSuperAdmin?: boolean;
+    access?: NavigationAccess;
   };
   unreadNotificationsCount?: number;
   className?: string;
@@ -34,41 +36,25 @@ export interface SidebarProps {
 export function Sidebar({ user, unreadNotificationsCount, className }: SidebarProps) {
   const pathname = usePathname();
 
-  // Surat Penagihan: Finance (FIN), GM, Dirut, dan SM (atau Super Admin)
-  const canAccessBilling =
-    user?.unit === 'FIN' ||
-    user?.positionCode === 'GM' ||
-    user?.positionCode === 'SM' ||
-    user?.positionCode === 'DIR' ||
-    user?.isSuperAdmin;
-
-  const suratItems: NavItem[] = [
+  const access = user?.access;
+  const suratItems: NavItem[] = [];
+  if (access?.correspondence) suratItems.push(
     { label: 'Surat Saya', href: '/surat' },
     { label: 'Kotak Masuk', href: '/kotak-masuk' },
     { label: 'Kotak Keluar', href: '/kotak-keluar' },
     { label: 'Buat Surat', href: '/surat/buat' },
     { label: 'Ambil Nomor', href: '/surat/ambil-nomor' },
-  ];
-
-  if (canAccessBilling) {
-    suratItems.push({ label: 'Surat Penagihan', href: '/tagihan/buat' });
-  }
-
-  suratItems.push(
-    { label: 'Pemeriksaan Surat', href: '/pemeriksaan' },
-    { label: 'Pengesahan', href: '/pengesahan' },
-    { label: 'Disposisi', href: '/disposisi' }
   );
-
-  // Menu Administrasi: Master Organisasi & Seri Penomoran untuk semua user, Log History khusus Super Admin
-  const adminItems: NavItem[] = [
+  if (access?.billing) suratItems.push({ label: 'Surat Penagihan', href: '/tagihan/buat' });
+  if (access?.review) suratItems.push({ label: 'Pemeriksaan Surat', href: '/pemeriksaan' });
+  if (access?.approvals) suratItems.push({ label: 'Persetujuan', href: '/persetujuan' });
+  if (access?.signatures) suratItems.push({ label: 'Tanda Tangan', href: '/pengesahan' });
+  if (access?.correspondence) suratItems.push({ label: 'Disposisi', href: '/disposisi' });
+  const adminItems: NavItem[] = access?.administration ? [
     { label: 'Master Organisasi', href: '/admin/organisasi' },
     { label: 'Seri Penomoran', href: '/admin/seri' },
-  ];
-
-  if (user?.isSuperAdmin) {
-    adminItems.push({ label: 'Riwayat Aktivitas', href: '/admin/log' });
-  }
+    { label: 'Riwayat Aktivitas', href: '/admin/log' },
+  ] : [];
 
   const groups: NavGroup[] = [
     {
@@ -84,7 +70,7 @@ export function Sidebar({ user, unreadNotificationsCount, className }: SidebarPr
       title: 'Administrasi',
       items: adminItems,
     },
-  ];
+  ].filter(group => group.items.length > 0);
 
   const defaultUser = user || {
     name: 'Pengguna SIA',

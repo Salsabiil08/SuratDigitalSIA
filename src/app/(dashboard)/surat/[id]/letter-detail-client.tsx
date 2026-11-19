@@ -21,6 +21,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { DocumentDownloads } from "@/components/letters/document-downloads";
 import { DocumentPreview } from "@/components/letters/document-preview";
+import { RefreshStatusButton } from "@/components/letters/refresh-status-button";
 import { SignPanel } from "@/components/letters/sign-panel";
 export function LetterDetailClient({
   id,
@@ -43,15 +44,11 @@ export function LetterDetailClient({
   const [sendConfirmed,setSendConfirmed]=useState(false);
   const [ccIds,setCcIds]=useState<string[]>([]);
   const [note, setNote] = useState("");
+  useEffect(() => { setPreviewed(false); }, [data.letter.current_version_id,data.letter.revision]);
   const reload = useCallback(async () => {
-    try {
-      const result = await getWorkflowLetter(id);
-      setData(result);
-      setPreviewed(false);
-      setConfirmSelf(false);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Surat tidak tersedia.");
-    }
+    const result = await getWorkflowLetter(id);
+    setData(result);
+    setConfirmSelf(false);
   }, [id]);
   async function act(
     fn: () => Promise<{ success: boolean; error?: string }>,
@@ -89,7 +86,7 @@ export function LetterDetailClient({
       <Link className="text-brand-red text-sm underline" href={backTo}>
         Kembali ke {origin==='kotak-masuk'?'Kotak Masuk':origin==='kotak-keluar'?'Kotak Keluar':'Surat Saya'}
       </Link>
-      <PageHeader title={l.subject} actions={<Button variant="secondary" disabled={busy} onClick={reload}>Perbarui</Button>}/>
+      <PageHeader title={l.subject} actions={<RefreshStatusButton refresh={reload} disabled={busy}/>}/>
       <OfficialReplyPanel letterId={id} context={data.replyContext}/>
       <DispositionLetterPanel letterId={id} context={data.dispositionContext}/>
       {error && (
