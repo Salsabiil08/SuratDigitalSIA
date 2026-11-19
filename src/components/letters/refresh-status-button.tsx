@@ -1,4 +1,5 @@
 'use client';
+import {ActionNotice} from "@/components/ui/action-notice";
 import {useState} from 'react';
 import {Button} from '@/components/ui/button';
 
@@ -15,6 +16,6 @@ export function RefreshStatusButton({refresh,disabled=false}: {refresh:()=>Promi
     <Button type="button" variant="secondary" disabled={disabled||busy} aria-busy={busy} onClick={run}>
       {busy?'Memperbarui…':'Perbarui status'}
     </Button>
-    {feedback&&<p role={failed?'alert':'status'} className={`text-xs max-w-xs text-right ${failed?'text-red-700':'text-neutral-600'}`}>{feedback}</p>}
+    {feedback&&<ActionNotice kind={failed?'error':'success'}>{feedback}</ActionNotice>}
   </div>;
 }

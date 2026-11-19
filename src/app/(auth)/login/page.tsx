@@ -1,4 +1,5 @@
 'use client';
+import {ActionNotice} from "@/components/ui/action-notice";
 
 import * as React from 'react';
 import Link from 'next/link';
@@ -72,11 +73,7 @@ export default function LoginPage() {
             </p>
           </div>
 
-          {state?.error && (
-            <div className="mb-3 p-2.5 bg-red-50 border border-red-200 text-red-700 text-xs rounded-lg font-medium">
-              {state.error}
-            </div>
-          )}
+          {state?.error && <ActionNotice eventKey={state} kind={"error"}>{state.error}</ActionNotice>}
 
           <form action={formAction} className="flex flex-col gap-2.5 sm:gap-3">
             <div>

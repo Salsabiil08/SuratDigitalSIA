@@ -1,4 +1,5 @@
 "use client";
+import {ActionNotice} from "@/components/ui/action-notice";
 import { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -217,12 +218,9 @@ export function LetterEditor({
       {dispositionSeed&&<p className="text-sm border rounded-xl p-3">Surat hasil baru untuk pemberi disposisi. Selesaikan alur surat dan kirim resmi sebelum mengajukan hasil. <Link className="text-brand-red underline" href={`/disposisi?tugas=${dispositionSeed.dispositionId}`}>Kembali ke Disposisi</Link></p>}
       {initialData?.replyContext.links.filter(r=>r.direction==='ORIGIN').map(r=><p key={r.id} className="text-sm border rounded-xl p-3">Balasan untuk surat {r.officialNumber||r.letterId}. Penerima tetap pengirim resmi surat asal. <Link prefetch={false} className="text-brand-red underline" href={`/surat/${r.letterId}`}>Buka Surat Asal</Link></p>)}
       {error && (
-        <p
-          role="alert"
-          className="p-3 rounded-xl bg-red-50 text-red-800 border border-red-200"
-        >
+        <ActionNotice>
           {error}
-        </p>
+        </ActionNotice>
       )}
       <form
         onSubmit={(e) => {

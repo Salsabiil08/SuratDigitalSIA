@@ -1,4 +1,5 @@
 'use client';
+import {ActionNotice} from "@/components/ui/action-notice";
 import React,{useEffect,useState} from 'react';
 import Link from 'next/link';
 import {useRouter} from 'next/navigation';
@@ -16,7 +17,7 @@ export function MailboxClient({folder,data,query}:{folder:MailboxFolder;data:Mai
   <PageHeader title={title} actions={<Button variant="secondary" onClick={()=>router.refresh()}>Perbarui</Button>}/>
   <p className="text-sm text-neutral-600">{folder==='INBOX'?'Hanya surat yang telah dikirim resmi kepada Anda. Membuka atau mengunduh tidak otomatis mengonfirmasi penerimaan.':'Pengiriman resmi sesuai kewenangan Anda. Status setiap penerima dicatat terpisah; terkirim bukan berarti diterima.'}</p>
   <div className="flex gap-2 flex-wrap"><Link prefetch={false} href={folder==='INBOX'?'/kotak-keluar':'/kotak-masuk'} className="text-sm text-brand-red underline">{folder==='INBOX'?'Buka Kotak Keluar':'Buka Kotak Masuk'}</Link><Link href="/surat" className="text-sm text-brand-red underline">Surat Saya — draf dan proses surat</Link></div>
-  {error&&<p role="alert" className="text-sm text-red-700">{error}</p>}{message&&<p role="status" className="text-sm text-emerald-700">{message}</p>}
+  {error&&<ActionNotice>{error}</ActionNotice>}{message&&<ActionNotice kind="success">{message}</ActionNotice>}
   <form action={base} method="get" className="flex flex-col sm:flex-row gap-3 sm:items-end">
    <input type="hidden" name="filter" value={query.filter}/>
    <label className="text-sm flex-1">Cari perihal, nomor atau pengirim<input name="q" defaultValue={query.q} maxLength={100} className="block w-full border rounded-xl px-3 py-2 mt-1"/></label>

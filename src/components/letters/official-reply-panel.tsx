@@ -1,4 +1,5 @@
 'use client';
+import {ActionNotice} from "@/components/ui/action-notice";
 import React,{useState} from 'react';
 import Link from 'next/link';
 import {useRouter} from 'next/navigation';
@@ -22,7 +23,7 @@ export function OfficialReplyPanel({letterId,context}:{letterId:string;context:R
  if(!context.seed&&!context.links.length)return null;
  return <Card className="p-5 space-y-3">
   <h2 className="font-bold">Hubungan Surat dan Balasan Resmi</h2>
-  {error&&<p role="alert" className="text-sm text-red-700">{error}</p>}
+  {error&&<ActionNotice>{error}</ActionNotice>}
   {context.seed&&<><p className="text-sm">Balasan menggunakan surat dan nomor baru. Kategori awal mengikuti surat asal; periksa sebelum mengajukan.</p><Button onClick={create} isLoading={busy}>Balas dengan Surat Resmi</Button></>}
 
   {context.links.length===0?<p className="text-sm text-neutral-500">Tidak ada hubungan surat yang dapat ditampilkan untuk akun ini.</p>:<ul className="space-y-3">{context.links.map(link=><li key={link.id} className="border rounded-xl p-3 text-sm break-words">

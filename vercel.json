@@ -14,7 +14,8 @@
       "fix/pr08-beta-editor": false,
       "fix/pr08-role-menus": false,
       "fix/pr08-guided-flow": false,
-      "fix/pr08-download-options": false
+      "fix/pr08-download-options": false,
+      "fix/pr08-action-popups": false
     }
   }
 }

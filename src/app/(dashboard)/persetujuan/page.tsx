@@ -1,3 +1,4 @@
+import {ActionNotice} from "@/components/ui/action-notice";
 import { getPendingApprovalsAction } from "@/server/actions/approvals";
 import { PersetujuanClient } from "./persetujuan-client";
 export const dynamic = "force-dynamic";
@@ -7,9 +8,9 @@ export default async function Page() {
     return <PersetujuanClient initialData={data} />;
   } catch {
     return (
-      <p role="alert">
+      <ActionNotice>
         Data belum dapat diambil. Silakan buka kembali halaman ini.
-      </p>
+      </ActionNotice>
     );
   }
 }

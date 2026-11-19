@@ -1,4 +1,5 @@
 "use client";
+import {ActionNotice} from "@/components/ui/action-notice";
 import { useEffect, useRef, useState } from "react";
 export function DocumentPreview({
   url,
@@ -62,9 +63,9 @@ export function DocumentPreview({
   return (
     <div ref={container} className="space-y-2">
       {error && (
-        <p role="alert" className="text-sm text-red-700">
+        <ActionNotice>
           {error}
-        </p>
+        </ActionNotice>
       )}
         <iframe
           hidden={!!error}

@@ -1,4 +1,5 @@
 "use client";
+import {ActionNotice} from "@/components/ui/action-notice";
 
 import * as React from "react";
 import Link from "next/link";
@@ -66,11 +67,7 @@ export default function KonfirmasiPenerbitanPage() {
 
       <PageHeader title="Konfirmasi & Terbitkan Nomor Surat" />
 
-      {errorMsg && (
-        <div className="p-4 bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl">
-          {errorMsg}
-        </div>
-      )}
+      {errorMsg && <ActionNotice kind={"error"}>{errorMsg}</ActionNotice>}
 
       {issuedNumber ? (
         /* Tampilan Sukses Setelah Nomor Diterbitkan (Satu Transaksi) */

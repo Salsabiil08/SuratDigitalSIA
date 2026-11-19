@@ -1,4 +1,5 @@
 "use client";
+import {ActionNotice} from "@/components/ui/action-notice";
 import React,{ useState,useEffect } from "react";
 import Link from "next/link";
 import { PageHeader } from "@/components/ui/page-header";
@@ -42,6 +43,7 @@ export function DisposisiClient({
     [note, setNote] = useState(""),
     [busy, setBusy] = useState(false),
     [message, setMessage] = useState(initialError || "");
+  const [messageKind,setMessageKind]=useState<"success"|"error">("error");
   const [subject, setSubject] = useState(source?`Tindak lanjut: ${source.subject}`:""),
     [instruction, setInstruction] = useState(""),
     [recipientId, setRecipient] = useState(""),
@@ -80,6 +82,7 @@ export function DisposisiClient({
       setSelected(null);
       setNote("");setAttachmentIds([]);
       await refresh();
+      setMessageKind("success");
       setMessage(
         action === "SUBMIT"
           ? "Hasil dikirim kepada pemberi untuk diperiksa."
@@ -90,6 +93,7 @@ export function DisposisiClient({
               : "Disposisi mulai dikerjakan.",
       );
     } catch (e) {
+      setMessageKind("error");
       setMessage(e instanceof Error ? e.message : "Proses gagal.");
     } finally {
       setBusy(false);
@@ -119,10 +123,12 @@ export function DisposisiClient({
       setRequires(false);sessionStorage.removeItem('siadocs-disp-create');
       setTab("OUTBOX");
       await refresh();
+      setMessageKind("success");
       setMessage(
         "Disposisi dikirim. Penerima dapat membuat surat tindak lanjut dari tugas ini.",
       );
     } catch (e) {
+      setMessageKind("error");
       setMessage(e instanceof Error ? e.message : "Gagal mengirim disposisi.");
     } finally {
       setBusy(false);
@@ -151,12 +157,12 @@ export function DisposisiClient({
         dikirim kembali kepada pemberi untuk diperiksa, diperbaiki bila perlu,
         lalu diterima.
       </p>
-      {sourceLetterId&&!source&&<p role="alert" className="text-sm text-red-700">Surat ini tidak tersedia untuk dibuatkan disposisi oleh akun Anda.</p>}
-      {selectedTaskId&&![...data.inbox,...data.outbox].some(d=>d.id===selectedTaskId)&&<p role="alert" className="text-sm text-red-700">Disposisi tidak tersedia untuk akun Anda.</p>}
+      {sourceLetterId&&!source&&<ActionNotice>Surat ini tidak tersedia untuk dibuatkan disposisi oleh akun Anda.</ActionNotice>}
+      {selectedTaskId&&![...data.inbox,...data.outbox].some(d=>d.id===selectedTaskId)&&<ActionNotice>Disposisi tidak tersedia untuk akun Anda.</ActionNotice>}
       {message && (
-        <div role="status" className="rounded-xl border bg-white p-3 text-sm">
+        <ActionNotice kind={messageKind}>
           {message}
-        </div>
+        </ActionNotice>
       )}
       <div className="flex flex-wrap gap-2">
         {data.canReceiveDisposition && (
@@ -232,7 +238,7 @@ export function DisposisiClient({
           )}
           {d.integrated&&<div className="space-y-2 text-sm"><p>Hasil: catatan wajib. {d.requiresLetter||d.responseLetterId?'Surat hasil wajib final dan dikirim resmi kepada pemberi.':'Lampiran dan surat hasil opsional sesuai arahan.'} Draf belum menyelesaikan tugas.</p>
           {d.files.map(f=><p key={f.id}><a className="text-brand-red underline" href={`/api/dispositions/${d.id}/attachments/${f.id}`}>Unduh lampiran hasil — {f.file_name}</a></p>)}
-          {tab==='INBOX'&&['NEW','IN_PROGRESS','REVISION_REQUESTED'].includes(d.status)&&<label className="block">Tambah lampiran PDF/DOCX (maks. 1 MB)<input type="file" accept=".pdf,.docx" disabled={busy} onChange={async e=>{const f=e.target.files?.[0];if(!f)return;setBusy(true);try{const form=new FormData();form.set('file',f);form.set('key',intent(`upload-${d.id}`,{name:f.name,size:f.size,modified:f.lastModified}));const res=await fetch(`/api/dispositions/${d.id}/attachments`,{method:'POST',body:form});const j=await res.json();if(!res.ok)throw new Error(j.error);await refresh();setMessage('Lampiran hasil tersimpan; belum diajukan untuk pemeriksaan.');}catch(err){setMessage(err instanceof Error?err.message:'Unggah gagal.');}finally{setBusy(false);e.target.value='';}}}/></label>}
+          {tab==='INBOX'&&['NEW','IN_PROGRESS','REVISION_REQUESTED'].includes(d.status)&&<label className="block">Tambah lampiran PDF/DOCX (maks. 1 MB)<input type="file" accept=".pdf,.docx" disabled={busy} onChange={async e=>{const f=e.target.files?.[0];if(!f)return;setMessage("");setBusy(true);try{const form=new FormData();form.set('file',f);form.set('key',intent(`upload-${d.id}`,{name:f.name,size:f.size,modified:f.lastModified}));const res=await fetch(`/api/dispositions/${d.id}/attachments`,{method:'POST',body:form});const j=await res.json();if(!res.ok)throw new Error(j.error);await refresh();setMessageKind('success');setMessage('Lampiran hasil tersimpan; belum diajukan untuk pemeriksaan.');}catch(err){setMessageKind('error');setMessage(err instanceof Error?err.message:'Unggah gagal.');}finally{setBusy(false);e.target.value='';}}}/></label>}
           {d.submissions.map(s=><div key={s.id} className="border rounded-xl p-3"><p>Hasil diajukan: {new Date(s.created_at).toLocaleString('id-ID')} — {s.note}</p>{s.decision&&<p>{s.decision.decision==='RETURN'?'Perlu Perbaikan':'Diterima / Selesai'}: {s.decision.note||'Hasil diterima'} — {new Date(s.decision.created_at).toLocaleString('id-ID')}</p>}</div>)}
           </div>}
           <div className="flex flex-wrap gap-2">

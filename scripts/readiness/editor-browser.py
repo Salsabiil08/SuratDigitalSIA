@@ -79,7 +79,7 @@ async def main():
    async def fail_export(route):await route.fulfill(status=403,json={'error':'Anda tidak berwenang melihat dokumen ini.'})
    await page.route('**/api/letters/export-docx/document?*',fail_export,times=1)
    await panel.get_by_role('button',name='Unduh Surat',exact=True).click()
-   await panel.get_by_role('alert').get_by_text('Anda tidak berwenang melihat dokumen ini.',exact=True).wait_for()
+   await page.get_by_role('alert').get_by_text('Anda tidak berwenang melihat dokumen ini.',exact=True).wait_for()
    assert await panel.get_by_role('button',name='Unduh Surat',exact=True).is_enabled()
    await panel.get_by_label('Format unduhan surat').select_option('DOCX')
    async with page.expect_download(timeout=60000) as event:await panel.get_by_role('button',name='Unduh Surat',exact=True).click()
@@ -96,10 +96,15 @@ async def main():
     assert b'page2' in z.read('word/document.xml')
    verify="import fs from 'node:fs';import {PDFDocument} from 'pdf-lib';for(const f of process.argv.slice(1)){const d=await PDFDocument.load(fs.readFileSync(f));if(d.getPageCount()!==1)throw new Error('Unexpected page count '+f);const p=d.getPage(0);if(p.getWidth()<500||p.getHeight()<700)throw new Error('Invalid page geometry '+f);}"
    subprocess.run(['node','--input-type=module','-e',verify,str(out/f'export-{name}-signed.pdf'),str(out/f'export-{name}-unsigned.pdf')],check=True)
+   for _ in range(2):
+    await page.get_by_role('button',name='Uji pesan berulang',exact=True).click()
+    same=page.locator('[data-action-popup="true"]').filter(has_text='Pesan gagal yang sama');await same.wait_for()
+    assert await same.count()==1
+    await same.get_by_role('button',name='Tutup pemberitahuan',exact=True).click()
    assert not errors,errors
    assert await page.evaluate('document.documentElement.scrollWidth<=innerWidth'),'Overflow horizontal'
    await page.screenshot(path=str(out/f'editor-{name}.png'),full_page=True)
-   results.append({'viewport':name,'typing_cursor_format_draft':'PASS','refresh_success_failure_retry':'PASS','canonical_letterhead_stamp_layer':'PASS','signed_unsigned_pdf_docx_exports':'PASS','pdf_to_docx_two_pages':'PASS','backend':'mock-local-only','js_errors':errors})
+   results.append({'viewport':name,'typing_cursor_format_draft':'PASS','refresh_success_failure_retry':'PASS','popup_visible_scrolled_dismiss_persistent':'PASS','canonical_letterhead_stamp_layer':'PASS','signed_unsigned_pdf_docx_exports':'PASS','pdf_to_docx_two_pages':'PASS','backend':'mock-local-only','js_errors':errors})
    await page.close()
   await browser.close();(out/'editor-result.json').write_text(json.dumps(results,indent=2));print(json.dumps(results))
 

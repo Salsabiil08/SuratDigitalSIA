@@ -1,4 +1,5 @@
 "use client";
+import {ActionNotice} from "@/components/ui/action-notice";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Field, Input, Select } from "@/components/ui/field";
@@ -163,9 +164,9 @@ export function SignPanel({
         </>
       )}
       {error && (
-        <p role="alert" className="text-sm text-red-700">
+        <ActionNotice>
           {error}
-        </p>
+        </ActionNotice>
       )}
     </section>
   );

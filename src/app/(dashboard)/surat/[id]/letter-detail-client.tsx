@@ -1,4 +1,5 @@
 "use client";
+import {ActionNotice} from "@/components/ui/action-notice";
 import {DispositionLetterPanel} from "@/components/letters/disposition-letter-panel";
 import {OfficialReplyPanel} from "@/components/letters/official-reply-panel";
 import { decideReviewAction } from "@/server/actions/reviews";
@@ -109,20 +110,14 @@ export function LetterDetailClient({
       <OfficialReplyPanel letterId={id} context={data.replyContext}/>
       <DispositionLetterPanel letterId={id} context={data.dispositionContext}/>
       {error && (
-        <p
-          role="alert"
-          className="p-3 rounded-xl border bg-red-50 text-red-800"
-        >
+        <ActionNotice>
           {error}
-        </p>
+        </ActionNotice>
       )}
       {msg && (
-        <p
-          role="status"
-          className="p-3 rounded-xl border bg-emerald-50 text-emerald-800"
-        >
+        <ActionNotice kind="success">
           {msg}
-        </p>
+        </ActionNotice>
       )}
       <Card className="p-5 space-y-3">
         <div className="flex gap-3 flex-wrap items-center">

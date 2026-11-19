@@ -1,4 +1,5 @@
 'use client';
+import {ActionNotice} from "@/components/ui/action-notice";
 
 import * as React from 'react';
 import Link from 'next/link';
@@ -71,11 +72,7 @@ export default function RegisterPage() {
             </p>
           </div>
 
-          {state?.error && (
-            <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 text-xs rounded-lg">
-              {state.error}
-            </div>
-          )}
+          {state?.error && <ActionNotice eventKey={state} kind={"error"}>{state.error}</ActionNotice>}
 
           <form action={formAction} className="flex flex-col gap-3.5">
             <Field label="Nama Lengkap" htmlFor="reg-name" required>

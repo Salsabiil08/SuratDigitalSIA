@@ -1,4 +1,5 @@
 "use client";
+import {ActionNotice} from "@/components/ui/action-notice";
 
 import {notificationHref} from "@/domain/notification-links";
 import * as React from "react";
@@ -202,9 +203,9 @@ export function DashboardShell({
                   </div>
                   <div className="p-2 text-xs text-neutral-600 space-y-1 max-h-72 overflow-y-auto divide-y divide-neutral-100">
                     {notificationError && (
-                      <p role="alert" className="p-3 text-red-700">
+                      <ActionNotice>
                         {notificationError}
-                      </p>
+                      </ActionNotice>
                     )}
                     {quickNotifs.length > 0 ? (
                       quickNotifs.slice(0, 4).map((item) => (

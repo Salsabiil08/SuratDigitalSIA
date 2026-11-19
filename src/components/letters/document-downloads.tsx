@@ -1,4 +1,5 @@
 'use client';
+import {ActionNotice} from "@/components/ui/action-notice";
 import {useEffect,useRef,useState} from 'react';
 import {Button} from '@/components/ui/button';
 import {exportSources,type ExportVersion,type ExportFormat} from '@/domain/document-export';
@@ -39,6 +40,6 @@ export function DocumentDownloads({id,current,unsigned,signatureCount,fullVersio
       <Button type="button" variant="secondary" disabled={!source||busy} aria-busy={busy} onClick={download}>{busy?'Menyiapkan unduhan…':'Unduh Surat'}</Button>
     </div>
     {source&&source.format!==format&&<p className="text-xs text-neutral-500">{format==='PDF'?'PDF dibuat dari tampilan pratinjau.':'DOCX dari PDF berupa gambar per halaman.'}</p>}
-    {error&&<p role="alert" className="text-sm text-red-700">{error}</p>}
+    {error&&<ActionNotice>{error}</ActionNotice>}
   </div>;
 }

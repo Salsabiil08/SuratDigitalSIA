@@ -1,4 +1,5 @@
 "use client";
+import {ActionNotice} from "@/components/ui/action-notice";
 
 import {notificationHref} from "@/domain/notification-links";
 import * as React from "react";
@@ -69,9 +70,9 @@ export function NotifikasiClient({
   return (
     <div className="flex flex-col gap-3 sm:gap-3.5 max-w-5xl w-full">
       {error && (
-        <p role="alert" className="text-sm text-red-700">
+        <ActionNotice>
           {error}
-        </p>
+        </ActionNotice>
       )}
       <PageHeader
         title="Pusat Notifikasi"

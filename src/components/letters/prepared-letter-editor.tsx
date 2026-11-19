@@ -1,3 +1,4 @@
+import {ActionNotice} from "@/components/ui/action-notice";
 import {readDispositionDraftSeed} from "@/server/disposition-integration";
 import { LetterEditor } from "./letter-editor";
 import {
@@ -27,9 +28,9 @@ export async function PreparedLetterEditor(props: {
     );
   } catch (e) {
     return (
-      <p role="alert" className="text-sm text-red-700">
+      <ActionNotice>
         {e instanceof Error ? e.message : "Formulir tidak dapat dibuka."}
-      </p>
+      </ActionNotice>
     );
   }
 }

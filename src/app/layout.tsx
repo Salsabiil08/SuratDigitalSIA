@@ -1,3 +1,4 @@
+import {ActionNoticeProvider} from "@/components/ui/action-notice";
 import type { Metadata } from 'next';
 import { Inter, Playfair_Display } from 'next/font/google';
 import './globals.css';
@@ -28,7 +29,7 @@ export default function RootLayout({
   return (
     <html lang="id" className={`${inter.variable} ${playfair.variable}`}>
       <body className="antialiased min-h-screen bg-page-gradient text-[#1C1C1E]">
-        {children}
+        <ActionNoticeProvider>{children}</ActionNoticeProvider>
       </body>
     </html>
   );

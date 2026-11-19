@@ -1,4 +1,5 @@
 "use client";
+import {ActionNotice} from "@/components/ui/action-notice";
 
 import * as React from "react";
 import Link from "next/link";
@@ -131,17 +132,7 @@ export function PersetujuanClient({
     <div className="flex flex-col gap-6">
       <PageHeader title="Persetujuan Masuk" />
 
-      {msg && (
-        <div
-          className={`p-4 rounded-xl text-xs font-semibold border ${
-            msg.type === "success"
-              ? "bg-emerald-50 border-emerald-200 text-emerald-800"
-              : "bg-red-50 border-red-200 text-red-700"
-          }`}
-        >
-          {msg.text}
-        </div>
-      )}
+      {msg && <ActionNotice eventKey={msg} kind={msg.type}>{msg.text}</ActionNotice>}
 
       {approvals.length === 0 ? (
         <Card className="p-12 text-center text-neutral-500 space-y-3">

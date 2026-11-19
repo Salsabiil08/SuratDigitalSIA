@@ -1,3 +1,4 @@
+import {ActionNotice} from "@/components/ui/action-notice";
 import {QueueAutoRefresh} from "@/components/letters/queue-auto-refresh";
 import * as React from 'react';
 export const dynamic = 'force-dynamic';
@@ -54,7 +55,7 @@ export default async function DashboardLayout({
       initialNotificationError={notifications.error}
     >
       <QueueAutoRefresh/>
-      {navigation.error&&<p role="alert" className="text-sm text-red-700">{navigation.error}</p>}
+      {navigation.error&&<ActionNotice>{navigation.error}</ActionNotice>}
       {children}
     </DashboardShell>
   );

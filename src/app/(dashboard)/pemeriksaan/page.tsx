@@ -1,3 +1,4 @@
+import {ActionNotice} from "@/components/ui/action-notice";
 import Link from 'next/link';
 import { getPendingReviewsAction } from '@/server/actions/reviews';
 import { PageHeader } from '@/components/ui/page-header';
@@ -10,5 +11,5 @@ export default async function Page() {
       <p className="text-sm text-neutral-600">Periksa naskah, beri catatan, lalu loloskan pemeriksaan atau minta pembuat memperbaikinya. Pemeriksaan berbeda dari persetujuan dan tanda tangan.</p>
       {rows.length === 0 ? <Card className="p-5">Tidak ada surat yang menunggu pemeriksaan Anda.</Card> : rows.map(row => <Card key={row.id} className="p-5 flex justify-between gap-3"><span>{row.subject}</span><Link className="text-brand-red underline" href={`/surat/${row.letterId}`}>Periksa Surat</Link></Card>)}
     </div>;
-  } catch { return <p role="alert">Daftar pemeriksaan belum dapat diambil. Silakan coba kembali.</p>; }
+  } catch { return <ActionNotice>Daftar pemeriksaan belum dapat diambil. Silakan coba kembali.</ActionNotice>; }
 }

@@ -1,4 +1,5 @@
 'use client';
+import {ActionNotice} from "@/components/ui/action-notice";
 
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
@@ -339,24 +340,7 @@ export function OrganisasiClient({ initialUnits, initialPositions }: OrganisasiC
       />
 
       {/* Alert Banner */}
-      {alert && (
-        <div
-          className={`p-3.5 sm:p-4 rounded-xl text-xs sm:text-sm border flex items-center justify-between gap-2 animate-in fade-in ${
-            alert.type === 'success'
-              ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
-              : 'bg-red-50 text-red-800 border-red-200'
-          }`}
-        >
-          <span className="leading-snug">{alert.text}</span>
-          <button
-            type="button"
-            onClick={() => setAlert(null)}
-            className="text-xs font-bold opacity-60 hover:opacity-100 p-1"
-          >
-            ✕
-          </button>
-        </div>
-      )}
+      {alert && <ActionNotice eventKey={alert} kind={alert.type}>{alert.text}</ActionNotice>}
 
       {/* ========================================================================= */}
       {/* BAGAN STRUKTUR POHON ORGANISASI (DINAMIS DARI DATA JABATAN AKTIF)        */}
