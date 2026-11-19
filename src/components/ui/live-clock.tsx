@@ -18,6 +18,7 @@ export function LiveClock({ variant = 'default', className = '' }: LiveClockProp
       
       // Format Tanggal Indonesia: Sabtu, 14 November 2026
       const formattedDate = now.toLocaleDateString('id-ID', {
+        timeZone: 'Asia/Jakarta',
         weekday: 'long',
         day: 'numeric',
         month: 'long',
@@ -26,6 +27,7 @@ export function LiveClock({ variant = 'default', className = '' }: LiveClockProp
 
       // Format Pendek: SEL, 17 NOV 2026
       const formattedShortDate = now.toLocaleDateString('id-ID', {
+        timeZone: 'Asia/Jakarta',
         weekday: 'short',
         day: 'numeric',
         month: 'short',
@@ -35,6 +37,7 @@ export function LiveClock({ variant = 'default', className = '' }: LiveClockProp
       // Format Waktu: 04.15 WIB
       const formattedTime =
         now.toLocaleTimeString('id-ID', {
+          timeZone: 'Asia/Jakarta',
           hour: '2-digit',
           minute: '2-digit',
         }).replace(':', '.') + ' WIB';
@@ -45,7 +48,7 @@ export function LiveClock({ variant = 'default', className = '' }: LiveClockProp
     };
 
     updateDateTime();
-    const interval = setInterval(updateDateTime, 1000);
+    const interval = setInterval(updateDateTime, 30000);
     return () => clearInterval(interval);
   }, []);
 

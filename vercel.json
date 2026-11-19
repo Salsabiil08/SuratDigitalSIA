@@ -10,7 +10,8 @@
       "feat/pr-05-inbox-outbox": false,
       "feat/pr-06-official-replies": false,
       "feat/pr-07-disposition-integration": false,
-      "feat/pr-08-production-readiness": false
+      "feat/pr-08-production-readiness": false,
+      "fix/pr08-beta-editor": false
     }
   }
 }

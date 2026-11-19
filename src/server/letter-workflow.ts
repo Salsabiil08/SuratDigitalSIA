@@ -91,6 +91,11 @@ export async function peopleOptions() {
     { data: profiles, error },
     { data: assignments, error: ae },
     { data: banks, error: be },
+    { data: billingType },
+    { data: categories, error: catError },
+    { data: rules, error: ruleError },
+    { data: grants, error: grantError },
+    { data: approvalGrants, error: approvalGrantError },
   ] = await Promise.all([
     db.from("profiles").select("id,full_name").eq("is_active", true),
     db
@@ -101,6 +106,11 @@ export async function peopleOptions() {
       .eq("is_active", true)
       .order("start_date", { ascending: false }),
     db.from("master_bank").select("id,name").eq("is_active", true),
+    db.from('letter_types').select('creator_unit_id').eq('category','BILLING').eq('is_active',true).maybeSingle(),
+    db.from('document_categories').select('id,code,name').eq('is_active', true).in('code', ['PERMOHONAN','LAPORAN','PEMBERITAHUAN']),
+    db.from('review_policies').select('id,category_code,requires_review,validation_status,revision,type:letter_types(code)'),
+    createAdminClient().from('review_authorizations').select('reviewer_id,unit_id,starts_on,ends_on,type:letter_types(code)').eq('is_active', true),
+    createAdminClient().from('approver_authorizations').select('approver_id,unit_id,starts_on,ends_on,type:letter_types(code)').eq('is_active',true),
   ]);
   if (error || ae || be)
     throw new Error(
@@ -137,16 +147,9 @@ export async function peopleOptions() {
       };
     })
     .filter((p) => p.position && p.active);
-  const {data:billingType}=await db.from('letter_types').select('creator_unit_id').eq('category','BILLING').eq('is_active',true).maybeSingle();
-  const [{ data: categories, error: catError }, { data: rules, error: ruleError }, { data: grants, error: grantError }] = await Promise.all([
-    db.from('document_categories').select('id,code,name').eq('is_active', true).in('code', ['PERMOHONAN','LAPORAN','PEMBERITAHUAN']),
-    db.from('review_policies').select('id,category_code,requires_review,validation_status,revision,type:letter_types(code)'),
-    createAdminClient().from('review_authorizations').select('reviewer_id,unit_id,starts_on,ends_on,type:letter_types(code)').eq('is_active', true),
-  ]);
   if (catError || ruleError || grantError) throw new Error('Konfigurasi pemeriksaan belum dapat diambil.');
   const reviewerGrants = (grants || []).filter(g => (!g.unit_id || g.unit_id === user.unit?.id) && g.starts_on <= today && (!g.ends_on || g.ends_on >= today))
     .map(g => ({ reviewerId: g.reviewer_id, typeCode: (g.type as any)?.code || null }));
-  const {data:approvalGrants,error:approvalGrantError}=await createAdminClient().from('approver_authorizations').select('approver_id,unit_id,starts_on,ends_on,type:letter_types(code)').eq('is_active',true);
   if(approvalGrantError)throw new Error('Konfigurasi persetujuan belum dapat diambil.');
   const approverGrants=(approvalGrants||[]).filter(g=>(!g.unit_id||g.unit_id===user.unit?.id)&&g.starts_on<=today&&(!g.ends_on||g.ends_on>=today)).map(g=>({approverId:g.approver_id,typeCode:(g.type as any)?.code||null}));
   const reviewRules = (rules || []).map(r => ({ ...r, typeCode: (r.type as any)?.code || null }));

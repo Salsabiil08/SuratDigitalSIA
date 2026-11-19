@@ -27,6 +27,9 @@ export async function getWorkflowLetter(id: string) {
     { data: items },
     { data: cancellations, error: ce },
     { data: reviews, error: re },
+    { data: delivery, error: de },
+    replyContext,
+    dispositionContext,
   ] = await Promise.all([
     db
       .from("letter_versions")
@@ -62,15 +65,16 @@ export async function getWorkflowLetter(id: string) {
       .eq("letter_id", id)
       .order("created_at", { ascending: false }),
     db.from('review_steps').select('*,reviewer:profiles!review_steps_reviewer_id_fkey(full_name),comments:review_comments(*)').eq('letter_id', id).order('cycle', { ascending: false }),
+    createAdminClient().rpc('get_internal_delivery_context',{p_actor:user.id,p_letter:id}),
+    readReplyContext(id),
+    readDispositionLetterContext(id),
   ]);
   if (ve || ae || se || ce || re) throw new Error((ve || ae || se || ce || re)!.message);
-  const {data:delivery,error:de}=await createAdminClient().rpc('get_internal_delivery_context',{p_actor:user.id,p_letter:id});
   if(de)throw new Error('Informasi pengiriman belum dapat diambil.');
   let ccOptions: {id:string;full_name:string}[]=[];
   if(delivery?.ccEnabled&&delivery?.canDispatch){const {data:ccPeople,error:cce}=await db.from('profiles').select('id,full_name').eq('is_active',true);if(cce)throw new Error('Penerima tembusan belum dapat diambil.');ccOptions=ccPeople||[];}
-  const replyContext=await readReplyContext(id);
   return {
-    dispositionContext:await readDispositionLetterContext(id),
+    dispositionContext,
     replyContext,
     ccOptions,
     delivery,

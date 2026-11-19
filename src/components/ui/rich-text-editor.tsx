@@ -39,7 +39,9 @@ export function RichTextEditor({
   const [selectedSize, setSelectedSize] = React.useState("3"); // 3 = normal in execCommand
 
   const selection = React.useRef<Range | null>(null);
-  const initialHtml = React.useRef(sanitizeLetterHtml(value));
+  const initialized = React.useRef(false);
+  const lastEmitted = React.useRef(value);
+  const composing = React.useRef(false);
   const remember = React.useCallback(() => {
     const current = window.getSelection();
     if (current?.rangeCount && editorRef.current?.contains(current.anchorNode))
@@ -51,11 +53,21 @@ export function RichTextEditor({
   }, [remember]);
   React.useEffect(() => {
     const editor = editorRef.current;
-    if (editor && document.activeElement !== editor) {
+    if (editor && (!initialized.current || value !== lastEmitted.current)) {
       const safe = sanitizeLetterHtml(value);
       if (editor.innerHTML !== safe) editor.innerHTML = safe;
+      initialized.current = true;
+      lastEmitted.current = value;
     }
   }, [value]);
+  const publish = () => {
+    if (!editorRef.current || composing.current) return;
+    const html = editorRef.current.innerHTML;
+    if (html !== lastEmitted.current) {
+      lastEmitted.current = html;
+      onChange(html);
+    }
+  };
   const exec = (command: string, arg?: string) => {
     editorRef.current?.focus();
     const current = window.getSelection();
@@ -69,12 +81,12 @@ export function RichTextEditor({
     document.execCommand(command, false, arg);
     if (editorRef.current) {
       remember();
-      onChange(editorRef.current.innerHTML);
+      publish();
     }
   };
   const handleInput = () => {
     if (editorRef.current) {
-      onChange(editorRef.current.innerHTML);
+      publish();
     }
   };
 
@@ -287,8 +299,11 @@ export function RichTextEditor({
         aria-label="Isi surat"
         aria-multiline="true"
         contentEditable
+        translate="no"
         suppressContentEditableWarning
-        dangerouslySetInnerHTML={{ __html: initialHtml.current }}
+        tabIndex={0}
+        onCompositionStart={() => { composing.current = true; }}
+        onCompositionEnd={() => { composing.current = false; publish(); }}
         onPaste={(e) => {
           e.preventDefault();
           const html = e.clipboardData.getData("text/html");

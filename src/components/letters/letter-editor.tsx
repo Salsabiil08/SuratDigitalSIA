@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
@@ -117,6 +117,9 @@ export function LetterEditor({
             : undefined,
         },
   );
+  const changeContent = useCallback((content: string) => {
+    setInput(x => x.content === content ? x : { ...x, content, contentFormat: "HTML" });
+  }, []);
   const [file, setFile] = useState<File | null>(null);
   const [attachment, setAttachment] = useState<File | null>(null);
   const [currentFormat, setCurrentFormat] = useState(
@@ -212,10 +215,6 @@ export function LetterEditor({
       />
       {dispositionSeed&&<p className="text-sm border rounded-xl p-3">Surat hasil baru untuk pemberi disposisi. Selesaikan alur surat dan kirim resmi sebelum mengajukan hasil. <Link className="text-brand-red underline" href={`/disposisi?tugas=${dispositionSeed.dispositionId}`}>Kembali ke Disposisi</Link></p>}
       {initialData?.replyContext.links.filter(r=>r.direction==='ORIGIN').map(r=><p key={r.id} className="text-sm border rounded-xl p-3">Balasan untuk surat {r.officialNumber||r.letterId}. Penerima tetap pengirim resmi surat asal. <Link prefetch={false} className="text-brand-red underline" href={`/surat/${r.letterId}`}>Buka Surat Asal</Link></p>)}
-      <p className="text-sm text-neutral-600">
-        Buat/Impor → Pratinjau dan Koreksi → Pemeriksaan jika diperlukan → Persetujuan → Nomor Resmi → TTD →
-        Finalisasi
-      </p>
       {error && (
         <p
           role="alert"
@@ -381,20 +380,17 @@ export function LetterEditor({
                 label="Isi Surat"
                 htmlFor="letter-content"
                 required
-                hint="Naskah pada template berkop. Koreksi dapat dilakukan selama Draft/Perlu Revisi."
               >
                 <RichTextEditor
                   value={input.content || ""}
-                  onChange={(content) =>
-                    setInput((x) => ({ ...x, content, contentFormat: "HTML" }))
-                  }
+                  onChange={changeContent}
                 />
               </Field>
               <a
                 className="text-brand-red underline text-sm"
                 href="/api/kop/unduh"
               >
-                Unduh kop DOCX untuk penyusunan di luar aplikasi
+                Unduh kop DOCX
               </a>
             </>
           ) : (

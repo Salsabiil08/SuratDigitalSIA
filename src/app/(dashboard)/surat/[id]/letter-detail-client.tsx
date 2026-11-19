@@ -19,6 +19,7 @@ import { workflowLabel } from "@/domain/workflow";
 import { PageHeader } from "@/components/ui/page-header";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { DocumentDownloads } from "@/components/letters/document-downloads";
 import { DocumentPreview } from "@/components/letters/document-preview";
 import { SignPanel } from "@/components/letters/sign-panel";
 export function LetterDetailClient({
@@ -171,7 +172,7 @@ export function LetterDetailClient({
         {data.delivery?.dispatch && <>
           <p className="text-sm">Dikirim pada {new Date(data.delivery.dispatch.sent_at).toLocaleString('id-ID',{timeZone:'Asia/Jakarta'})} WIB. Versi dan sidik dokumen pengiriman dicatat tetap.</p>
           {(data.delivery.recipients as {profile_id:string;recipient_role:string;read_at:string|null;received_at:string|null}[]).map(r=><p key={r.profile_id} className="text-sm">{r.recipient_role==='PRIMARY'?'Penerima utama':'Tembusan'} · {r.read_at?'Dokumen sudah dibuka':'Belum dibuka'} · {r.recipient_role==='CC'?'Salinan, tanpa konfirmasi penerimaan utama':r.received_at?'Penerimaan dikonfirmasi':'Belum ada konfirmasi penerimaan'} · {r.recipient_role==='CC'?'Tidak otomatis wajib membalas':data.replyContext.recipients.find(x=>x.profileId===r.profile_id)?.repliedAt?'Sudah Dibalas':'Belum ada balasan resmi terkirim'}</p>)}
-          <p className="text-xs text-neutral-600">Membuka atau mengunduh dokumen bukan konfirmasi penerimaan. Tembusan tidak otomatis wajib membalas.</p>
+          <p className="text-xs text-neutral-600">Membuka surat tidak mengonfirmasi penerimaan.</p>
           {data.delivery.recipientRole==='PRIMARY' && !data.delivery.recipients.find((r:any)=>r.profile_id===data.userId)?.received_at && <Button isLoading={busy} onClick={()=>act(()=>receiveInternalLetterAction(data.delivery.dispatch.id),'Penerimaan Anda telah dicatat.')}>Konfirmasi Terima Surat</Button>}
         </>}
         {data.delivery?.canDispatch && l.finalized_at && l.status==='NUMBERED' && !data.delivery.dispatch && <>
@@ -189,20 +190,10 @@ export function LetterDetailClient({
               format={v.file_format}
               onLoaded={() => setPreviewed(true)}
             />
-            <div className="flex gap-4 flex-wrap">
-              <a
-                className="text-brand-red underline text-sm"
-                href={`/api/letters/${id}/document?download=1`}
-              >
-                Unduh Dokumen {v.file_format}
-              </a>
-              <a
-                className="text-brand-red underline text-sm"
-                href={`/api/letters/${id}/document?download=1&blank=1`}
-              >
-                Unduh untuk TTD Basah (area kosong)
-              </a>
-            </div>
+            <DocumentDownloads id={id} current={v}
+              unsigned={data.versions.find(version => version.version_kind === 'NUMBERED')}
+              signatureCount={l.required_signature_count}
+              fullVersionAccess={!!data.delivery?.fullVersionAccess} />
             <p className="text-xs text-neutral-500">
               Versi dokumen {v.version_no}
             </p>
@@ -272,7 +263,7 @@ export function LetterDetailClient({
       </Card>}
       {activeReview && <Card className="p-5 space-y-4">
         <h2 className="font-bold">Hasil Pemeriksaan Naskah</h2>
-        <p className="text-sm">Anda memeriksa versi ini. Perubahan isi dilakukan pembuat surat. Lolos pemeriksaan bukan persetujuan atau tanda tangan.</p>
+        <p className="text-sm">Beri catatan pemeriksaan. Perubahan isi dilakukan pembuat surat.</p>
         <label htmlFor="review-note" className="block text-sm">Catatan (wajib untuk memberi catatan atau meminta perbaikan)</label>
         <textarea id="review-note" className="w-full border rounded-xl p-3" value={note} onChange={e => setNote(e.target.value)} />
         <div className="flex gap-3 flex-wrap">{([['COMMENT','Simpan Catatan'],['PASS','Lolos Pemeriksaan'],['REQUEST_REVISION','Minta Perbaikan']] as const).map(([action,label]) =>

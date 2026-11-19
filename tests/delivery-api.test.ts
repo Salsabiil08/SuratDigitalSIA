@@ -14,3 +14,16 @@ it('penerima memperoleh bytes final snapshot persis, READ bukan RECEIVE',async()
 it('salinan blank/versi sebelum pengesahan ditolak untuk penerima saja',async()=>{const res=await GET(new Request('https://example.test/api/letters/l/document?blank=1'),{params:Promise.resolve({id:'l'})});expect(res.status).toBe(403);expect(m.download).not.toHaveBeenCalled();});
 it('snapshot/hash berbeda atau pencatatan READ gagal tidak menyajikan dokumen',async()=>{m.download.mockResolvedValue({bytes,format:'PDF',version:{id:'old',file_hash:'old-hash'}});expect((await GET(new Request('https://example.test/api/letters/l/document'),{params:Promise.resolve({id:'l'})})).status).toBe(403);m.download.mockResolvedValue({bytes,format:'PDF',version:{id:'sent-version',file_hash:'hash'}});m.rpc.mockImplementation((name:string)=>Promise.resolve(name==='get_internal_delivery_context'?{data:ctx,error:null}:{error:{message:'Audit gagal'}}));expect((await GET(new Request('https://example.test/api/letters/l/document'),{params:Promise.resolve({id:'l'})})).status).toBe(403);});
 it('HEAD tidak dicatat sebagai pembacaan',async()=>{expect((await GET(new Request('https://example.test/api/letters/l/document',{method:'HEAD'}),{params:Promise.resolve({id:'l'})})).status).toBe(200);expect(m.rpc.mock.calls.some(c=>c[0]==='record_internal_recipient_action')).toBe(false);});
+it.each([{data:null,error:null},{data:null,error:{message:'Query gagal'}}])('salinan kosong tidak boleh jatuh kembali ke dokumen bertanda tangan (%j)',async result=>{
+ ctx.fullVersionAccess=true;ctx.recipientRole=null;
+ const q:any={};for(const method of ['from','select','eq','order','limit'])q[method]=vi.fn(()=>q);q.maybeSingle=vi.fn().mockResolvedValue(result);m.client.mockResolvedValue(q);
+ const res=await GET(new Request('https://example.test/api/letters/l/document?download=1&blank=1'),{params:Promise.resolve({id:'l'})});
+ expect(res.status).toBe(403);expect(m.download).not.toHaveBeenCalled();
+});
+it('unduhan tanpa TTD memakai versi NUMBERED dan nama berkas berbeda',async()=>{
+ ctx.fullVersionAccess=true;ctx.recipientRole=null;
+ const q:any={};for(const method of ['from','select','eq','order','limit'])q[method]=vi.fn(()=>q);q.maybeSingle=vi.fn().mockResolvedValue({data:{id:'unsigned-version'},error:null});m.client.mockResolvedValue(q);
+ const res=await GET(new Request('https://example.test/api/letters/l/document?download=1&blank=1'),{params:Promise.resolve({id:'l'})});
+ expect(res.status).toBe(200);expect(m.download).toHaveBeenCalledWith(expect.objectContaining({current_version_id:'unsigned-version'}),false);
+ expect(res.headers.get('Content-Disposition')).toContain('Surat-tanpa-TTD.pdf');
+});

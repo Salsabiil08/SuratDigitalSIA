@@ -134,6 +134,7 @@ export function Sidebar({ user, unreadNotificationsCount, className }: SidebarPr
                 <Link
                   key={item.href}
                   href={item.href}
+                  prefetch={false}
                   className={cn(
                     'flex items-center justify-between px-2.5 py-2 rounded-lg text-sm transition-colors min-h-[38px]',
                     isActive

@@ -19,7 +19,7 @@ export async function GET(
     if(blank&&!context.fullVersionAccess)throw new Error('Salinan sebelum pengesahan tidak tersedia melalui hak penerima/pengiriman.');
     let sourceLetter = {...letter,current_version_id:context.documentVersionId};
     if (blank) {
-      const { data: version } = await (await createClient())
+      const { data: version, error: versionError } = await (await createClient())
         .from("letter_versions")
         .select("id")
         .eq("letter_id", letter.id)
@@ -27,7 +27,8 @@ export async function GET(
         .order("version_no", { ascending: false })
         .limit(1)
         .maybeSingle();
-      if (version) sourceLetter = { ...letter, current_version_id: version.id };
+      if (versionError || !version) throw new Error('Salinan tanpa TTD tersedia setelah nomor surat diterbitkan.');
+      sourceLetter = { ...letter, current_version_id: version.id };
     }
     const doc = await downloadVersion(sourceLetter,false);
     // Dokumen final disajikan persis bytes snapshot; tidak diregenerasi saat diunduh.
@@ -79,7 +80,7 @@ export async function GET(
     return new NextResponse(new Uint8Array(bytes), {
       headers: {
         "Content-Type": DOCUMENT_MIME[doc.format],
-        "Content-Disposition": `${new URL(request.url).searchParams.has("download") ? "attachment" : "inline"}; filename="Surat.${doc.format.toLowerCase()}"`,
+        "Content-Disposition": `${new URL(request.url).searchParams.has("download") ? "attachment" : "inline"}; filename="Surat${blank ? "-tanpa-TTD" : ""}.${doc.format.toLowerCase()}"`,
         "Cache-Control": "private, no-store",
         "X-Content-Type-Options": "nosniff",
       },
