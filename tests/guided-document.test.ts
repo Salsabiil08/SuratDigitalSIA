@@ -1,6 +1,7 @@
 import {it,expect} from 'vitest';
 import {mkdir,writeFile} from 'node:fs/promises';
 import JSZip from 'jszip';
+import {PDFDocument} from 'pdf-lib';
 import {generateLetterDocx} from '../src/lib/docx-generator';
 import {applyDocumentImages} from '../src/lib/letter-document';
 import {CANONICAL_HEADER_SHA256} from '../src/lib/letterhead-preview';
@@ -15,5 +16,6 @@ it('keeps original header and positions stamp as an overlapping layer only withi
  const signed=await applyDocumentImages(bytes,'DOCX',[{marker:'{{SIGNATURE_1}}',bytes:png},{marker:'{{STAMP}}',bytes:png}]);
  const result=await (await JSZip.loadAsync(signed)).file('word/document.xml')!.async('string');
  expect(result).toContain('<wp:anchor');expect(result).toContain('behindDoc="0"');expect(result).not.toContain('{{STAMP}}');
- await mkdir('test-results/editor-harness',{recursive:true});await writeFile('test-results/editor-harness/guided-signed.docx',signed);
+ await mkdir('test-results/editor-harness',{recursive:true});await writeFile('test-results/editor-harness/guided-signed.docx',signed);await writeFile('test-results/editor-harness/guided-unsigned.docx',bytes);
+ const pdf=await PDFDocument.create();for(let n=1;n<=2;n++){const page=pdf.addPage([595,842]);page.drawText('Synthetic local PDF page '+n,{x:40,y:780});}await writeFile('test-results/editor-harness/export-source.pdf',await pdf.save());
 });
