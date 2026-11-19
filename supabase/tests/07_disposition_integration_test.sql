@@ -1,0 +1,94 @@
+\set ON_ERROR_STOP on
+grant usage on schema public,app,auth to authenticated;
+grant select on letters,profiles,letter_versions,dispositions,approval_steps,signature_requests to authenticated;
+begin;
+create function test_support.fail_disposition_stage() returns trigger language plpgsql as $$begin raise exception 'Fault disposisi';end $$;
+do $$
+declare staff uuid:='a0000000-0000-0000-0000-000000000005';fin uuid:='a0000000-0000-0000-0000-000000000006';gm uuid:='a0000000-0000-0000-0000-000000000004';sm uuid:='a0000000-0000-0000-0000-000000000003';dir uuid:='a0000000-0000-0000-0000-000000000002';adm uuid:='a0000000-0000-0000-0000-000000000001';
+ ds uuid;src uuid;task uuid;rev integer;payload jsonb;submit_data jsonb;key uuid:=gen_random_uuid();result uuid;v letter_versions;rd uuid;j jsonb;failed boolean;original jsonb;tbl text;n bigint;new_result uuid;file uuid;first_submission uuid;note_task uuid;
+begin
+ insert into delivery_policy_managers values(dir);perform configure_internal_delivery(dir,null,null,null,null,true,'CC fixture disposisi');
+ ds:=test_support.disposition_origin(fin,gm,array[sm,adm]);select letter_id into src from internal_dispatches where id=ds;select to_jsonb(l) into original from letters l where id=src;
+ payload:=jsonb_build_object('recipientId',staff,'subject','Tindak lanjut','instruction','Siapkan surat hasil','priority','NORMAL','requiresLetter',true,'letterId',src,'operationKey',key);
+ failed:=false;begin perform disposition_workflow(sm,'CREATE',null,null,payload);exception when others then failed:=true;end;assert failed,'CC SM bukan mandat disposisi sumber';
+ failed:=false;begin perform disposition_workflow(adm,'CREATE',null,null,payload);exception when others then failed:=true;end;assert failed;
+ failed:=false;begin perform disposition_workflow(staff,'CREATE',null,null,payload);exception when others then failed:=true;end;assert failed;
+ failed:=false;begin perform disposition_workflow(gm,'CREATE',null,null,payload||jsonb_build_object('recipientId',fin));exception when others then failed:=true;end;assert failed,'GM tidak lintas unit';
+ foreach tbl in array array['notifications','audit_logs','disposition_operations'] loop
+  execute format('create trigger fault before insert on %I for each row execute function test_support.fail_disposition_stage()',tbl);
+  failed:=false;begin perform disposition_workflow(gm,'CREATE',null,null,payload);exception when others then failed:=true;end;assert failed;
+  execute format('drop trigger fault on %I',tbl);assert not exists(select 1 from dispositions where source_dispatch_id=ds);
+ end loop;
+ task:=disposition_workflow(gm,'CREATE',null,null,payload);assert disposition_workflow(gm,'CREATE',null,null,payload)=task;
+ assert(select count(*)=1 from audit_logs where action='DISPOSITION_CREATE' and entity_id=task::text);
+ failed:=false;begin perform disposition_workflow(gm,'CREATE',null,null,payload||jsonb_build_object('instruction','Diubah'));exception when others then failed:=true;end;assert failed;
+ perform set_config('request.jwt.claim.sub',gm::text,true);set local role authenticated;
+ j:=get_disposition_letter_context(src);assert(j->>'canCreate')::boolean;assert jsonb_array_length(j->'tasks')=1;
+ assert(select count(*)=1 from letter_versions where letter_id=src),'Disposisi bukan hak membaca arsip versi';reset role;
+ perform set_config('request.jwt.claim.sub',staff::text,true);set local role authenticated;
+ assert(select count(*)=1 from dispositions where id=task);assert(select count(*)=0 from letters where id=src);assert(select count(*)=0 from letter_versions where letter_id=src);
+ failed:=false;begin perform get_disposition_letter_context(src);exception when others then failed:=true;end;assert failed;reset role;
+ select revision into rev from dispositions where id=task;
+ submit_data:=jsonb_build_object('note','Draf saja belum cukup','operationKey',gen_random_uuid());
+ failed:=false;begin perform disposition_workflow(staff,'SUBMIT',task,rev,submit_data);exception when others then failed:=true;end;assert failed;
+ result:=test_support.disposition_result(staff,task,gen_random_uuid());
+ assert(select official_number is null and status='DRAFT' from letters where id=result);assert(select status<>'DONE' from dispositions where id=task);
+ select revision into rev from dispositions where id=task;
+ failed:=false;begin perform disposition_workflow(staff,'SUBMIT',task,rev,submit_data);exception when others then failed:=true;end;assert failed;
+ perform set_config('request.jwt.claim.sub',gm::text,true);set local role authenticated;
+ assert(select count(*)=0 from letters where id=result);assert(select count(*)=0 from disposition_result_links where result_letter_id=result);reset role;
+ -- Draf mengikuti preview/approval/nomor/final. Final saja masih belum cukup.
+ perform test_support.submit(staff,result);perform test_support.number(staff,result,'disposition-result-number');select revision into rev from letters where id=result;perform finalize_letter(staff,result,rev,false);
+ assert(select official_number<>(select official_number from letters where id=src) from letters where id=result);
+ select revision into rev from dispositions where id=task;
+ failed:=false;begin perform disposition_workflow(staff,'SUBMIT',task,rev,submit_data);exception when others then failed:=true;end;assert failed;
+ select * into v from letter_versions where id=(select current_version_id from letters where id=result);rd:=dispatch_internal_letter(staff,result,v.id,v.file_hash,'disposition-result-send');
+ assert not exists(select 1 from official_reply_sends),'Kirim hasil bukan balasan resmi PR-06';assert(select status<>'DONE' from dispositions where id=task);
+ -- Lampiran: pelaksana bisa menyiapkan, pemberi belum bisa membaca sebelum submit.
+ select revision into rev from dispositions where id=task;
+ perform disposition_workflow(staff,'ATTACH',task,rev,jsonb_build_object('operationKey',gen_random_uuid(),'path',staff::text||'/evidence.pdf','hash',repeat('a',64),'format','PDF','name','Hasil.pdf','size',100));
+ select id into file from disposition_result_files where disposition_id=task;
+ perform set_config('request.jwt.claim.sub',gm::text,true);set local role authenticated;assert(select count(*)=0 from disposition_result_files where id=file);reset role;
+ select revision into rev from dispositions where id=task;
+ submit_data:=jsonb_build_object('note','Surat hasil dan lampiran telah siap','operationKey',gen_random_uuid(),'attachmentIds',jsonb_build_array(file));
+ foreach tbl in array array['disposition_submissions','disposition_submission_files','notifications','audit_logs','disposition_operations'] loop
+  execute format('create trigger fault before insert on %I for each row execute function test_support.fail_disposition_stage()',tbl);
+  failed:=false;begin perform disposition_workflow(staff,'SUBMIT',task,rev,submit_data);exception when others then failed:=true;end;assert failed;
+  execute format('drop trigger fault on %I',tbl);assert(select status='IN_PROGRESS' from dispositions where id=task);assert not exists(select 1 from disposition_submissions where disposition_id=task);
+ end loop;
+ perform disposition_workflow(staff,'SUBMIT',task,rev,submit_data);perform disposition_workflow(staff,'SUBMIT',task,rev,submit_data);
+ select id into first_submission from disposition_submissions where disposition_id=task;
+ assert(select count(*)=1 from disposition_submissions where disposition_id=task);
+ perform set_config('request.jwt.claim.sub',gm::text,true);set local role authenticated;
+ assert(select count(*)=1 from disposition_result_files where id=file);assert(select count(*)=1 from letter_versions where letter_id=result),'Pemberi hanya snapshot resmi';
+ assert(select count(*)=0 from approval_steps where letter_id=result);j:=get_disposition_letter_context(result);assert jsonb_array_length(j->'tasks')=1;reset role;
+ select revision into rev from dispositions where id=task;
+ failed:=false;begin perform disposition_workflow(staff,'ACCEPT',task,rev,jsonb_build_object('operationKey',gen_random_uuid()));exception when others then failed:=true;end;assert failed;
+ failed:=false;begin perform disposition_workflow(adm,'ACCEPT',task,rev,jsonb_build_object('operationKey',gen_random_uuid()));exception when others then failed:=true;end;assert failed;
+ perform disposition_workflow(gm,'RETURN',task,rev,jsonb_build_object('note','Lengkapi analisis','operationKey',gen_random_uuid()));
+ assert(select count(*)=1 from disposition_decisions where submission_id=first_submission and decision='RETURN');
+ new_result:=test_support.disposition_result(staff,task,gen_random_uuid());assert new_result<>result;
+ perform test_support.submit(staff,new_result);perform test_support.number(staff,new_result,'disposition-repair-number');select revision into rev from letters where id=new_result;perform finalize_letter(staff,new_result,rev,false);
+ select * into v from letter_versions where id=(select current_version_id from letters where id=new_result);perform dispatch_internal_letter(staff,new_result,v.id,v.file_hash,'disposition-repair-send');
+ select revision into rev from dispositions where id=task;perform disposition_workflow(staff,'SUBMIT',task,rev,jsonb_build_object('note','Analisis diperbaiki','operationKey',gen_random_uuid()));
+ select revision into rev from dispositions where id=task;
+ create trigger fault before insert on disposition_decisions for each row execute function test_support.fail_disposition_stage();
+ failed:=false;begin perform disposition_workflow(gm,'ACCEPT',task,rev,jsonb_build_object('note','Sesuai','operationKey',gen_random_uuid()));exception when others then failed:=true;end;assert failed;
+ drop trigger fault on disposition_decisions;assert(select status='IN_REVIEW' from dispositions where id=task);
+ submit_data:=jsonb_build_object('note','Sesuai','operationKey',gen_random_uuid());perform disposition_workflow(gm,'ACCEPT',task,rev,submit_data);perform disposition_workflow(gm,'ACCEPT',task,rev,submit_data);
+ assert(select status='DONE' from dispositions where id=task);assert(select count(*)=2 from disposition_submissions where disposition_id=task);assert(select count(*)=2 from disposition_decisions);
+ assert(select count(*)=2 from disposition_result_links where disposition_id=task);assert not exists(select 1 from official_reply_sends);assert(select to_jsonb(l)=original from letters l where id=src);
+ -- Catatan saja sah bila pemberi tidak mewajibkan surat; tidak otomatis due date.
+ payload:=payload||jsonb_build_object('operationKey',gen_random_uuid(),'requiresLetter',false);
+ note_task:=disposition_workflow(gm,'CREATE',null,null,payload);select revision into rev from dispositions where id=note_task;
+ perform disposition_workflow(staff,'SUBMIT',note_task,rev,jsonb_build_object('note','Hasil catatan','operationKey',gen_random_uuid()));
+ select revision into rev from dispositions where id=note_task;perform disposition_workflow(gm,'ACCEPT',note_task,rev,jsonb_build_object('operationKey',gen_random_uuid()));
+ assert(select due_date is null and status='DONE' from dispositions where id=note_task);
+ perform set_config('request.jwt.claim.sub',sm::text,true);set local role authenticated;
+ assert(select count(*)=0 from disposition_submissions where disposition_id=task);assert(select count(*)=0 from disposition_result_files where disposition_id=task);assert(select count(*)=0 from letters where id=new_result);
+ assert(select count(*)=0 from storage.objects where bucket_id='letter-documents');reset role;
+ assert not has_function_privilege('authenticated','disposition_workflow(uuid,text,uuid,integer,jsonb)','execute');
+ assert not has_function_privilege('anon','get_disposition_letter_context(uuid)','execute');
+ assert not has_function_privilege('service_role','get_disposition_letter_context(uuid)','execute');
+end $$;
+rollback;

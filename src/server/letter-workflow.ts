@@ -16,11 +16,11 @@ export const DOCUMENT_BUCKET = "letter-documents";
 export const ASSET_BUCKET = "signature-assets";
 export async function readLetter(id: string) {
   await requireUser();
-  const db = createClient();
+  const db = await createClient();
   const { data, error } = await db
     .from("letters")
     .select(
-      "*, type:letter_types!letters_letter_type_id_fkey(code,name,category), creator:profiles!letters_creator_id_fkey(full_name), recipient:profiles!letters_recipient_user_id_fkey(full_name), unit:organizational_units!letters_creator_unit_id_fkey(name,code)",
+      "*, document_category:document_categories!letters_category_id_fkey(code,name), type:letter_types!letters_letter_type_id_fkey(code,name,category), creator:profiles!letters_creator_id_fkey(full_name), recipient:profiles!letters_recipient_user_id_fkey(full_name), unit:organizational_units!letters_creator_unit_id_fkey(name,code)",
     )
     .eq("id", id)
     .single();
@@ -31,7 +31,7 @@ export async function readLetter(id: string) {
   return data;
 }
 export async function readVersion(letter: any) {
-  const { data, error } = await createClient()
+  const { data, error } = await (await createClient())
     .from("letter_versions")
     .select("*")
     .eq("id", letter.current_version_id)
@@ -86,7 +86,7 @@ export async function storeBytes(
 }
 export async function peopleOptions() {
   const user = await requireUser();
-  const db = createClient();
+  const db = await createClient();
   const [
     { data: profiles, error },
     { data: assignments, error: ae },
@@ -138,7 +138,19 @@ export async function peopleOptions() {
     })
     .filter((p) => p.position && p.active);
   const {data:billingType}=await db.from('letter_types').select('creator_unit_id').eq('category','BILLING').eq('is_active',true).maybeSingle();
-  return { user, people, banks: banks || [], financeUnitId:billingType?.creator_unit_id || '' };
+  const [{ data: categories, error: catError }, { data: rules, error: ruleError }, { data: grants, error: grantError }] = await Promise.all([
+    db.from('document_categories').select('id,code,name').eq('is_active', true).in('code', ['PERMOHONAN','LAPORAN','PEMBERITAHUAN']),
+    db.from('review_policies').select('id,category_code,requires_review,validation_status,revision,type:letter_types(code)'),
+    createAdminClient().from('review_authorizations').select('reviewer_id,unit_id,starts_on,ends_on,type:letter_types(code)').eq('is_active', true),
+  ]);
+  if (catError || ruleError || grantError) throw new Error('Konfigurasi pemeriksaan belum dapat diambil.');
+  const reviewerGrants = (grants || []).filter(g => (!g.unit_id || g.unit_id === user.unit?.id) && g.starts_on <= today && (!g.ends_on || g.ends_on >= today))
+    .map(g => ({ reviewerId: g.reviewer_id, typeCode: (g.type as any)?.code || null }));
+  const {data:approvalGrants,error:approvalGrantError}=await createAdminClient().from('approver_authorizations').select('approver_id,unit_id,starts_on,ends_on,type:letter_types(code)').eq('is_active',true);
+  if(approvalGrantError)throw new Error('Konfigurasi persetujuan belum dapat diambil.');
+  const approverGrants=(approvalGrants||[]).filter(g=>(!g.unit_id||g.unit_id===user.unit?.id)&&g.starts_on<=today&&(!g.ends_on||g.ends_on>=today)).map(g=>({approverId:g.approver_id,typeCode:(g.type as any)?.code||null}));
+  const reviewRules = (rules || []).map(r => ({ ...r, typeCode: (r.type as any)?.code || null }));
+  return { user, people, banks: banks || [], financeUnitId:billingType?.creator_unit_id || '', categories: categories || [], reviewRules, reviewerGrants, approverGrants };
 }
 export async function saveDraft(
   input: DraftInput,
@@ -172,7 +184,10 @@ export async function saveDraft(
     throw new Error("Sumber surat tidak valid.");
   if (old && input.source !== old.source)
     throw new Error("Sumber dokumen tidak dapat diganti.");
-  const { people, banks } = await peopleOptions();
+  const { people, banks, categories, reviewerGrants } = await peopleOptions();
+  if (!categories.some(c => c.code === input.categoryCode)) throw new Error('Pilih kategori surat yang aktif.');
+  if (input.reviewerId && (input.reviewerId === user.id || !people.some(p => p.id === input.reviewerId) || !reviewerGrants.some(g => g.reviewerId === input.reviewerId && (!g.typeCode || g.typeCode === input.letterTypeCode))))
+    throw new Error('Pilih pemeriksa berbeda yang berwenang untuk jenis dan unit surat.');
   const signers = input.signerIds.map((id) =>
     people.find((p) => p.id === id && p.signer),
   );
@@ -289,6 +304,10 @@ export async function saveDraft(
       .storage.from(DOCUMENT_BUCKET)
       .remove([document.path]);
     throw new Error(error.message);
+  }
+  if(input.replyToDispatchId||input.dispositionDraftKey){
+    const {data:used,error:checkError}=await createAdminClient().from('letter_versions').select('id').eq('storage_path',document.path).limit(1);
+    if(!checkError&&used?.length===0)await createAdminClient().storage.from(DOCUMENT_BUCKET).remove([document.path,...attachments.map(a=>a.path)]);
   }
   return id as string;
 }

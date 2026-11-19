@@ -1,10 +1,12 @@
 "use client";
 
+import {notificationHref} from "@/domain/notification-links";
 import * as React from "react";
 import Link from "next/link";
 import { PageHeader } from "@/components/ui/page-header";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { notificationPresentation } from "@/domain/notification-events";
 import { Chip } from "@/components/ui/chip";
 import {
   getNotificationsAction,
@@ -60,24 +62,8 @@ export function NotifikasiClient({
   }, [notifications, filter]);
 
   const getEventBadge = (type: string) => {
-    switch (type) {
-      case "APPROVAL_REQUEST":
-        return <Chip variant="amber">Persetujuan</Chip>;
-      case "APPROVED":
-        return <Chip variant="green">Disetujui</Chip>;
-      case "REVISED":
-        return <Chip variant="amber">Revisi</Chip>;
-      case "REJECTED":
-        return <Chip variant="red">Ditolak</Chip>;
-      case "NUMBER_ISSUED":
-        return <Chip variant="green">Nomor Terbit</Chip>;
-      case "DISPOSITION":
-        return <Chip variant="blue">Disposisi</Chip>;
-      case "CANCELLED":
-        return <Chip variant="red">Dibatalkan</Chip>;
-      default:
-        return <Chip variant="gray">Sistem</Chip>;
-    }
+    const event = notificationPresentation(type);
+    return <Chip variant={event.variant}>{event.label}</Chip>;
   };
 
   return (
@@ -187,7 +173,7 @@ export function NotifikasiClient({
 
                 <div className="flex items-center gap-2 shrink-0">
                   {item.letter_id && (
-                    <Link href={`/surat/${item.letter_id}`}>
+                    <Link prefetch={false} href={notificationHref(item)}>
                       <Button variant="outline" size="sm">
                         Buka Surat
                       </Button>

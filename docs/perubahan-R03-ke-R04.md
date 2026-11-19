@@ -1,3 +1,5 @@
+> Dokumen historis perubahan 14 November 2026. Target R.04 adaptasi NDO tanggal 18 November ada di [spesifikasi 08](spec/08-alur-ndo-r04.md); pengecualian editor/Kotak Masuk/pengiriman di bawah tidak lagi menjadi larangan target baru.
+
 # Perubahan R.03 ke R.04
 
 R.04 (14 Nov 2026) menyederhanakan R.03: SIADocs menjadi sistem penomoran dan kewenangan surat. Bila spec lain di folder ini berbeda dengan R.04, R.04 yang berlaku, dan perbedaan dicatat di sini.

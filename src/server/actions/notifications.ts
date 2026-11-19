@@ -1,7 +1,6 @@
 'use server';
 
 import { createClient } from '@/lib/supabase/server';
-import { createAdminClient } from '@/lib/supabase/admin';
 import { requireUser } from '@/server/auth';
 import { readNotifications } from '@/server/notifications';
 import { revalidatePath } from 'next/cache';
@@ -16,14 +15,6 @@ export interface NotificationItem {
   is_read: boolean;
   read_at?: string | null;
   created_at: string;
-}
-
-export interface CreateNotificationInput {
-  recipientId: string;
-  eventType: 'APPROVAL_REQUEST' | 'APPROVED' | 'REVISED' | 'REJECTED' | 'NUMBER_ISSUED' | 'DISPOSITION' | 'CANCELLED';
-  title: string;
-  letterId?: string;
-  dispositionId?: string;
 }
 
 /**
@@ -50,22 +41,21 @@ export async function getNotificationsAction(): Promise<{
 export async function markNotificationAsReadAction(notificationId: string) {
   try {
     const user = await requireUser();
-    const supabase = createClient();
-    const { error } = await supabase
+    const supabase = await createClient();
+    const { data, error } = await supabase
       .from('notifications')
       .update({
         is_read: true,
         read_at: new Date().toISOString(),
       })
-      .eq('id', notificationId).eq('recipient_id',user.id);
+      .eq('id', notificationId).eq('recipient_id',user.id)
+      .select('id').maybeSingle();
 
-    if (error) {
-      console.warn('markNotificationAsReadAction error:', error.message);
-    }
+    if (error || !data) return { success: false, error: 'Gagal menandai pemberitahuan. Coba kembali.' };
     revalidatePath('/notifikasi');
     return { success: true };
-  } catch (err: any) {
-    return { success: false, error: err.message };
+  } catch {
+    return { success: false, error: 'Tidak dapat menandai pemberitahuan. Pastikan Anda masuk dengan akun aktif.' };
   }
 }
 
@@ -76,7 +66,7 @@ export async function markAllNotificationsAsReadAction() {
   try {
     const user = await requireUser();
     const recipientId = user.id;
-    const supabase = createClient();
+    const supabase = await createClient();
 
     const { error } = await supabase
       .from('notifications')
@@ -87,39 +77,10 @@ export async function markAllNotificationsAsReadAction() {
       .eq('recipient_id', recipientId)
       .eq('is_read', false);
 
-    if (error) {
-      console.warn('markAllNotificationsAsReadAction error:', error.message);
-    }
+    if (error) return { success: false, error: 'Gagal menandai pemberitahuan. Coba kembali.' };
     revalidatePath('/notifikasi');
     return { success: true };
-  } catch (err: any) {
-    return { success: false, error: err.message };
-  }
-}
-
-/**
- * Membuat entri notifikasi baru (Server-side helper).
- * Tidak menyimpan ringkasan atau isi dokumen apapun.
- */
-export async function createNotification(input: CreateNotificationInput) {
-  try {
-    const supabase = createAdminClient();
-    const { data, error } = await supabase
-      .from('notifications')
-      .insert({
-        recipient_id: input.recipientId,
-        letter_id: input.letterId || null,
-        disposition_id: input.dispositionId || null,
-        event_type: input.eventType,
-        title: input.title,
-        is_read: false,
-        channels_sent: ['IN_APP'],
-      })
-      .select()
-      .single();
-
-    return { success: !error, data, error: error?.message };
-  } catch (err: any) {
-    return { success: false, error: err.message };
+  } catch {
+    return { success: false, error: 'Tidak dapat menandai pemberitahuan. Pastikan Anda masuk dengan akun aktif.' };
   }
 }

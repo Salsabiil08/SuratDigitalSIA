@@ -1,4 +1,4 @@
 import { PreparedLetterEditor } from "@/components/letters/prepared-letter-editor";
-export default function Page({ params }: { params: { id: string } }) {
-  return <PreparedLetterEditor id={params.id} />;
+export default async function Page({ params }: { params: Promise<{ id: string }> }) {
+  return <PreparedLetterEditor id={(await params).id} />;
 }

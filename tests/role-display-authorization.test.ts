@@ -1,0 +1,10 @@
+import {beforeEach,expect,it,vi} from 'vitest';
+const m=vi.hoisted(()=>({user:vi.fn(),one:vi.fn()}));
+vi.mock('@/server/auth',()=>({requireUser:m.user,getCurrentUser:m.user,clearLocalSession:vi.fn()}));
+vi.mock('next/navigation',()=>({redirect:vi.fn()}));
+vi.mock('@/lib/supabase/server',()=>({createClient:async()=>{const db:any={};for(const k of ['from','select','eq'])db[k]=()=>db;db.maybeSingle=m.one;return db;}}));
+import {getCurrentUserRoleAction} from '../src/server/actions/auth';
+beforeEach(()=>{vi.resetAllMocks();m.one.mockResolvedValue({data:null,error:null});});
+it('tanpa sesi tidak mengembalikan akun/persona palsu',async()=>{m.user.mockRejectedValue(new Error('Masuk dahulu'));await expect(getCurrentUserRoleAction()).rejects.toThrow();expect(m.one).not.toHaveBeenCalled();});
+it('Super Admin tanpa mandat jabatan bukan pemberi disposisi atau penandatangan',async()=>{m.user.mockResolvedValue({id:'admin-real',fullName:'Admin',isSuperAdmin:true,isOfficialSigner:false});const x=await getCurrentUserRoleAction();expect(x.id).toBe('admin-real');expect(x.canCreateDisposition).toBe(false);expect(x.canSignQueue).toBe(false);expect(x.canApplySignature).toBe(false);expect(x.canReceiveDisposition).toBe(false);});
+it('jabatan dan mandat penandatangan sah tetap berlaku terlepas dari status admin',async()=>{m.user.mockResolvedValue({id:'official',fullName:'Pejabat',isSuperAdmin:false,isOfficialSigner:true,position:{code:'SM',level:3}});const x=await getCurrentUserRoleAction();expect(x.canSignQueue).toBe(true);expect(x.canCreateDisposition).toBe(true);});

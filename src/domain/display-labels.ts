@@ -1,5 +1,17 @@
 /** Kode tetap dipakai di database; hanya label ini yang ditampilkan. */
 const labels: Record<string, string> = {
+  CREATOR_APPROVAL_EFFECTIVE: "Persetujuan pembuat berlaku sesuai urutan",
+  APPROVER_AUTHORIZATION_SET: "Kewenangan penyetuju diperbarui",
+  RESTART_APPROVAL: "Pengajuan ditarik untuk koreksi",
+  SIGNER_CONFIRMATION: "Persetujuan formal",
+  CREATOR_SELECTED: "Persetujuan tambahan",
+  BILLING_SUBMITTER: "Persetujuan SM Finance",
+  BILLING_APPROVER: "Persetujuan Direktur",
+  SUPERSEDED: "Digantikan pengajuan baru",
+  INTERNAL_SENT: "Surat internal dikirim",
+  INTERNAL_RECEIVE: "Penerimaan surat dikonfirmasi",
+  INTERNAL_READ: "Dokumen surat dibuka",
+  DELIVERY_POLICY_SET: "Kewenangan pengiriman ditetapkan",
   ACCOUNT_ACCESS_UPDATED: "Akses akun diperbarui",
   LETTER_DATE_SET: "Tanggal surat ditetapkan",
   SIGNATURE_REQUESTED: "Pengesahan tanda tangan diajukan",

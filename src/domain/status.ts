@@ -1,13 +1,6 @@
-/**
- * Mesin status surat & disposisi SIADocs (Blueprint R.04).
- * Dua status utama surat dipisah dan tidak dicampur:
- *  - status proses (LetterStatus)
- *  - status pengesahan (SignatureStatus)
- *
- * Catatan R.04:
- *  - Status pengiriman (DistributionStatus) telah DIHAPUS.
- *  - Transisi penomoran langsung satu transaksi: READY_TO_ISSUE -> NUMBERED.
- *  - Disposisi memiliki aturan penyelesaian: bila requires_letter, harus berstatus NUMBERED.
+/** Status proses/pengesahan baseline tetap kompatibel dengan database.
+ * Finalitas dokumen bukan bukti pengiriman, penerimaan atau selesai alur.
+ * Review independen dan transaksi distribusi diterapkan pada PR berikutnya.
  */
 
 export const LETTER_STATUSES = [
@@ -142,4 +135,13 @@ export function canCompleteDisposition(
 ): boolean {
   if (!requiresLetter) return true;
   return letterStatus === 'NUMBERED';
+}
+
+/** Dimensi finalitas saja; tidak menyimpulkan pengiriman/penerimaan/selesai alur. */
+export type DocumentFinality = 'NOT_FINAL' | 'FINAL';
+export const DOCUMENT_FINALITY_LABEL: Record<DocumentFinality, string> = {
+  NOT_FINAL: 'Belum final', FINAL: 'Dokumen final',
+};
+export function documentFinality(finalizedAt?: string | null): DocumentFinality {
+  return finalizedAt ? 'FINAL' : 'NOT_FINAL';
 }

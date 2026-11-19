@@ -1,17 +1,52 @@
 name: ci
 on: [push, pull_request]
+permissions:
+  contents: read
 jobs:
   check:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
-        with: { node-version: 20 }
-      - run: npm install
+        with: { node-version: 22 }
+      - run: npm ci
       - run: npm run check
+      - run: npm audit --omit=dev
+      - run: npm audit --audit-level=critical
+      - run: npm run build
   db:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - run: sudo apt-get update && sudo apt-get install -y postgresql
       - run: npm run test:db
+      - run: mkdir -p test-results && bash scripts/readiness/test-forward.sh
+
+  browser-public:
+    runs-on: ubuntu-latest
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: http://127.0.0.1:9
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: local-public-only
+      NEXT_PUBLIC_SIADOCS_ENV: staging
+      SIADOCS_ENV: staging
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.12' }
+      - run: npm ci
+      - run: pip install -r scripts/readiness/requirements.txt
+      - run: python -m playwright install --with-deps chromium
+      - run: npm run build
+      - run: |
+          mkdir -p test-results
+          npm run start -- -H 127.0.0.1 -p 3108 > test-results/public-server.log 2>&1 &
+          task_server_pid=$!
+          trap 'kill "$task_server_pid" 2>/dev/null || true' EXIT
+          python scripts/readiness/browser-public.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: readiness-public-browser
+          path: test-results/readiness-browser/

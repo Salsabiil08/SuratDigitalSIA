@@ -1,88 +1,39 @@
-# AGENTS.md: SIADocs
+# AGENTS.md — SIADocs
 
-Petunjuk untuk agen AI pengembang (Codex, Claude Code, atau agen lain). Baca file ini sebelum mengerjakan apa pun.
+## Pekerjaan aktif dan batas persetujuan
 
-## Revisi aktif (18 November 2026)
+Basis implementasi yang disetujui adalah **Salsabiil08/SuratDigitalSIA**. Jangan merekonsiliasi ke `Salsabiil08/SIAdocs` atau mengganti stack.
 
-Instruksi pengguna REV-01 sampai REV-07 pada `docs/spec/00-revisi-alur.md` menggantikan larangan editor isi, gambar TTD, stempel, dan batasan tanggal pada R.04. Blueprint R.03 tetap menjadi acuan penomoran dan kewenangan; perubahan mekanisme gambar TTD/stempel merupakan revisi eksplisit pengguna, bukan klaim isi R.03. Kerjakan alur ini dengan Auth, database, dan Storage Supabase yang nyata, tanpa fallback akun demo.
+PR-00–07 tersedia sebagai Draft PR #1–8, belum di-merge. Pengguna mengizinkan **PR-08 FINAL: Production Readiness** pada 18 November 2026. Branch `feat/pr-08-production-readiness` dimulai dari PR-07 `fad16b73d0f72bf1ad0637ea1c5994e6277752d8`. Satu Draft PR-08 menjadi integrasi seluruh stack ke main dengan CI terkini; jangan bypass CI merah historis. Selesaikan perbaikan teknis dan bukti non-production, tanpa membangun ulang modul atau membuat fase PR-09. Staging Supabase belum tersedia (branching ditolak paket), Vercel staging disiapkan terpisah tanpa kredensial production. UAT nyata lintas akun/Storage dan keputusan perusahaan tidak boleh diklaim PASS sebelum dilakukan. Production hanya read-only; tidak ada izin merge, migrasi production atau deployment. Berhenti dengan laporan GO/NO-GO dan runbook setelah semua pekerjaan independen selesai atau blocker akses tak dapat dilewati.
 
-## Tujuan
+## Acuan dan cara membaca
 
-SIADocs adalah sistem penomoran dan disposisi surat digital PT Semen Indonesia Aceh (Blueprint R.04): Buat Surat, Ambil Nomor, persetujuan, penerbitan nomor resmi, pengesahan tanda tangan, dan disposisi. Stack: Next.js (App Router), TypeScript, Supabase (PostgreSQL, Auth, Storage, Realtime). Instruksi pembangunan lengkap: `ANTIGRAVITY.md`.
+1. Instruksi pengguna terbaru serta keputusan yang tercatat di [spesifikasi target R.04](docs/spec/08-alur-ndo-r04.md).
+2. [Revisi fitur production](docs/spec/00-revisi-alur.md), [baseline terkunci](docs/baselines/production-2026-11-18.md), dan [rencana migrasi](docs/plans/R04_NDO_MIGRATION_PLAN.md).
+3. Blueprint SIADocs R.03 untuk invarian SIA yang tidak direvisi; User Guide NDO untuk referensi adaptasi, bukan seluruh fitur wajib.
+4. Spesifikasi/panduan lama bertanda historis hanya untuk penelusuran. PDF/DOCX R.04 lama tidak mengalahkan keputusan terbaru.
+5. Kode dan migrasi pada baseline menjelaskan implementasi aktual; keberadaan halaman, tabel, atau checklist bukan bukti fitur selesai.
 
-## Sumber kebenaran (urutan prioritas)
+Mulai dari [docs/INDEX.md](docs/INDEX.md) dan tugas aktif di [tasks/BACKLOG.md](tasks/BACKLOG.md). Baca file relevan saja. Bila ada konflik bisnis yang belum diputuskan, catat di `docs/FINDINGS.md` dan hentikan bagian yang bergantung pada keputusan itu; pilihan teknis rutin tidak perlu konfirmasi ulang.
 
-1. `docs/spec/*.md` (ringkasan aturan bisnis yang sudah disepakati, mudah dibaca agen)
-2. `docs/blueprint/Blueprint_R04_SIADocs.pdf` atau `.docx` (dokumen resmi lengkap, termasuk diagram dan mockup layar)
-3. Skema yang berjalan: `supabase/migrations/`
+## Invarian yang dipertahankan
 
-Bila ada perbedaan antara kode dan spesifikasi, spesifikasi menang. Jangan mengubah aturan bisnis sendiri. Catat temuan di `docs/FINDINGS.md`.
+- Pertahankan fitur production: editor isi/format dan pratinjau, draft/koreksi/versi, nomor resmi, dua jalur pengesahan, stempel opsional, disposisi dua arah, Auth, Storage privat, audit, pembatalan, identitas merah–oranye, dan nama **Dashboard**. Jangan membangun ulang aplikasi.
+- Internal: satu penerima utama di organisasi, tanpa TTD untuk komunikasi biasa, maksimal satu TTD formal. Eksternal: identitas penerima luar dan satu SM/Direktur. Tagihan: pengaju Finance, rincian/lampiran wajib, dua persetujuan dan TTD SM lalu Direktur. SM berlaku lintas organisasi, bukan hanya Finance. Tembusan default nonaktif; aktivasi memerlukan penetapan perusahaan dan tidak memberi kewajiban balasan otomatis.
+- Nomor hanya melalui tindakan eksplisit Terbitkan Nomor Surat setelah syarat sah. Persetujuan tidak menerbitkan nomor otomatis. Counter atomik/idempoten per seri dan tahun WIB; nomor tidak diubah, direset, atau dipakai ulang, termasuk setelah pembatalan. Pemulihan dokumen memakai nomor yang sama.
+- Jangan mengubah otomatis **13 surat lama yang belum memiliki versi dokumen**. Jangan mengarang dokumen, tanda tangan, review, pengiriman, atau bukti terima. Rekonsiliasi memerlukan berkas asli, kewenangan, dan persetujuan tersendiri.
+- Dokumen final terkunci; finalisasi dokumen berbeda dari pengiriman, penerimaan, dan penyelesaian alur. Unduh bukan kirim, dibaca bukan diterima, nomor bukan bukti pengesahan.
+- Target akses penerima baru diberikan setelah pengiriman resmi terhadap versi/hash terkirim. Hak reviewer/penyetuju/penandatangan berdasarkan penugasan diperiksa terpisah. Kekurangan baseline tetap tercatat sebagai GAP, bukan diklaim sudah diperbaiki.
+- Reviewer hanya memberi catatan, menyetujui hasil pemeriksaan, atau meminta revisi; pembuat yang mengubah isi. Reviewer, penyetuju, dan penandatangan adalah peran berbeda. Hindari approval duplikat jika pembuat juga pejabat berwenang; penerbitan dan TTD tetap eksplisit.
+- Konfigurasi awal kategori: Permohonan/Laporan wajib review; Pemberitahuan opsional. Pertimbangkan pasangan jenis–kategori dan kewenangan perusahaan. Ini konfigurasi awal **belum tervalidasi perusahaan**, bukan kebijakan final yang boleh diterapkan ke production dari PR-00.
+- Disposisi hanya selesai sesudah pemberi memeriksa dan menerima hasil. Balasan resmi adalah surat baru berelasi, dengan identitas/versi/nomor sendiri. Jangan menimpa surat asal.
+- `IN_APP`: penandatangan sah memeriksa lalu menerapkan gambar TTD atau mengunggah hasil basah melalui akunnya. Stempel opsional sesuai kewenangan. `EXTERNAL`: unduh untuk pengesahan luar tanpa kewajiban unggah. Gambar TTD bukan TTE tersertifikasi. Tanpa OCR atau penempatan nomor/TTD sembarangan.
+- Super Admin tidak otomatis mendapat kewenangan bisnis atau akses isi surat. Identitas aktor dari sesi Auth terverifikasi; server dan RLS menegakkan hak. Secret/service role hanya server, berkas privat, audit append-only dan tanpa isi dokumen.
 
-## Aturan bisnis yang tidak boleh diubah
+## Disiplin perubahan dan bukti
 
-1. Nomor surat TIDAK pernah diterbitkan saat draft. Nomor terbit hanya lewat aksi eksplisit Terbitkan Nomor Surat, setelah validasi dan persetujuan wajib terpenuhi. Persetujuan terakhir hanya menghasilkan status `READY_TO_ISSUE`.
-2. Nomor unik, atomik (fungsi database `issue_letter_number`), tidak pernah dipakai ulang, tidak pernah diedit. Surat dibatalkan tetap menyimpan nomornya.
-3. Format nomor dan seri tidak berubah (lihat `docs/spec/03-penomoran.md`). Tahun mengikuti go-live, urut mulai 001, reset tahunan menurut Asia/Jakarta. Tanpa migrasi register Excel.
-4. Dua jalur pengesahan, dipilih pembuat: melalui SIADocs (unduh, tanda tangan di luar aplikasi, unggah dokumen bertanda tangan) atau di luar SIADocs (unduh dokumen bernomor dengan kop dan ruang tanda tangan kosong, tanpa kewajiban unggah).
-5. Dua status terpisah: proses dan pengesahan (status pengiriman dihapus pada R.04). `NUMBERED` tidak sama dengan sudah ditandatangani.
-6. Satu penerima utama per surat. Tanpa tembusan. Penerima eksternal hanya data, bukan akun.
-7. Tanpa tanda tangan elektronik tersertifikasi, tanpa gambar tanda tangan atau stempel otomatis, tanpa OCR atau AI untuk dokumen.
-8. Super Admin tidak otomatis berwenang membatalkan, menyetujui, atau menandatangani. Log History khusus Super Admin.
-9. Struktur organisasi dinamis (Master Organisasi), tidak di-hardcode. Kode unit, jabatan, dan jenis surat berasal dari data.
-10. Penerbitan nomor satu transaksi (`READY_TO_ISSUE` ke `NUMBERED`). SIADocs tidak menyisipkan nomor ke dokumen.
-
-## Cakupan
-
-Kerjakan hanya yang ada di `tasks/BACKLOG.md`. Jangan menambah fitur, memperluas cakupan, atau mengganti stack. Fitur yang sengaja tidak ada: editor isi, template isi, distribusi, Kotak Masuk, Konfirmasi Terima, arsip, penyisipan nomor otomatis, tembusan, impor register.
-
-## Penamaan
-
-- Kode, kolom database, dan kode status memakai bahasa Inggris (`NUMBERED`, `READY_TO_ISSUE`, `official_number`).
-- Teks antarmuka memakai bahasa Indonesia sesuai istilah blueprint: Terbitkan Nomor Surat, Alur Kerja, Penyetuju, Persetujuan, Nomor urut, Penanda posisi nomor, Riwayat aktivitas, status pengiriman. Label status ada di `src/domain/status.ts` (`STATUS_LABEL`).
-
-## Struktur repo
-
-```
-AGENTS.md  CLAUDE.md  README.md
-docs/spec/            ringkasan aturan bisnis dan model data
-docs/blueprint/       Blueprint R.04 (PDF dan DOCX)
-supabase/migrations/  skema, constraint, fungsi, RLS (urut berdasarkan nama file)
-supabase/seed.sql     data awal contoh
-supabase/tests/       uji SQL (penomoran, RLS)
-src/domain/           logika murni TypeScript (status, penomoran) bertes
-src/                  aplikasi Next.js (dibuat pada tugas M0)
-tasks/BACKLOG.md      daftar tugas dan kriteria selesai
-.claude/agents/       peran agen
-.claude/commands/     perintah siap pakai
-scripts/              skrip uji database
-```
-
-## Perintah
-
-```
-npm run typecheck     pemeriksaan tipe
-npm run test          uji unit domain (vitest)
-npm run test:db       migrasi + uji SQL pada PostgreSQL sementara (perlu PostgreSQL 15+ terpasang)
-npm run check         ketiganya
-```
-
-## Cara bekerja
-
-1. Ambil tugas berikutnya yang belum selesai dari `tasks/BACKLOG.md`. Baca bagian spesifikasi yang dirujuk.
-2. Tulis uji dahulu bila logika bisnis (domain atau SQL), lalu implementasi.
-3. Jalankan `npm run check`. Jangan menandai tugas selesai bila ada uji gagal atau dilewati.
-4. Perubahan database selalu berupa file migrasi baru (jangan mengubah migrasi lama yang sudah dipakai). Setiap tabel baru wajib RLS aktif.
-5. Perbarui `tasks/BACKLOG.md` (centang tugas) dan, bila perlu, `docs/spec/`. Commit kecil dengan pesan jelas.
-6. Bila menemukan konflik bisnis kritis yang tidak terjawab spesifikasi, berhenti pada tugas itu dan tulis di `docs/FINDINGS.md`. Untuk keputusan teknis biasa pilih yang paling sederhana, aman, dan konsisten, lalu lanjut.
-
-## Keamanan
-
-- Service role key hanya di server (Route Handler atau Server Action), tidak pernah ke browser. Penerbitan nomor, persetujuan akhir, pembatalan, dan penulisan audit lewat server.
-- Hak akses ditegakkan di database (RLS) dan di server, bukan hanya dengan menyembunyikan tombol.
-- Berkas privat di Supabase Storage, diakses lewat signed URL berumur pendek setelah pemeriksaan hak.
-- Notifikasi dan log tidak memuat isi dokumen. `audit_logs` hanya ditambah.
-- Tidak ada rahasia di repo. Gunakan `.env.local` (lihat `.env.example`).
-
-## Definisi selesai
-
-Spesifikasi terpenuhi, uji ada dan lulus, RLS ditinjau, label antarmuka sesuai istilah, tidak ada fitur di luar cakupan, backlog diperbarui.
+- Satu PR kecil sesuai persetujuan. Perubahan database lewat migrasi aditif baru setelah pengujian lokal/staging; jangan mengubah migrasi terpakai atau memperlebar grant untuk mengatasi RLS.
+- Jangan menganggap target baru sudah diimplementasikan. Pisahkan baseline teruji, GAP, rencana, dan hasil UAT.
+- Batas historis PR-00: tidak mengubah `src/`, `supabase/`, dependensi, CI, atau PDF/DOCX blueprint. Satu pengecualian konfigurasi: `vercel.json` boleh mencegah auto-deploy **hanya branch PR-00**, tanpa mengubah main/project production. PR-01 memperketat notifikasi. PR-02 menambah kategori/review versi terpisah. PR-03 menambah approval terpisah melalui migrasi aditif dan memperbaiki fixture secara terpisah; PR-04 menambah pengiriman internal. PR-05 menambah antarmuka/daftar read-only yang memakai sesi/RLS, pengaman deployment diperluas hanya ke branch PR-05. PR-06 menambah relasi aditif dan pemenuhan balasan atomik dengan pengiriman, pengaman ditambah hanya untuk branch PR-06. PR-07 mengintegrasikan disposisi existing dengan bukti hasil/pengiriman dan riwayat aditif; pengaman ditambah hanya untuk branch PR-07.
+- Jalankan `npm run check` (typecheck + Vitest, termasuk PGlite). `npm run test:db` adalah suite PostgreSQL terpisah; jangan mengklaimnya dijalankan oleh `check`. Build lokal bukan deployment. Untuk dokumentasi, periksa tautan, konsistensi keputusan, dan diff runtime/migrasi.
+- Perbarui status tugas dan laporkan bukti yang benar-benar dijalankan. Jangan menandai UAT seluruh target selesai karena tes otomatis PR-08 lulus.

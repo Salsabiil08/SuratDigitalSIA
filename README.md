@@ -1,94 +1,50 @@
-# SIADocs — PT Semen Indonesia Aceh (Blueprint R.04)
+# SIADocs — PT Semen Indonesia Aceh
 
-SIADocs adalah sistem penomoran dan disposisi surat digital PT Semen Indonesia Aceh berbasis **Next.js 14 (App Router), TypeScript, dan Supabase** sesuai spesifikasi resmi **Blueprint R.04**.
+Aplikasi persuratan digital yang berjalan di https://suratdigital-sig.vercel.app/, berbasis Next.js 14 App Router, TypeScript, Tailwind dan Supabase (Auth, PostgreSQL, Storage).
 
----
+**Repository basis: `Salsabiil08/SuratDigitalSIA`.** Tidak ada rekonsiliasi ke repo `SIAdocs` pada pekerjaan ini.
 
-## Status Implementasi Backlog
+## Status yang dapat ditinjau
 
-Seluruh milestone dari **M0 hingga M8** pada [tasks/BACKLOG.md](tasks/BACKLOG.md) telah selesai 100% dan terverifikasi penuh:
+Baseline production adalah commit `4e0c0c661af58dd6db729c202643cd6629f7eb07`. Editor format/pratinjau, draft/versi, penomoran, pengesahan dan disposisi dua arah mempunyai bukti kerja. Reviewer independen, pengiriman/penerimaan internal, Kotak Masuk dan balasan resmi berelasi masih menjadi target pengembangan. Jangan menafsirkan checklist lama sebagai klaim seluruh R.04 adaptasi NDO telah selesai.
 
-| Bagian / Fitur | Status |
+PR-00–07 tersedia sebagai draft; **PR-08 FINAL (Production Readiness)** disetujui untuk implementasi/pengujian pada branch terpisah. Keputusan saat ini NO-GO sampai UAT staging nyata dan keputusan wajib perusahaan selesai. Tidak ada izin mengubah database production, merge, atau deploy.
+
+| Dokumen | Tujuan |
 |---|---|
-| Spesifikasi ringkas (`docs/spec/`) dan Blueprint R.04 (`docs/blueprint/`) | Siap |
-| Skema database, fungsi atomik `issue_letter_number`, trigger disposisi, RLS multi-peran, seed | Siap, lulus uji PostgreSQL 15+ |
-| Logika domain TypeScript (`src/domain/`: status, penomoran, terbilang rupiah) | Siap, 31 uji vitest lulus |
-| Fondasi UI Next.js 14, Tailwind CSS, Google Fonts, komponen bersama (`src/components/ui/`) | Siap |
-| Alur Buat Surat (`CREATE`) dan Ambil Nomor (`UPLOAD`) | Siap |
-| Surat Pengantar Tagihan (rincian, bank, terbilang nominal otomatis) | Siap |
-| Alur Persetujuan bertingkat, validasi kewenangan, Konfirmasi & Terbitkan Nomor resmi | Siap |
-| Pengesahan tanda tangan dua jalur (`IN_APP` dan `EXTERNAL`) | Siap |
-| Disposisi digital dengan aturan penyelesaian bersyarat (`requires_letter`) | Siap |
-| Pusat Notifikasi Realtime dalam aplikasi (tanpa memuat isi dokumen) | Siap |
-| Prosedur Pembatalan draf dan surat bernomor resmi (nomor tetap tersimpan) | Siap |
-| Dashboard, Surat Saya, Detail Surat, Log History (Super Admin), aksesibilitas WCAG AA | Siap |
+| [Indeks](docs/INDEX.md) | Memilih acuan aktif dan membedakan dokumen historis |
+| [Baseline production](docs/baselines/production-2026-11-18.md) | SHA/deployment, bukti audit, perlindungan fitur dan 13 surat lama |
+| [Spesifikasi target R.04](docs/spec/08-alur-ndo-r04.md) | Keputusan pengguna, reviewer, status, akses penerima dan relasi surat |
+| [Rencana migrasi](docs/plans/R04_NDO_MIGRATION_PLAN.md) | Perubahan aditif, urutan PR, risiko dan gerbang persetujuan |
+| [Laporan PR-08](docs/plans/PR08_READINESS.md) | PASS/BLOCKED, NO-GO dan langkah pembukaan blocker |
+| [Runbook release](docs/plans/PR08_PRODUCTION_RUNBOOK.md) | Urutan integrasi/migrasi/backup/recovery setelah persetujuan |
+| [Laporan PR-07](docs/plans/PR07_VALIDATION.md) | Disposisi dari surat terkirim, bukti hasil dan pemeriksaan pemberi |
+| [Laporan PR-06](docs/plans/PR06_VALIDATION.md) | Balasan sebagai surat baru, hubungan berotorisasi dan status setelah kirim |
+| [Laporan PR-05](docs/plans/PR05_VALIDATION.md) | Daftar surat resmi, status penerima, filter/pagination dan hak akses |
+| [Laporan PR-04](docs/plans/PR04_VALIDATION.md) | Pengiriman, receipt, snapshot, RLS/Storage dan pengujian |
+| [Laporan PR-03](docs/plans/PR03_VALIDATION.md) | Hasil approval terpisah dan fixture PostgreSQL |
+| [Laporan PR-02](docs/plans/PR02_VALIDATION.md) | Hasil implementasi, pengujian dan risiko kategori/review |
+| [Laporan PR-00](docs/plans/PR00_VALIDATION.md) | Cakupan dan hasil pemeriksaan PR ini |
+| [Backlog](tasks/BACKLOG.md) | Progres PR-00–05 dan pekerjaan berikutnya yang belum diizinkan |
 
----
+## Menjalankan lokal
 
-## Cara Menjalankan Aplikasi
-
-### 1. Prasyarat
-- Node.js 18.17+ atau 20+
-- Proyek Supabase (URL dan Kunci Akses)
-
-### 2. Instalasi Dependensi & Konfigurasi
 ```bash
-npm install
+npm ci
 cp .env.example .env.local
-```
-Sesuaikan variabel lingkungan pada `.env.local`:
-```env
-NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
-SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
-```
-
-### 3. Menjalankan Server Pengembangan
-```bash
 npm run dev
 ```
-Buka browser di [http://localhost:3000](http://localhost:3000).
 
-### 4. Menjalankan Pengujian & Verifikasi
+Isi konfigurasi Supabase melalui environment lokal. Service role key hanya di server; jangan memasukkan kredensial akun atau secret ke repository. `supabase/seed.sql` berisi contoh lokal, bukan perintah untuk memperbarui data production.
+
+## Pemeriksaan
+
 ```bash
-npm run typecheck    # Pemeriksaan tipe TypeScript (0 error)
-npm run test         # Uji unit domain dan acceptance test vitest (31 test lulus)
-npm run check        # Menjalankan typecheck dan seluruh rangkaian tes
-npm run build        # Build produksi Next.js (18 rute terkompilasi)
+npm run check        # typecheck + Vitest; termasuk kasus database PGlite
+npm run test:db      # suite PostgreSQL terpisah, hanya lingkungan uji lokal
+npm run build        # build lokal; tidak melakukan deployment
 ```
 
----
+Laporan audit baseline mencatat 69 tes lulus. Ini bukan bukti bahwa reviewer, pengiriman, penerimaan dan balasan target baru sudah lulus UAT. Hasil pemeriksaan PR-00 dicatat terpisah pada laporan PR.
 
-## Aturan Bisnis Kritis (Blueprint R.04)
-
-1. **Nomor Surat Tidak Pernah Terbit Saat Draft**: Nomor hanya terbit lewat aksi eksplisit *Terbitkan Nomor Surat* setelah surat mencapai status `READY_TO_ISSUE`.
-2. **Penerbitan Nomor Satu Transaksi**: Transisi langsung dari `READY_TO_ISSUE` $\rightarrow$ `NUMBERED` dalam satu transaksi atomik ACID (`issue_letter_number`).
-3. **Surat Dibatalkan Tetap Menyimpan Nomor**: Nomor resmi tidak pernah dihapus dan tidak pernah dipakai ulang untuk surat lain.
-4. **Dua Jalur Pengesahan**:
-   - `IN_APP`: Dilacak di aplikasi (unduh kop bernomor, tanda tangan di luar aplikasi, unggah berkas bertanda tangan, verifikasi hash SHA-256).
-   - `EXTERNAL`: Di luar aplikasi (unduh kop bernomor, tanpa kewajiban unggah).
-5. **Penyelesaian Disposisi**: Disposisi dengan `requires_letter = true` tidak boleh diselesaikan (`DONE`) sebelum surat terkait berstatus `NUMBERED`.
-6. **Privasi dan Keamanan**: Notifikasi dan audit log tidak memuat isi dokumen surat. Jejak audit hanya dapat ditambah (*append-only*).
-
----
-
-## Struktur Folder
-
-```
-AGENTS.md           Aturan wajib bagi pengembang AI
-ANTIGRAVITY.md      Panduan implementasi teknis dan kriteria penerimaan
-tasks/BACKLOG.md    Daftar tugas backlog M0 - M8
-docs/spec/          Spesifikasi aturan bisnis dan model data
-docs/FINDINGS.md    Catatan temuan dan hasil uji arsitektur
-supabase/
-  migrations/       Migrasi skema database (termasuk 20261114000001_r04.sql)
-  seed.sql          Data awal contoh (unit, jabatan, seri, user demo)
-  tests/            Uji SQL penomoran dan RLS
-src/
-  app/              Rute halaman Next.js 14 App Router
-  components/ui/    Komponen UI bersama (Button, Card, Chip, Table, Sidebar, dll.)
-  domain/           Logika bisnis murni tanpa I/O (status, penomoran, terbilang)
-  lib/supabase/     Klien Supabase (browser, server, admin)
-  server/           Server actions (surat, persetujuan, tanda tangan, disposisi, notifikasi, admin)
-tests/              Uji vitest (domain.test.ts dan acceptance.test.ts)
-```
+`vercel.json` menonaktifkan auto-deploy hanya untuk branch PR-00, PR-01, PR-02, PR-03, PR-04, PR-05, PR-06, PR-07 dan PR-08 yang sedang ditinjau. Tidak ada perubahan pengaturan project production atau perintah deploy pada PR-00.

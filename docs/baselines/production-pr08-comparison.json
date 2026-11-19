@@ -1,0 +1,63 @@
+{
+  "structural": "PASS",
+  "differences": [],
+  "formattingOnlyFunctions": 8,
+  "aclDifferences": [
+    "tables:public|approval_steps",
+    "tables:public|audit_logs",
+    "tables:public|authority_delegations",
+    "tables:public|billing_details",
+    "tables:public|billing_items",
+    "tables:public|cancellation_authorizations",
+    "tables:public|cancellation_requests",
+    "tables:public|dispositions",
+    "tables:public|document_categories",
+    "tables:public|letter_attachments",
+    "tables:public|letter_distributions",
+    "tables:public|letter_templates",
+    "tables:public|letter_types",
+    "tables:public|letter_versions",
+    "tables:public|letters",
+    "tables:public|master_bank",
+    "tables:public|notifications",
+    "tables:public|number_counters",
+    "tables:public|number_issuances",
+    "tables:public|number_series",
+    "tables:public|organizational_units",
+    "tables:public|permissions",
+    "tables:public|positions",
+    "tables:public|profiles",
+    "tables:public|push_subscriptions",
+    "tables:public|role_permissions",
+    "tables:public|roles",
+    "tables:public|signature_requests",
+    "tables:public|system_settings",
+    "tables:public|user_assignments",
+    "functions:public|audit_logs_immutable|",
+    "functions:public|build_official_number|p_pattern text, p_seq integer, p_issued_at timestamp with time zone, p_unit text, p_position text, p_type text",
+    "functions:public|check_disposition_completion|",
+    "functions:public|letters_guard|",
+    "functions:public|protect_final_letter|",
+    "functions:public|protect_final_version|",
+    "functions:public|set_updated_at|"
+  ],
+  "counts": {
+    "tables": {
+      "production": 30,
+      "baseline": 30
+    },
+    "functions": {
+      "production": 27,
+      "baseline": 27
+    },
+    "triggers": {
+      "production": 6,
+      "baseline": 6
+    },
+    "policies": {
+      "production": 48,
+      "baseline": 48
+    }
+  },
+  "aclNote": "Managed Supabase defaults berbeda dari PostgreSQL biasa. PR-08 mencabut DML/TRUNCATE workflow; uji forward dimulai dengan grant luas serupa production."
+}

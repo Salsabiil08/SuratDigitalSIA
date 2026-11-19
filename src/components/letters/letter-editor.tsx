@@ -22,6 +22,8 @@ function draftFromData(
     v = data.versions.find((v) => v.id === l.current_version_id);
   return {
     id: l.id,
+    categoryCode: l.document_category?.code || "",
+    reviewerId: l.reviewer_id || "",
     revision: l.revision,
     source: l.source,
     letterTypeCode: l.type.code,
@@ -39,6 +41,8 @@ function draftFromData(
     contentFormat: "HTML",
     signatureMode: l.signature_mode,
     signerIds: l.signer_ids || [],
+    mandatoryApproverIds: l.mandatory_approver_ids || l.signer_ids || [],
+    additionalApproverIds: l.additional_approver_ids || [],
     areas: l.signature_areas || [],
     stampArea: l.stamp_area || undefined,
     numberArea: l.number_area || undefined,
@@ -64,6 +68,7 @@ export function LetterEditor({
   billing = false,
   id,
   dispositionId,
+  dispositionSeed,
   initialOptions,
   initialData,
 }: {
@@ -71,6 +76,7 @@ export function LetterEditor({
   billing?: boolean;
   id?: string;
   dispositionId?: string;
+  dispositionSeed?:{dispositionId:string;recipientId:string;subject:string};
   initialOptions: Awaited<ReturnType<typeof getWorkflowOptions>>;
   initialData?: Awaited<ReturnType<typeof getWorkflowLetter>>;
 }) {
@@ -81,12 +87,14 @@ export function LetterEditor({
       ? draftFromData(initialData)
       : {
           source,
+          categoryCode: "",
+          reviewerId: "",
           dispositionId,
           letterTypeCode: billing ? "Tag" : "IN",
-          subject: "",
+          subject: dispositionSeed?.subject||"",
           letterDate: jakartaDate(),
           dateReason: "",
-          recipientUserId: "",
+          recipientUserId: dispositionSeed?.recipientId||"",
           recipientName: "",
           recipientOrg: "",
           recipientAddress: "",
@@ -130,6 +138,9 @@ export function LetterEditor({
       ...x,
       letterTypeCode: type,
       signerIds: [],
+      reviewerId: "",
+      mandatoryApproverIds: [],
+      additionalApproverIds: [],
       areas: [],
       recipientUserId: "",
       recipientName: "",
@@ -141,12 +152,16 @@ export function LetterEditor({
   const internal = input.letterTypeCode === "IN";
   const isBill = input.letterTypeCode === "Tag";
   const count = internal ? (formal ? 1 : 0) : isBill ? 2 : 1;
+  const reviewRule = options.reviewRules.find(r => r.category_code === input.categoryCode && r.typeCode === input.letterTypeCode)
+    || options.reviewRules.find(r => r.category_code === input.categoryCode && !r.typeCode);
+  const reviewers = options.people.filter(p => p.id !== options.user.id && options.reviewerGrants.some(g => g.reviewerId === p.id && (!g.typeCode || g.typeCode === input.letterTypeCode)));
   const signers = options?.people.filter((p) => p.signer) || [];
   function updateSigner(index: number, value: string) {
     const ids = [...input.signerIds];
     ids[index] = value;
-    change("signerIds", ids.slice(0, count));
+    setInput(x=>({...x,signerIds:ids.slice(0,count),mandatoryApproverIds:x.mandatoryApproverIds?.length===count?x.mandatoryApproverIds:ids.slice(0,count)}));
   }
+  const additionalApprovers=options.people.filter(p=>options.approverGrants.some(g=>g.approverId===p.id&&(!g.typeCode||g.typeCode===input.letterTypeCode)));
   async function save(preview: boolean) {
     setBusy(true);
     setError("");
@@ -157,8 +172,10 @@ export function LetterEditor({
       const data = {
         ...input,
         signerIds: ids,
+        mandatoryApproverIds: input.mandatoryApproverIds?.slice(0,count) || ids,
         areas: currentFormat === "PDF" ? input.areas.slice(0, count) : [],
       };
+      if(dispositionSeed&&!input.id){const keyName=`siadocs-disposition-draft-${dispositionSeed.dispositionId}`;let key=sessionStorage.getItem(keyName);if(!key){key=crypto.randomUUID();sessionStorage.setItem(keyName,key);}data.dispositionDraftKey=key;}
       const form = new FormData();
       form.set("data", JSON.stringify(data));
       if (file) form.set("file", file);
@@ -169,6 +186,7 @@ export function LetterEditor({
       });
       const result = await res.json();
       if (!res.ok) throw new Error(result.error);
+      if(dispositionSeed)sessionStorage.removeItem(`siadocs-disposition-draft-${dispositionSeed.dispositionId}`);
       router.push(`/surat/${result.id}${preview ? "?preview=1" : ""}`);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Draft gagal disimpan.");
@@ -192,8 +210,10 @@ export function LetterEditor({
                 : "Buat Surat"
         }
       />
+      {dispositionSeed&&<p className="text-sm border rounded-xl p-3">Surat hasil baru untuk pemberi disposisi. Selesaikan alur surat dan kirim resmi sebelum mengajukan hasil. <Link className="text-brand-red underline" href={`/disposisi?tugas=${dispositionSeed.dispositionId}`}>Kembali ke Disposisi</Link></p>}
+      {initialData?.replyContext.links.filter(r=>r.direction==='ORIGIN').map(r=><p key={r.id} className="text-sm border rounded-xl p-3">Balasan untuk surat {r.officialNumber||r.letterId}. Penerima tetap pengirim resmi surat asal. <Link prefetch={false} className="text-brand-red underline" href={`/surat/${r.letterId}`}>Buka Surat Asal</Link></p>)}
       <p className="text-sm text-neutral-600">
-        Buat/Impor → Pratinjau dan Koreksi → Persetujuan → Nomor Resmi → TTD →
+        Buat/Impor → Pratinjau dan Koreksi → Pemeriksaan jika diperlukan → Persetujuan → Nomor Resmi → TTD →
         Finalisasi
       </p>
       {error && (
@@ -233,6 +253,20 @@ export function LetterEditor({
               </p>
             </Field>
           </div>
+          <Field label="Kategori Surat" htmlFor="letter-category" required>
+            <Select id="letter-category" value={input.categoryCode || ""} onChange={e => change('categoryCode', e.target.value)} required>
+              <option value="">Pilih kategori surat</option>
+              {options.categories.map(c => <option key={c.id} value={c.code}>{c.name}</option>)}
+            </Select>
+          </Field>
+          <Field label={`Pemeriksa Surat${reviewRule?.requires_review ? ' (wajib sebelum pengajuan)' : ' (opsional)'}`} htmlFor="letter-reviewer"
+            hint="Pemeriksa hanya memberi catatan atau hasil pemeriksaan. Anda tetap yang mengedit isi surat. Aturan awal perlu validasi perusahaan.">
+            <Select id="letter-reviewer" value={input.reviewerId || ""} onChange={e => change('reviewerId', e.target.value)}>
+              <option value="">{reviewRule?.requires_review ? 'Pilih pemeriksa berwenang' : 'Tanpa pemeriksa'}</option>
+              {reviewers.map(p => <option key={p.id} value={p.id}>{p.name} — {p.title}</option>)}
+            </Select>
+            {reviewers.length === 0 && <p className="text-xs text-amber-800">Belum ada pemeriksa dengan kewenangan jenis dan unit ini. Penugasan perlu ditetapkan perusahaan sebelum surat wajib pemeriksaan dapat diajukan.</p>}
+          </Field>
           <Field
             label="Tanggal Surat"
             htmlFor="letter-date"
@@ -274,6 +308,7 @@ export function LetterEditor({
             >
               <Select
                 id="recipient-user"
+                disabled={!!dispositionSeed||!!initialData?.dispositionContext.tasks.some(t=>t.isResult)||!!initialData?.replyContext.links.some(r=>r.direction==='ORIGIN')}
                 value={input.recipientUserId}
                 onChange={(e) => change("recipientUserId", e.target.value)}
                 required
@@ -558,7 +593,19 @@ export function LetterEditor({
           </Card>
         )}
         <Card className="p-5 space-y-4">
-          <h2 className="font-bold">Persetujuan dan Tanda Tangan</h2>
+          <h2 className="font-bold">Persetujuan Surat</h2>
+          <p className="text-sm">Penyetuju memutuskan kelayakan surat. Penandatangan dipilih terpisah di bawah. Orang yang sama hanya mempunyai satu langkah persetujuan per pengajuan.</p>
+          {Array.from({length:count},(_,index)=><Field key={`approval-${index}`} label={isBill?(index===0?'Penyetuju SM Finance':'Penyetuju Direktur'):'Penyetuju Formal (SM/Direktur)'} required>
+            <Select value={input.mandatoryApproverIds?.[index] || input.signerIds[index] || ''} onChange={e=>{const ids=[...(input.mandatoryApproverIds?.length?input.mandatoryApproverIds:input.signerIds)];ids[index]=e.target.value;change('mandatoryApproverIds',ids);}} required>
+              <option value="">Pilih pejabat penyetuju</option>{signers.filter(p=>!isBill||(index===0?p.position==='SM':p.position==='DIR')).map(p=><option key={p.id} value={p.id}>{p.name} — {p.title}</option>)}
+            </Select>
+          </Field>)}
+          <Field label="Penyetuju Tambahan (opsional)" hint="Hanya pegawai yang telah diberi kewenangan perusahaan untuk jenis dan unit ini. Pilihan berulang tidak membuat persetujuan ganda.">
+            {additionalApprovers.map(p=><label key={p.id} className="flex gap-2 text-sm"><input type="checkbox" checked={input.additionalApproverIds?.includes(p.id)||false} onChange={e=>change('additionalApproverIds',e.target.checked?[...(input.additionalApproverIds||[]),p.id]:(input.additionalApproverIds||[]).filter(id=>id!==p.id))}/>{p.name} — {p.title}</label>)}
+            {additionalApprovers.length===0&&<p className="text-xs text-neutral-500">Belum ada penugasan penyetuju tambahan. Super Admin tidak otomatis berwenang.</p>}
+          </Field>
+          <h2 className="font-bold">Tanda Tangan Dokumen</h2>
+
           {internal && (
             <label className="flex items-center gap-2 text-sm">
               <input
@@ -588,7 +635,7 @@ export function LetterEditor({
                   ? index === 0
                     ? "Senior Manager (tahap 1)"
                     : "Direktur (tahap 2)"
-                  : "Pejabat Penyetuju dan Penandatangan"
+                  : "Pejabat Penandatangan"
               }
               htmlFor={`signer-${index}`}
               required

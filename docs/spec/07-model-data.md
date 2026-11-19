@@ -1,3 +1,5 @@
+> Dokumen historis: rancangan R.04 sebelum adaptasi NDO. Untuk keputusan aktif gunakan [spesifikasi target 08](08-alur-ndo-r04.md) dan [revisi production 00](00-revisi-alur.md). Aturan lama yang bertentangan tidak boleh dipakai untuk menghapus fitur production atau menganggap target baru sudah tersedia.
+
 # Model Data
 
 Dari kamus data Blueprint R.03 yang disesuaikan ke R.04 (Bab 4). Perubahan R.04 yang harus dimigrasi: `letters.source` (`CREATE`/`UPLOAD`), kolom status pengiriman tidak dipakai, `dispositions.requires_letter`, `letter_id`, `followup_note`, penerbitan satu transaksi. Tabel `letter_templates`, `letter_distributions`, `push_subscriptions` diarsipkan di `docs/arsip-R03/`. Skema SQL ada di `supabase/migrations/`. Bila ada perbedaan, blueprint menjadi acuan dan perbedaan itu dicatat sebagai temuan.

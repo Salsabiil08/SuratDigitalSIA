@@ -3,8 +3,8 @@ import { DisposisiClient } from './disposisi-client';
 
 export const dynamic = 'force-dynamic';
 
-export default async function DisposisiPage() {
-  const res = await getDispositionsAction();
+export default async function DisposisiPage({searchParams}:{searchParams:Promise<{surat?:string;tugas?:string}>}) {
+  const res = await getDispositionsAction((await searchParams).surat);
   const initialData = res.success && res.data ? res.data : {
     inbox: [],
     outbox: [],
@@ -14,5 +14,5 @@ export default async function DisposisiPage() {
     canReceiveDisposition: false,
   };
 
-  return <DisposisiClient initialData={initialData} initialError={res.error} />;
+  return <DisposisiClient initialData={initialData} initialError={res.error} sourceLetterId={(await searchParams).surat} selectedTaskId={(await searchParams).tugas} />;
 }

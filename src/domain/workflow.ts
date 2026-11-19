@@ -1,3 +1,4 @@
+import { documentFinality, DOCUMENT_FINALITY_LABEL } from "./status";
 export interface SignatureArea {
   page: number;
   x: number;
@@ -6,7 +7,14 @@ export interface SignatureArea {
   height: number;
 }
 export interface DraftInput {
+  mandatoryApproverIds?: string[];
+  additionalApproverIds?: string[];
+  categoryCode?: string;
+  reviewerId?: string;
   dispositionId?: string;
+  dispositionDraftKey?: string;
+  replyToDispatchId?: string;
+  replyKey?: string;
   id?: string;
   revision?: number;
   source: "CREATE" | "UPLOAD";
@@ -80,9 +88,11 @@ export function workflowLabel(letter: {
   status: string;
   signature_status?: string;
   finalized_at?: string | null;
+  review_status?: string | null;
 }) {
   if (letter.status === "CANCELLED") return "Dibatalkan";
-  if (letter.finalized_at) return "Selesai";
+  if (documentFinality(letter.finalized_at) === "FINAL") return DOCUMENT_FINALITY_LABEL.FINAL;
+  if (letter.review_status === "WAITING") return "Menunggu Pemeriksaan";
   if (letter.status === "READY_TO_ISSUE") return "Disetujui";
   if (letter.status === "NUMBERED" && letter.signature_status === "WAITING")
     return "Menunggu TTD";

@@ -1,0 +1,16 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "git": {
+    "deploymentEnabled": {
+      "docs/pr-00-r04-ndo-baseline": false,
+      "fix/pr-01-notifications-status": false,
+      "feat/pr-02-independent-review": false,
+      "feat/pr-03-independent-approval": false,
+      "feat/pr-04-internal-delivery": false,
+      "feat/pr-05-inbox-outbox": false,
+      "feat/pr-06-official-replies": false,
+      "feat/pr-07-disposition-integration": false,
+      "feat/pr-08-production-readiness": false
+    }
+  }
+}

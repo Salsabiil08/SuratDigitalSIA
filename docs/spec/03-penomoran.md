@@ -1,3 +1,5 @@
+> Dokumen historis: rancangan R.04 sebelum adaptasi NDO. Untuk keputusan aktif gunakan [spesifikasi target 08](08-alur-ndo-r04.md) dan [revisi production 00](00-revisi-alur.md). Aturan lama yang bertentangan tidak boleh dipakai untuk menghapus fitur production atau menganggap target baru sudah tersedia.
+
 # Penomoran
 
 Implementasi: fungsi SQL `issue_letter_number`, `complete_number_issuance`, `build_official_number` (`supabase/migrations/20261111000003_functions.sql`) dan `src/domain/numbering.ts`. Kedua implementasi harus identik.

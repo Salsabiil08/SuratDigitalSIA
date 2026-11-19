@@ -1,3 +1,4 @@
+import {assertSupabaseTarget} from '@/domain/deployment-target';
 import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 
 /**
@@ -21,6 +22,7 @@ export function createAdminClient() {
     throw new Error('Supabase Service Role Key atau Anon Key belum dikonfigurasi di environment variables.');
   }
 
+  assertSupabaseTarget(supabaseUrl,process.env.SIADOCS_ENV||process.env.NEXT_PUBLIC_SIADOCS_ENV,process.env.VERCEL_ENV);
   return createSupabaseClient(supabaseUrl, serviceRoleKey, {
     auth: {
       persistSession: false,

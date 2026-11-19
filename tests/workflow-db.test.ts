@@ -37,6 +37,7 @@ const draft = async (
 ) => {
   const p = {
     source: "CREATE",
+    categoryCode: "PEMBERITAHUAN",
     letterTypeCode: type,
     subject: "Uji revisi",
     letterDate: jakartaDate(),
@@ -88,7 +89,7 @@ beforeAll(async () => {
   );
 }, 30000);
 afterAll(() => db.close());
-describe.sequential("Database: alur nyata dengan akun berbeda", () => {
+describe("Database: alur nyata dengan akun berbeda", { concurrent: false }, () => {
   it("RPC sensitif tidak dapat dipanggil anon atau authenticated", async () => {
     for (const fn of [
       "save_letter_draft(uuid,jsonb,jsonb)",
@@ -111,7 +112,7 @@ describe.sequential("Database: alur nyata dengan akun berbeda", () => {
   it("membuat draft tanpa nomor, tanpa preview pengajuan ditolak", async () => {
     letterId = await draft(5, "IN");
     expect((await get(letterId)).official_number).toBeNull();
-    await expect(act(letterId, 5, "SUBMIT")).rejects.toThrow(/preview/i);
+    await expect(act(letterId, 5, "SUBMIT")).rejects.toThrow(/preview|pratinjau/i);
   });
   it("membatasi pengeditan, tanggal mundur, dan perubahan oleh akun lain", async () => {
     await expect(
@@ -417,7 +418,7 @@ describe.sequential("Database: alur nyata dengan akun berbeda", () => {
   });
 });
 
-describe.sequential("Disposisi: surat kembali untuk diperiksa pemberi", () => {
+describe("Disposisi: surat kembali untuk diperiksa pemberi", { concurrent: false }, () => {
   let id: string, response: string;
   const disp = async () =>
     (await rows("select * from dispositions where id=$1", [id]))[0];
@@ -586,6 +587,7 @@ it("Senior Manager tetap berwenang mengesahkan tagihan ketika penugasannya di un
       "update user_assignments set unit_id=(select id from organizational_units where code='ACH') where profile_id=$1",
       [actor(3)],
     );
+    await run("insert into approver_authorizations(approver_id,unit_id,letter_type_id,granted_by) values($1,(select id from organizational_units where code='FIN'),(select id from letter_types where code='Tag'),$2)",[actor(3),actor(2)]);
     const bank = (await rows("select id from master_bank limit 1"))[0].id;
     const id = await draft(6, "Tag", [3, 2], {
       billing: {
@@ -652,4 +654,34 @@ it("versi draft menyimpan format HTML secara eksplisit, teks lama tetap TEXT", a
       )
     )[0].content_format,
   ).toBe("TEXT");
+});
+
+describe('PR-01: event dan audit terikat transaksi alur sah', { concurrent: false }, () => {
+  it('aksi tanpa kewenangan tidak menghasilkan event atau audit palsu', async () => {
+    const id = await draft(5, 'IN');
+    const before = await rows('select (select count(*) from notifications) n, (select count(*) from audit_logs) a');
+    await expect(act(id, 6, 'SUBMIT')).rejects.toThrow();
+    expect(await rows('select (select count(*) from notifications) n, (select count(*) from audit_logs) a')).toEqual(before);
+    expect((await get(id)).status).toBe('DRAFT');
+  });
+  it('gagal insert event membatalkan perubahan status dan audit, lalu retry sah berhasil', async () => {
+    const id = await draft(5, 'IN');
+    await act(id, 5, 'PREVIEW');
+    const before = await rows('select (select count(*) from notifications) n, (select count(*) from audit_logs) a');
+    await db.exec(`create function app.test_fail_notification() returns trigger language plpgsql as $$ begin raise exception 'Simulasi write event gagal'; end $$;
+      create trigger test_fail_notification before insert on notifications for each row execute function app.test_fail_notification()`);
+    try {
+      await expect(act(id, 5, 'SUBMIT')).rejects.toThrow(/event gagal/);
+      expect((await get(id)).status).toBe('DRAFT');
+      expect(await rows('select (select count(*) from notifications) n, (select count(*) from audit_logs) a')).toEqual(before);
+    } finally {
+      await db.exec('drop trigger test_fail_notification on notifications; drop function app.test_fail_notification()');
+    }
+    await act(id, 5, 'SUBMIT');
+    expect((await get(id)).status).toBe('READY_TO_ISSUE');
+    expect((await rows('select recipient_id,event_type from notifications where letter_id=$1', [id]))).toEqual([{ recipient_id: actor(5), event_type: 'SUBMIT' }]);
+    expect((await rows("select action from audit_logs where letter_id=$1 and action='SUBMIT'", [id]))).toHaveLength(1);
+    await expect(act(id, 5, 'SUBMIT')).rejects.toThrow();
+    expect((await rows("select id from notifications where letter_id=$1 and event_type='SUBMIT'", [id]))).toHaveLength(1);
+  });
 });

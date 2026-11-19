@@ -1,0 +1,3 @@
+import {expect,it} from 'vitest';
+import {verifyStaging} from '../scripts/readiness/verify-staging.mjs';
+it('konfigurasi kosong/production ditolak tanpa membocorkan secret',()=>{expect(verifyStaging({}).length).toBeGreaterThan(0);const x=verifyStaging({SIADOCS_ENV:'staging',NEXT_PUBLIC_SIADOCS_ENV:'staging',NEXT_PUBLIC_SUPABASE_URL:'https://ixrpdgkrxlsxbwttujvz.supabase.co',SIADOCS_STAGING_PROJECT_REF:'ixrpdgkrxlsxbwttujvz',NEXT_PUBLIC_SUPABASE_ANON_KEY:'secret-anon',SUPABASE_SERVICE_ROLE_KEY:'secret-service',VERCEL_PROJECT_ID:'prj_2MolQrrsOlzIjJgg3cZDphrv9O4u'});expect(x.length).toBeGreaterThan(0);expect(x.join(' ')).not.toContain('secret');});

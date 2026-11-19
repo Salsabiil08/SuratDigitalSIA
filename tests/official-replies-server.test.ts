@@ -1,0 +1,20 @@
+import {beforeEach,expect,it,vi} from 'vitest';
+const m=vi.hoisted(()=>({user:vi.fn(),client:vi.fn(),rpc:vi.fn(),from:vi.fn(),select:vi.fn(),eq:vi.fn(),one:vi.fn(),save:vi.fn(),revalidate:vi.fn()}));
+vi.mock('@/server/auth',()=>({requireUser:m.user}));vi.mock('@/lib/supabase/server',()=>({createClient:m.client}));vi.mock('@/server/letter-workflow',()=>({saveDraft:m.save}));vi.mock('next/cache',()=>({revalidatePath:m.revalidate}));
+vi.mock('@/lib/supabase/admin',()=>({createAdminClient:()=>{throw new Error('Relasi dibaca dengan sesi/RLS');}}));
+import {createOfficialReplyAction} from '../src/server/actions/official-replies';
+import {readReplyContext} from '../src/server/official-replies';
+const seed={dispatchId:'d',senderId:'sender',officialNumber:'001-IN/SIA',subject:'Asal',categoryCode:'LAPORAN'};
+const key='b0000000-0000-0000-0000-000000000001';
+beforeEach(()=>{vi.resetAllMocks();m.user.mockResolvedValue({id:'session-user'});const db={rpc:m.rpc,from:m.from,select:m.select,eq:m.eq,maybeSingle:m.one};m.client.mockReturnValue(db);m.from.mockReturnValue(db);m.select.mockReturnValue(db);m.eq.mockReturnValue(db);m.one.mockResolvedValue({data:null,error:null});m.rpc.mockResolvedValue({data:{seed,links:[],recipients:[]},error:null});m.save.mockResolvedValue('new-letter');});
+it('draf dari konteks sesi sah memakai saveDraft biasa tanpa aktor dari browser',async()=>{
+ expect(await createOfficialReplyAction('origin',key)).toEqual({success:true,id:'new-letter'});
+ expect(m.rpc).toHaveBeenCalledWith('get_official_reply_context',{p_letter:'origin'});expect(m.eq).toHaveBeenCalledWith('created_by','session-user');expect(m.save).toHaveBeenCalledWith(expect.objectContaining({replyToDispatchId:'d',replyKey:key,recipientUserId:'sender',categoryCode:'LAPORAN'}));expect(m.revalidate).toHaveBeenCalledWith('/surat/origin');
+});
+it('retry membuka draf yang sama tanpa membuat versi/unggahan baru',async()=>{m.one.mockResolvedValue({data:{origin_dispatch_id:'d',reply_letter_id:'existing'},error:null});expect(await createOfficialReplyAction('origin',key)).toEqual({success:true,id:'existing'});expect(m.save).not.toHaveBeenCalled();});
+it('key tidak boleh dipakai ulang lintas surat',async()=>{m.one.mockResolvedValue({data:{origin_dispatch_id:'another',reply_letter_id:'existing'},error:null});expect((await createOfficialReplyAction('origin',key)).success).toBe(false);expect(m.save).not.toHaveBeenCalled();});
+it('CC/pengguna lain tanpa seed sah tidak membuat draf',async()=>{m.rpc.mockResolvedValue({data:{seed:null,links:[],recipients:[]},error:null});expect((await createOfficialReplyAction('origin',key)).success).toBe(false);expect(m.save).not.toHaveBeenCalled();});
+it('Auth gagal menghentikan seluruh query',async()=>{m.user.mockRejectedValue(new Error('Masuk dahulu'));expect((await createOfficialReplyAction('origin',key)).success).toBe(false);expect(m.client).not.toHaveBeenCalled();});
+it.each([{data:null,error:{message:'DB gagal'}},{data:{},error:null}])('query konteks gagal tidak menjadi relasi kosong sukses',async response=>{m.rpc.mockResolvedValue(response);await expect(readReplyContext('origin')).rejects.toThrow(/Hubungan surat/);expect((await createOfficialReplyAction('origin',key)).success).toBe(false);expect(m.save).not.toHaveBeenCalled();});
+it('gagal penyimpanan/RPC tidak dilaporkan berhasil atau menginvalidasi status',async()=>{m.save.mockRejectedValue(new Error('Transaksi dibatalkan'));expect((await createOfficialReplyAction('origin',key)).success).toBe(false);expect(m.revalidate).not.toHaveBeenCalled();});
+it('gagal preflight retry tidak membuat draf ganda',async()=>{m.one.mockResolvedValue({data:null,error:{message:'Tidak tersedia'}});expect((await createOfficialReplyAction('origin',key)).success).toBe(false);expect(m.save).not.toHaveBeenCalled();});

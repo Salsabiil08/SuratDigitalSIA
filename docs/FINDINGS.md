@@ -1,3 +1,124 @@
+# PR-08 FINAL — 18 November 2026
+
+Lihat [readiness ringkas](plans/PR08_READINESS.md) dan [runbook](plans/PR08_PRODUCTION_RUNBOOK.md). Production tidak diubah. Blocker nyata: Supabase staging belum ada (branching memerlukan Pro), UAT Auth/Storage lintas akun, keputusan wajib perusahaan dan backup/restore staging.
+
+Perbaikan final: Next 15.5.29/PostCSS 8.5.33 (audit production 0), async request APIs, staging menolak URL production, role UI tanpa persona/mandat admin otomatis, error login jaringan dan cleanup profil nonaktif, serta migrasi aditif grant workflow/TRUNCATE dan validasi unit/jabatan aktif dengan tanggal WIB. Delapan migrasi forward diuji pada PostgreSQL 17 dengan 13 surat sintetis, grant mirip production, rollback/fault/replay dan integritas counter/audit.
+
+[Draft PR-08 #9](https://github.com/Salsabiil08/SuratDigitalSIA/pull/9); CI integrasi #45 lulus check/db/browser-public. Bukti dan keterbatasan staging tetap dalam readiness; CI hijau tidak membatalkan NO-GO.
+
+Audit dev tambahan: Vitest 5.1.1/Vite 8.3.8 menutup critical/moderate; seluruh 244 assertion dipertahankan, API tes dinonaktifkan. Sisa 12 high dev/build berasal dari picomatch tanpa patch upstream, bukan runtime; glob tidak menerima input pengguna. CI menambah gerbang critical untuk audit penuh.
+
+## Snapshot PR-07 (historis)
+
+# Pembaruan PR-07 — 18 November 2026
+
+PR-07 diizinkan setelah penerimaan PR-06; [laporan](plans/PR07_VALIDATION.md), [Draft PR #8](https://github.com/Salsabiil08/SuratDigitalSIA/pull/8). CI #41 check 234/234 dan PostgreSQL/konkurensi lulus; build lokal lulus. Production belum diubah, UAT staging masih diperlukan.
+
+- Disposisi internal baru memerlukan pengiriman resmi, PRIMARY berwenang, hierarki/penugasan dan unit sesuai baseline. CC/baca/admin bukan mandat otomatis.
+- Workflow existing tetap menangani CREATE/START/SUBMIT/RETURN/ACCEPT. Bukti hasil, operasi idempoten, relasi surat dan riwayat ditambah secara aditif. Surat hasil final harus dikirim resmi sebelum pengajuan hasil.
+- Tugas baru bertanda source_dispatch_id tidak memberi akses dokumen acuan/arsip atau hasil melalui relasi. Akses dokumen tetap peran independen/pengiriman. Tugas lama tidak dibackfill atau diberi status/relasi historis baru.
+- Lampiran PDF/DOCX memakai bucket privat dan proxy Auth/RLS/hash; pemberi baru membacanya sesudah dimasukkan ke pengajuan. Catatan tetap wajib. Pembuktian kewajiban surat ditentukan eksplisit pemberi, bukan default perusahaan yang dikarang.
+- Delegasi pemeriksa tidak diaktifkan: hanya pemberi menerima. Tenggat opsional manual, tanpa jadwal/kewajiban otomatis. UAT staging dan kebijakan perusahaan tetap pending; PR-08 tidak dimulai.
+
+## Snapshot PR-06 (historis)
+
+# Pembaruan PR-06 — 18 November 2026
+
+PR-06 diizinkan setelah penerimaan PR-05; [laporan](plans/PR06_VALIDATION.md), [Draft PR #7](https://github.com/Salsabiil08/SuratDigitalSIA/pull/7). CI #37 check 217/217 dan PostgreSQL/konkurensi lulus; build lokal lulus. Production belum berubah; UAT staging masih diperlukan.
+
+- Balasan dibuat penerima utama pengiriman resmi sebagai draf/surat baru. Kategori awal diwarisi untuk ditinjau di editor; pengirim resmi snapshot menjadi penerima yang dikunci. Tidak menyalin approval/TTD/nomor asal.
+- Relasi tidak memberi akses dokumen. RLS relasi memerlukan hak baca kedua endpoint, sehingga pengirim asal tidak melihat draf balasan kecuali punya peran independen yang sah.
+- Status Sudah Dibalas hanya melalui record pengiriman atomik; CC tidak mempunyai kewajiban baru. Status penerima yang boleh dilihat dapat tampil tanpa membuka metadata/ID balasan privat.
+- Kewajiban/tenggat, delegasi pengirim dan konfigurasi reviewer tetap pending perusahaan. Tidak dibuat tanggal jatuh tempo atau perluasan ke disposisi PR-07.
+- Metadata production read-only: history tetap 8; tabel dispatch/reply belum ada. Advisor baseline menyebut leaked-password protection belum aktif; pengaturan tidak diubah. UAT staging Auth/Storage/browser serta rekonsiliasi migrasi tetap diperlukan sebelum production.
+
+## Snapshot PR-05 (historis)
+
+# Pembaruan PR-05 — 18 November 2026
+
+PR-05 diizinkan setelah penerimaan PR-04; [laporan](plans/PR05_VALIDATION.md), [Draft PR #6](https://github.com/Salsabiil08/SuratDigitalSIA/pull/6). CI run #33 lulus: 202 tes/typecheck serta PostgreSQL/konkurensi nyata. Build lokal lulus. Production belum berubah; UAT staging masih diperlukan.
+
+- Kotak Masuk hanya dari dispatch_recipients resmi milik akun; Kotak Keluar dari pengiriman dengan kewenangan sender/creator/delegasi sah. Super Admin bukan pembaca global.
+- Daftar memakai client sesi/RLS dan RPC SECURITY INVOKER tanpa actor parameter/service role. Pencarian literal, filter status penerima dan pagination dihitung pada snapshot query yang sama; error tidak diubah menjadi sukses kosong.
+- Status/time final, kirim, baca dan receipt terpisah; status per penerima/CC tidak diratakan menjadi Selesai. Filter receipt mengecualikan CC yang tidak berhak menerima sebagai PRIMARY.
+- Surat Saya tetap; notifikasi menuju detail berotorisasi dengan jalur kembali kotak yang sesuai. Membuka daftar tidak mencatat READ/RECEIVE; API dokumen PR-04 hanya READ, penerimaan tetap aksi eksplisit.
+- Grant delegasi yang dicabut dapat menutup daftar/dokumen sesuai hak baca PR-04; tidak ada asumsi akses arsip global. CC default nonaktif dan keputusan perusahaan PR-04 tetap berlaku.
+- PR-06 balasan dan integrasi disposisi PR-07 belum diizinkan; hanya identifier dispatch/letter/recipient disiapkan sebagai titik integrasi.
+
+## Snapshot PR-04 (historis)
+
+# Pembaruan PR-04 — 18 November 2026
+
+PR-04 diizinkan setelah penerimaan PR-03; [laporan dan batas](plans/PR04_VALIDATION.md). Production belum berubah.
+
+- G-01 ditangani pada branch: penerima tidak mendapat akses dari status NUMBERED/CANCELLED. Hak receiver berasal dari snapshot pengiriman; versi lama/riwayat workflow privat tidak ikut dibuka. API final menyajikan bytes snapshot, Storage langsung tertutup oleh policy restrictive.
+- Pengiriman/penerimaan/read memiliki fakta terpisah, RPC actor terverifikasi, row lock dan transaksi event/audit wajib. READ/unduh tidak membuat receipt; receipt tidak membuat READ atau selesai alur.
+- Delegasi pengiriman unit dan pengelola kebijakan harus eksplisit. CC default nonaktif karena aturan tembusan belum disahkan; bila diaktifkan oleh pengelola sah, CC hanya salinan dan tidak boleh mengaku PRIMARY atau otomatis wajib balas.
+- Internal formal jalur EXTERNAL tanpa berkas TTD di Storage ditahan pengirimannya, menunggu keputusan perusahaan. Finalisasi/download existing tetap tersedia; tidak mengarang bukti pengesahan.
+- CI run 44259876072 lulus check (187 tes/typecheck) dan PostgreSQL/konkurensi: 40 nomor unik, 20 retry masing-masing SEND/READ/RECEIVE tanpa duplikasi snapshot atau event.
+- Inbox/Outbox, balasan dan integrasi disposisi dari Inbox tetap di luar PR-04. RLS relasi surat internal acuan tidak menjadi jalur pintas sebelum pengiriman.
+
+## Snapshot PR-03 (historis)
+
+# Pembaruan PR-03 — 18 November 2026
+
+PR-03 diizinkan setelah penerimaan fungsional PR-02; production tetap di luar cakupan. [Laporan PR-03](plans/PR03_VALIDATION.md) dan [perbaikan fixture terpisah](plans/PR03_POSTGRES_FIXTURES.md).
+
+- G-03 ditangani pada branch: approver wajib/tambahan terpisah dari signer; satu keputusan per aktor/siklus, creator-confirmation eksplisit dan terikat versi. Kewenangan SM Finance–Direktur tidak dihapus.
+- Ringkasan penerbitan statis (G-06) diganti data versi/plan approval sesungguhnya. Allocator nomor tetap; gate memakai seluruh plan, bukan jumlah TTD.
+- Penanganan perubahan kewenangan/policy setelah approval sebelum nomor tersedia melalui Tarik untuk Koreksi, lalu simpan versi baru. Keputusan lama utuh; tidak backfill persetujuan lama.
+- Reviewer/pengelola review dan manager/grant approver tambahan perlu ditetapkan perusahaan. Mandat Finance lintas unit harus eksplisit; nama jabatan SM tetap umum.
+- Fixture SQL lama disimpan sebagai arsip reproduksi. Fixture aktif memakai RPC nyata. CI run 44255908236 kini lulus check dan PostgreSQL/konkurensi (40 nomor unik, retry tanpa counter naik); blocker fixture baseline sudah diselesaikan tanpa melonggarkan guard.
+- G-01 penerima pra-kirim serta distribusi/receipt/balasan belum ditangani. PR-04 belum diizinkan.
+
+## Snapshot PR-02 (historis)
+
+# Pembaruan PR-02 — 18 November 2026
+
+Implementasi/pengujian lokal PR-02 diizinkan setelah penerimaan fungsional PR-01. [Laporan PR-02](plans/PR02_VALIDATION.md) membedakan perubahan branch dari production yang belum berubah.
+
+- Kategori kini masuk form, draft dan pengajuan; reviewer independen mempunyai penugasan jenis/unit yang eksplisit dan hanya catatan/lolos/minta perbaikan. Keputusan terkait versi/hash, terpisah dari approval/TTD.
+- G-04 bagian reviewer ditangani pada branch PR-02. Inbox pengiriman, receipt dan balasan formal masih menunggu PR terkait. G-01 akses penerima pra-kirim tidak dinyatakan telah diperbaiki oleh PR-02.
+- Default kategori berstatus INITIAL; validasi perusahaan, penetapan pengelola policy dan pemberian kewenangan pemeriksa belum dilakukan. Tidak otomatis memberikan kewenangan bisnis kepada Super Admin/jabatan tertentu.
+- [Investigasi fixture penomoran](plans/PR02_BASELINE_FIXTURE_INVESTIGATION.md) mereproduksi kegagalan pada baseline tanpa PR-02: READY_TO_ISSUE tanpa versi dokumen. Guard tidak dilonggarkan; perbaikan fixture penuh tetap terpisah.
+- Tiga belas surat lama tidak dibackfill. Snapshot 13 surat simulasi dan audit sebelum/sesudah migrasi lokal identik setelah mengecualikan kolom baru NULL.
+
+## Snapshot temuan PR-01 (historis)
+
+# Pembaruan PR-01 — 18 November 2026
+
+Implementasi/pengujian lokal PR-01 disetujui setelah PR-00. [Laporan PR-01](plans/PR01_VALIDATION.md) mencatat bukti dan batas; production belum berubah.
+
+- G-02: label `finalized_at` kini **Dokumen final**, tidak lagi Selesai. Pengiriman/penerimaan/selesai alur belum diimplementasikan.
+- G-06, bagian notifikasi: helper service-role publik tanpa caller dihapus. Event tetap berasal dari RPC sah. Migrasi baru mempersempit ACL/RLS dan melindungi kolom event; error write diteruskan sebagai gagal, judul dinormalisasi Indonesia. Perbaikan belum aktif di production.
+- G-06, ringkasan penerbitan statis, G-01 akses penerima pra-kirim, G-03 deduplikasi dan G-04 reviewer/Inbox/receipt/balasan tetap terbuka untuk PR terkait.
+- Tes PostgreSQL baseline PR-00 gagal pada fixture penomoran; tidak diperbaiki terselubung oleh PR-01 dan tetap penghalang CI penuh.
+
+## Snapshot temuan PR-00 (historis)
+
+# Temuan aktif — PR-00 R.04 adaptasi NDO
+
+Tanggal: 18 November 2026. Temuan audit disimpan, belum diperbaiki oleh PR dokumentasi ini.
+
+| ID | Keputusan/temuan | Perlakuan PR-00 |
+|---|---|---|
+| D-01 | Website live berasal dari SuratDigitalSIA, bukan SIAdocs | Pengguna menetapkan SuratDigitalSIA sebagai basis; tidak ada rekonsiliasi sekarang. |
+| D-02 | Review wajib/opsional harus memperhitungkan kategori dan jenis | Default awal Permohonan/Laporan wajib, Pemberitahuan opsional; konfigurasi awal belum tervalidasi perusahaan. Tidak diterapkan ke database. |
+| D-03 | Reviewer tidak mengedit | Catatan, setujui pemeriksaan atau minta revisi saja; pembuat membuat versi baru. |
+| G-01 | Penerima dapat membaca sejak NUMBERED sebelum kirim | Tetap GAP sampai PR pengiriman/RLS disetujui; target hak baca berbasis snapshot pengiriman. |
+| G-02 | finalized_at menyebabkan label Selesai tanpa bukti pengiriman/penerimaan | Kontrak target memisahkan finalitas dan selesai alur; runtime tidak diubah. |
+| G-03 | Pembuat yang juga signer mendapat approval duplikat | Rencana deduplikasi tanpa melewati kewenangan pihak wajib lain/penerbitan/TTD. |
+| G-04 | Reviewer, Inbox, receipt dan balasan formal belum tersambung | Target dan urutan PR dicatat, bukan dinyatakan tersedia. |
+| G-05 | Ada 13 surat bernomor tanpa versi dokumen dan selisih history migrasi | Tidak diubah otomatis, tidak dibuat bukti palsu, tidak menjalankan ulang baseline/repair. |
+| G-06 | Helper notifikasi tanpa guard dan judul berkode; ringkasan nomor lama statis | Tetap temuan terbuka untuk PR-01/PR terkait; tidak diperbaiki terselubung dalam PR-00. |
+| G-07 | Panduan lama meniadakan editor/pengiriman/Inbox dan mengklaim selesai penuh | Diberi penanda historis; spesifikasi target dan bukti baseline menjadi acuan aktif. |
+
+Lihat [baseline](baselines/production-2026-11-18.md), [spesifikasi target](spec/08-alur-ndo-r04.md) dan [rencana migrasi](plans/R04_NDO_MIGRATION_PLAN.md). Validasi perusahaan tentang lingkup reviewer, pengesah policy, override per jenis, bukti terima luar dan penutupan balasan masih tertunda. Izin PR-00 tidak mengizinkan PR-01, perubahan database production, merge atau deployment.
+
+## Catatan historis sebelum PR-00
+
+Catatan berikut dipertahankan sebagai riwayat, bukan bukti seluruh target baru sudah berfungsi. Misalnya klaim lama bahwa kolom distribution_status dihapus tidak sama dengan schema aktual audit: kolom/tabel masih ada, alurnya belum tersambung.
+
 # Temuan & Laporan Hasil Uji Arsitektur (Blueprint R.04)
 
 Catat di sini temuan, klarifikasi teknis, atau penegasan aturan bisnis SIADocs Blueprint R.04.

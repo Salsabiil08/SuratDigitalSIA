@@ -1,4 +1,9 @@
 "use client";
+import {DispositionLetterPanel} from "@/components/letters/disposition-letter-panel";
+import {OfficialReplyPanel} from "@/components/letters/official-reply-panel";
+import { decideReviewAction } from "@/server/actions/reviews";
+import { sendInternalLetterAction,receiveInternalLetterAction } from "@/server/actions/delivery";
+import {useSearchParams} from "next/navigation";
 import { displayLabel } from "@/domain/display-labels";
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
@@ -6,6 +11,7 @@ import {
   getWorkflowLetter,
   reviewLetterAction,
   finalizeLetterAction,
+  restartApprovalAction,
 } from "@/server/actions/workflow";
 import { issueLetterNumberAction } from "@/server/actions/approvals";
 import { cancellationAction } from "@/server/actions/cancellations";
@@ -22,19 +28,26 @@ export function LetterDetailClient({
   id: string;
   initialData: Awaited<ReturnType<typeof getWorkflowLetter>>;
 }) {
+  const params=useSearchParams();const origin=params.get('asal');
+  const backTo=origin==='kotak-masuk'?'/kotak-masuk':origin==='kotak-keluar'?'/kotak-keluar':'/surat';
   const [data, setData] =
     useState<Awaited<ReturnType<typeof getWorkflowLetter>>>(initialData);
+  useEffect(()=>setData(initialData),[initialData]);
   const [error, setError] = useState("");
   const [msg, setMsg] = useState("");
   const [busy, setBusy] = useState(false);
   const [external, setExternal] = useState(false);
   const [previewed, setPreviewed] = useState(false);
+  const [confirmSelf,setConfirmSelf]=useState(false);
+  const [sendConfirmed,setSendConfirmed]=useState(false);
+  const [ccIds,setCcIds]=useState<string[]>([]);
   const [note, setNote] = useState("");
   const reload = useCallback(async () => {
     try {
       const result = await getWorkflowLetter(id);
       setData(result);
       setPreviewed(false);
+      setConfirmSelf(false);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Surat tidak tersedia.");
     }
@@ -61,8 +74,10 @@ export function LetterDetailClient({
   const v = data.versions.find((v) => v.id === l.current_version_id);
   const editable =
     data.isCreator && ["DRAFT", "REVISION_REQUESTED"].includes(l.status);
+  const creatorApprovalRequired = [...(l.mandatory_approver_ids || l.signer_ids || []),...(l.additional_approver_ids || [])].includes(data.userId);
+  const activeReview = data.reviews.find(r => r.reviewer_id === data.userId && r.status === 'PENDING' && r.version_id === l.current_version_id && l.review_status === 'WAITING');
   const activeApproval = data.approvals.find(
-    (a) => a.approver_id === data.userId && a.status === "PENDING",
+    (a) => a.approver_id === data.userId && a.status === "PENDING" && a.version_id===l.current_version_id && a.cycle===l.approval_cycle,
   );
   const signing = data.signatures.find(
     (s) => s.signer_id === data.userId && s.status === "PENDING",
@@ -70,10 +85,12 @@ export function LetterDetailClient({
   const documentUrl = `/api/letters/${id}/document?areas=1&revision=${l.revision}`;
   return (
     <div className="max-w-5xl space-y-5">
-      <Link className="text-brand-red text-sm underline" href="/surat">
-        Kembali ke Surat Saya
+      <Link className="text-brand-red text-sm underline" href={backTo}>
+        Kembali ke {origin==='kotak-masuk'?'Kotak Masuk':origin==='kotak-keluar'?'Kotak Keluar':'Surat Saya'}
       </Link>
-      <PageHeader title={l.subject} />
+      <PageHeader title={l.subject} actions={<Button variant="secondary" disabled={busy} onClick={reload}>Perbarui</Button>}/>
+      <OfficialReplyPanel letterId={id} context={data.replyContext}/>
+      <DispositionLetterPanel letterId={id} context={data.dispositionContext}/>
       {error && (
         <p
           role="alert"
@@ -148,6 +165,21 @@ export function LetterDetailClient({
           </p>
         )}
       </Card>
+      {l.type.category==='INTERNAL' && <Card className="p-5 space-y-3">
+        <h2 className="font-bold">Pengiriman dan Penerimaan</h2>
+        <p className="text-sm">Dokumen: {l.finalized_at?'Final dan terkunci':'Belum final'} · Pengiriman: {data.delivery?.dispatch?'Terkirim':'Belum dikirim'}</p>
+        {data.delivery?.dispatch && <>
+          <p className="text-sm">Dikirim pada {new Date(data.delivery.dispatch.sent_at).toLocaleString('id-ID',{timeZone:'Asia/Jakarta'})} WIB. Versi dan sidik dokumen pengiriman dicatat tetap.</p>
+          {(data.delivery.recipients as {profile_id:string;recipient_role:string;read_at:string|null;received_at:string|null}[]).map(r=><p key={r.profile_id} className="text-sm">{r.recipient_role==='PRIMARY'?'Penerima utama':'Tembusan'} · {r.read_at?'Dokumen sudah dibuka':'Belum dibuka'} · {r.recipient_role==='CC'?'Salinan, tanpa konfirmasi penerimaan utama':r.received_at?'Penerimaan dikonfirmasi':'Belum ada konfirmasi penerimaan'} · {r.recipient_role==='CC'?'Tidak otomatis wajib membalas':data.replyContext.recipients.find(x=>x.profileId===r.profile_id)?.repliedAt?'Sudah Dibalas':'Belum ada balasan resmi terkirim'}</p>)}
+          <p className="text-xs text-neutral-600">Membuka atau mengunduh dokumen bukan konfirmasi penerimaan. Tembusan tidak otomatis wajib membalas.</p>
+          {data.delivery.recipientRole==='PRIMARY' && !data.delivery.recipients.find((r:any)=>r.profile_id===data.userId)?.received_at && <Button isLoading={busy} onClick={()=>act(()=>receiveInternalLetterAction(data.delivery.dispatch.id),'Penerimaan Anda telah dicatat.')}>Konfirmasi Terima Surat</Button>}
+        </>}
+        {data.delivery?.canDispatch && l.finalized_at && l.status==='NUMBERED' && !data.delivery.dispatch && <>
+          {data.delivery.ccEnabled&&<fieldset className="space-y-1"><legend className="text-sm font-semibold">Tembusan (opsional)</legend>{data.ccOptions.filter(p=>p.id!==l.recipient_user_id).map(p=><label key={p.id} className="flex gap-2 text-sm"><input type="checkbox" checked={ccIds.includes(p.id)} onChange={e=>setCcIds(e.target.checked?[...ccIds,p.id]:ccIds.filter(id=>id!==p.id))}/>{p.full_name}</label>)}</fieldset>}
+          <label className="flex gap-2 text-sm"><input type="checkbox" checked={sendConfirmed} onChange={e=>setSendConfirmed(e.target.checked)}/>Saya mengirim dokumen final ini kepada {l.recipient?.full_name||'penerima utama yang tercatat'}. Pengiriman resmi dicatat dan penerima mendapat akses.</label>
+          <Button disabled={!sendConfirmed} isLoading={busy} onClick={()=>act(()=>sendInternalLetterAction(id,ccIds),'Surat resmi telah dikirim. Penerimaan menunggu konfirmasi penerima.')}>Kirim Surat Internal</Button>
+        </>}
+      </Card>}
       <Card className="p-5 space-y-4">
         <h2 className="font-bold">Pratinjau Dokumen</h2>
         {v ? (
@@ -201,17 +233,18 @@ export function LetterDetailClient({
             >
               Konfirmasi Pratinjau
             </Button>
+            {creatorApprovalRequired && ["PASSED","NOT_REQUIRED"].includes(l.review_status) && <label className="text-sm flex items-start gap-2"><input type="checkbox" checked={confirmSelf} onChange={e=>setConfirmSelf(e.target.checked)}/>Saya mengajukan dan menyetujui versi ini sesuai kewenangan saya. Persetujuan pejabat lain, nomor resmi, dan tanda tangan tetap melalui tahapnya.</label>}
             <Button
               disabled={l.previewed_revision !== l.revision}
               isLoading={busy}
               onClick={() =>
                 act(
-                  () => reviewLetterAction(id, "SUBMIT", l.revision),
+                  () => reviewLetterAction(id, "SUBMIT", l.revision, undefined, confirmSelf),
                   "Surat berhasil diajukan sesuai alur kewenangan.",
                 )
               }
             >
-              Ajukan Persetujuan
+              {l.review_status === "PASSED" ? "Ajukan Persetujuan" : "Ajukan Surat"}
             </Button>
           </>
         )}
@@ -229,6 +262,24 @@ export function LetterDetailClient({
           </Button>
         )}
       </div>
+      {data.reviews.length > 0 && <Card className="p-5 space-y-3">
+        <h2 className="font-bold">Riwayat Pemeriksaan</h2>
+        {data.reviews.map(r => <div key={r.id} className="text-sm border-b pb-2">
+          <p>{r.reviewer?.full_name} — {r.status === 'PASSED' ? 'Lolos pemeriksaan' : r.status === 'REVISION_REQUESTED' ? 'Perlu perbaikan' : 'Menunggu pemeriksaan'}{r.version_id !== l.current_version_id ? ' (versi sebelumnya; tidak berlaku untuk versi ini)' : ''}</p>
+          {r.decision_note && <p>Catatan: {r.decision_note}</p>}
+          {r.comments.map((c: { id: string; note: string }) => <p key={c.id}>Catatan pemeriksa: {c.note}</p>)}
+        </div>)}
+      </Card>}
+      {activeReview && <Card className="p-5 space-y-4">
+        <h2 className="font-bold">Hasil Pemeriksaan Naskah</h2>
+        <p className="text-sm">Anda memeriksa versi ini. Perubahan isi dilakukan pembuat surat. Lolos pemeriksaan bukan persetujuan atau tanda tangan.</p>
+        <label htmlFor="review-note" className="block text-sm">Catatan (wajib untuk memberi catatan atau meminta perbaikan)</label>
+        <textarea id="review-note" className="w-full border rounded-xl p-3" value={note} onChange={e => setNote(e.target.value)} />
+        <div className="flex gap-3 flex-wrap">{([['COMMENT','Simpan Catatan'],['PASS','Lolos Pemeriksaan'],['REQUEST_REVISION','Minta Perbaikan']] as const).map(([action,label]) =>
+          <Button key={action} disabled={!previewed} isLoading={busy} variant={action === 'PASS' ? 'primary' : 'secondary'} onClick={() => act(() => decideReviewAction(activeReview.id, activeReview.version_id, l.revision, action, note), 'Hasil pemeriksaan tersimpan.')}>{label}</Button>)}</div>
+      </Card>}
+      {data.approvals.length>0 && <Card className="p-5 space-y-2"><h2 className="font-bold">Riwayat Persetujuan</h2>{data.approvals.map(a=><p key={a.id} className="text-sm">Tahap {a.step_order}: {a.approver?.full_name} — {displayLabel(a.status)}{a.version_id!==l.current_version_id?' (versi sebelumnya)':''}{a.decision_origin==='CREATOR_SUBMISSION'?' — dikonfirmasi pembuat saat pengajuan':''}</p>)}</Card>}
+      {data.isCreator && !l.official_number && !l.finalized_at && ['IN_REVIEW','READY_TO_ISSUE'].includes(l.status) && <Card className="p-5 space-y-3"><h2 className="font-bold">Koreksi Pengajuan</h2><p className="text-sm">Tarik pengajuan untuk menyimpan versi koreksi. Keputusan lama tetap tercatat dan tidak berlaku untuk versi baru.</p><textarea aria-label="Alasan koreksi" className="border rounded-xl p-3 w-full" value={note} onChange={e=>setNote(e.target.value)}/><Button variant="secondary" isLoading={busy} onClick={()=>act(()=>restartApprovalAction(id,l.revision,note),'Pengajuan ditarik. Edit dan simpan versi baru sebelum mengajukan kembali.')}>Tarik untuk Koreksi</Button></Card>}
       {activeApproval && (
         <Card className="p-5 space-y-4">
           <h2 className="font-bold">

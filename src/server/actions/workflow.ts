@@ -1,4 +1,6 @@
 "use server";
+import {readDispositionLetterContext} from "@/server/disposition-integration";
+import {readReplyContext} from "@/server/official-replies";
 import { requireUser } from "@/server/auth";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -16,7 +18,7 @@ export async function getWorkflowOptions() {
 export async function getWorkflowLetter(id: string) {
   const user = await requireUser();
   const l = await readLetter(id);
-  const db = createClient();
+  const db = await createClient();
   const [
     { data: versions, error: ve },
     { data: approvals, error: ae },
@@ -24,6 +26,7 @@ export async function getWorkflowLetter(id: string) {
     { data: billing },
     { data: items },
     { data: cancellations, error: ce },
+    { data: reviews, error: re },
   ] = await Promise.all([
     db
       .from("letter_versions")
@@ -58,9 +61,19 @@ export async function getWorkflowLetter(id: string) {
       )
       .eq("letter_id", id)
       .order("created_at", { ascending: false }),
+    db.from('review_steps').select('*,reviewer:profiles!review_steps_reviewer_id_fkey(full_name),comments:review_comments(*)').eq('letter_id', id).order('cycle', { ascending: false }),
   ]);
-  if (ve || ae || se || ce) throw new Error((ve || ae || se || ce)!.message);
+  if (ve || ae || se || ce || re) throw new Error((ve || ae || se || ce || re)!.message);
+  const {data:delivery,error:de}=await createAdminClient().rpc('get_internal_delivery_context',{p_actor:user.id,p_letter:id});
+  if(de)throw new Error('Informasi pengiriman belum dapat diambil.');
+  let ccOptions: {id:string;full_name:string}[]=[];
+  if(delivery?.ccEnabled&&delivery?.canDispatch){const {data:ccPeople,error:cce}=await db.from('profiles').select('id,full_name').eq('is_active',true);if(cce)throw new Error('Penerima tembusan belum dapat diambil.');ccOptions=ccPeople||[];}
+  const replyContext=await readReplyContext(id);
   return {
+    dispositionContext:await readDispositionLetterContext(id),
+    replyContext,
+    ccOptions,
+    delivery,
     letter: l,
     versions: versions || [],
     approvals: approvals || [],
@@ -68,6 +81,7 @@ export async function getWorkflowLetter(id: string) {
     billing,
     items: items || [],
     cancellations: cancellations || [],
+    reviews: reviews || [],
     isCreator: l.creator_id === user.id,
     userId: user.id,
   };
@@ -77,6 +91,7 @@ export async function reviewLetterAction(
   action: "PREVIEW" | "SUBMIT" | "APPROVE" | "REJECT" | "REQUEST_REVISION",
   revision: number,
   note?: string,
+  confirmCreatorApproval = false,
 ) {
   try {
     const user = await requireUser();
@@ -95,17 +110,14 @@ export async function reviewLetterAction(
           "Tentukan area nomor resmi pada PDF sebelum mengajukan.",
         );
     }
-    const { data, error } = await createAdminClient().rpc("review_letter", {
-      p_actor: user.id,
-      p_letter: id,
-      p_action: action,
-      p_revision: revision,
-      p_note: note || null,
-    });
+    const { data, error } = action === 'SUBMIT'
+      ? await createAdminClient().rpc('submit_letter_for_approval', {p_actor:user.id,p_letter:id,p_revision:revision,p_confirm_self:confirmCreatorApproval})
+      : await createAdminClient().rpc('review_letter', {p_actor:user.id,p_letter:id,p_action:action,p_revision:revision,p_note:note || null});
     if (error) throw new Error(error.message);
     for (const p of [
       "/surat",
       "/persetujuan",
+      "/pemeriksaan",
       "/pengesahan",
       "/",
       `/surat/${id}`,
@@ -143,4 +155,14 @@ export async function finalizeLetterAction(
       error: e instanceof Error ? e.message : "Finalisasi gagal.",
     };
   }
+}
+
+export async function restartApprovalAction(id:string, revision:number, reason:string) {
+  try {
+    const user=await requireUser();
+    const {error}=await createAdminClient().rpc('restart_letter_approval',{p_actor:user.id,p_letter:id,p_revision:revision,p_reason:reason});
+    if(error) throw new Error(error.message);
+    for(const path of ['/surat','/persetujuan','/pemeriksaan',`/surat/${id}`]) revalidatePath(path);
+    return {success:true};
+  }catch(e){return {success:false,error:e instanceof Error?e.message:'Pengajuan belum dapat dikoreksi.'};}
 }
