@@ -32,6 +32,7 @@ export function RegisterClient({options}:{options:Awaited<ReturnType<typeof regi
     <main data-auth-scroll className="h-screen h-[100dvh] w-full overflow-y-auto overflow-x-hidden login-animated-bg font-sans">
       <div className="min-h-full flex flex-col items-center justify-center px-4 py-6 sm:py-8">
         <div className="w-full max-w-[440px] shrink-0">
+          <Link href="/login" className="inline-flex items-center gap-2 mb-4 rounded-lg border border-white/30 px-3 py-2 text-sm font-semibold text-white hover:bg-white/10 focus-visible:outline-white"><span aria-hidden="true">←</span> Kembali ke Login</Link>
           <div className="flex flex-col items-center mb-4 text-center">
             <Link href="/login" aria-label="SIADocs — halaman masuk" className="flex items-center gap-2.5">
               <img src="/images/logo.png" alt="SIADocs Logo" className="h-10 sm:h-11 w-auto"/>
