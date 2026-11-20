@@ -32,6 +32,14 @@ async def main():
    await page.locator('input[name=password]').fill('Uat-local-only-123')
    await page.get_by_role('button',name='Masuk',exact=True).click()
    await page.get_by_text('Layanan login belum dapat dihubungi. Coba kembali.',exact=True).wait_for(timeout=30000)
+   await page.get_by_role('link',name='Daftar Akun',exact=True).click()
+   await page.wait_for_url('**/register')
+   assert await page.get_by_role('heading',name='Daftar Akun Baru',exact=True).is_visible()
+   assert await page.locator('input[name=confirmPassword]').is_visible()
+   assert await page.get_by_role('button',name='Ajukan Pendaftaran',exact=True).is_visible()
+   assert await page.evaluate('document.documentElement.scrollWidth<=innerWidth'), 'Register overflow'
+   await page.get_by_role('button',name='Ajukan Pendaftaran',exact=True).click()
+   assert await page.locator('input:invalid').count()>0
    await page.screenshot(path=str(out/(name+'.png')),full_page=True)
    assert not blocked,'Browser mencoba mengakses production'
    assert not errors,errors
