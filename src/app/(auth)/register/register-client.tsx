@@ -29,46 +29,19 @@ export function RegisterClient({options}:{options:Awaited<ReturnType<typeof regi
   const [state, formAction] = useFormState(registerAction, null);
 
   return (
-    <div className="flex flex-col lg:flex-row min-h-screen font-sans">
-      {/* Hero Panel (Kiri) */}
-      <section className="relative overflow-hidden flex-1 bg-gradient-to-br from-[#121A22] via-[#1E1417] to-[#B30B0B] text-white p-8 sm:p-14 lg:p-16 flex flex-col justify-between min-h-[300px] lg:min-h-screen">
-        {/* Brand */}
-        <div className="flex items-center gap-3 relative z-10">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#B30B0B] to-[#F26A0F] flex items-center justify-center font-bold text-white text-lg shadow-md">
-            S
+    <main data-auth-scroll className="h-screen h-[100dvh] w-full overflow-y-auto overflow-x-hidden login-animated-bg font-sans">
+      <div className="min-h-full flex flex-col items-center justify-center px-4 py-6 sm:py-8">
+        <div className="w-full max-w-[440px] shrink-0">
+          <div className="flex flex-col items-center mb-4 text-center">
+            <Link href="/login" aria-label="SIADocs — halaman masuk" className="flex items-center gap-2.5">
+              <img src="/images/logo.png" alt="SIADocs Logo" className="h-10 sm:h-11 w-auto"/>
+              <img src="/images/logo-text.png" alt="SIADocs" className="h-6 sm:h-7 w-auto"/>
+            </Link>
+            <p className="text-[11px] text-neutral-300 mt-2">Sistem Persuratan Digital &amp; Penomoran Resmi</p>
           </div>
-          <span className="font-display font-extrabold text-[34px] tracking-tight leading-none text-white">
-            SIADocs
-          </span>
-        </div>
-
-        {/* Hero Tagline */}
-        <div className="max-w-md my-8 relative z-10">
-          <div className="inline-block px-3 py-1 rounded-full bg-white/10 text-xs font-semibold text-[#FFB27A] mb-3">
-            Pendaftaran Pengguna Baru
-          </div>
-          <h1 className="text-3xl sm:text-4xl font-bold leading-tight tracking-tight mb-3">
-            Bergabung dengan Persuratan Digital PT Semen Indonesia Aceh
-          </h1>
-          <p className="text-xs sm:text-sm text-neutral-300 leading-relaxed">
-            Daftarkan akun kerja Anda untuk mulai membuat surat, mengambil nomor resmi, dan memproses disposisi secara digital.
-          </p>
-        </div>
-
-        {/* Footer info */}
-        <div className="text-xs text-neutral-400 relative z-10">
-          PT Semen Indonesia (Persero) Tbk.
-        </div>
-
-        {/* Bottom Accent line */}
-        <div className="absolute left-0 right-0 bottom-0 h-1.5 bg-gradient-to-r from-[#B30B0B] via-[#E62314] to-[#F26A0F] z-20" />
-      </section>
-
-      {/* Form Panel (Kanan) */}
-      <section className="flex-1 flex items-center justify-center p-6 sm:p-10 lg:p-14 bg-page-gradient">
-        <div className="w-full max-w-[440px] bg-white p-8 sm:p-10 rounded-2xl border border-[#E4E4E0] shadow-card">
-          <div className="mb-6">
-            <h2 className="text-2xl font-bold tracking-tight text-neutral-900 m-0">Daftar Akun Baru</h2>
+          <div className="w-full login-card-glass p-5 sm:p-6 rounded-2xl border border-neutral-200/80 shadow-2xl text-neutral-900">
+          <div className="mb-4 text-center">
+            <h1 className="text-xl font-bold tracking-tight text-neutral-900 m-0">Daftar Akun Baru</h1>
             <p className="text-xs text-neutral-500 mt-1 m-0">
               Isi data Anda. Super Admin akan memeriksa dan mengaktifkan akun.
             </p>
@@ -112,7 +85,7 @@ export function RegisterClient({options}:{options:Awaited<ReturnType<typeof regi
             </Field>
 
             <Field label="Konfirmasi Kata Sandi" htmlFor="reg-confirm" required><Input id="reg-confirm" name="confirmPassword" type="password" minLength={8} maxLength={128} autoComplete="new-password" required/></Field>
-            <p className="text-xs text-neutral-600">Satu unit dan jabatan dapat diisi banyak pegawai. Jabatan yang dipilih adalah pengajuan, bukan kewenangan yang langsung diberikan.</p>
+            <p className="text-xs text-neutral-600">Unit dan jabatan akan diperiksa oleh Super Admin.</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Field label="Unit Kerja" htmlFor="reg-unit" required>
                 <Select id="reg-unit" name="unitId" required defaultValue="">
@@ -138,9 +111,11 @@ export function RegisterClient({options}:{options:Awaited<ReturnType<typeof regi
               </Link>
             </div>
           </form>}
+          </div>
+          <p className="mt-3 text-center text-[10px] text-neutral-400">PT Semen Indonesia (Persero) Tbk.</p>
         </div>
-      </section>
-    </div>
+      </div>
+      <div aria-hidden="true" className="fixed bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-[#B30B0B] via-[#E62314] to-[#F26A0F] pointer-events-none"/>
+    </main>
   );
 }
-

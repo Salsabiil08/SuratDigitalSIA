@@ -14,7 +14,7 @@ async def main():
  else:raise RuntimeError('Server localhost belum siap')
  async with async_playwright() as p:
   browser=await p.chromium.launch(executable_path=os.environ.get('CHROMIUM_PATH'),args=['--no-sandbox'])
-  for name,width,height in [('desktop',1366,768),('mobile',390,844)]:
+  for name,width,height in [('desktop',1366,641),('mobile',390,650)]:
    page=await browser.new_page(viewport={'width':width,'height':height})
    errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
    blocked=[]
@@ -38,7 +38,16 @@ async def main():
    assert await page.locator('input[name=confirmPassword]').is_visible()
    assert await page.get_by_role('button',name='Ajukan Pendaftaran',exact=True).is_visible()
    assert await page.evaluate('document.documentElement.scrollWidth<=innerWidth'), 'Register overflow'
-   await page.get_by_role('button',name='Ajukan Pendaftaran',exact=True).click()
+   scroller=page.locator('[data-auth-scroll]')
+   await scroller.hover()
+   await page.mouse.wheel(0,1800)
+   await page.wait_for_timeout(300)
+   assert await scroller.evaluate('(el)=>el.scrollTop>0'), 'Registration cannot scroll'
+   submit=page.get_by_role('button',name='Ajukan Pendaftaran',exact=True)
+   box=await submit.bounding_box()
+   assert box and box['y']>=0 and box['y']+box['height']<=height, 'Submit clipped after scroll'
+   await page.get_by_role('link',name='Masuk di sini',exact=True).is_visible()
+   await submit.click()
    assert await page.locator('input:invalid').count()>0
    await page.screenshot(path=str(out/(name+'.png')),full_page=True)
    assert not blocked,'Browser mencoba mengakses production'
