@@ -2,7 +2,7 @@
 import fs from 'node:fs';import path from 'node:path';import {fileURLToPath} from 'node:url';import {createHash} from 'node:crypto';
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'../..');
 const expected=['20261117204405','20261117204922','20261117210259','20261117213134','20261118012449','20261118013200','20261118013517','20261118020743'];
-const files=fs.readdirSync(path.join(root,'supabase/migrations')).filter(f=>f.endsWith('.sql')&&f>'20261118020743_rich_text_content.sql').sort();
+const files=fs.readdirSync(path.join(root,'supabase/migrations')).filter(f=>f.endsWith('.sql')&&f>'20261118020743_rich_text_content.sql'&&f<='20261118125914_workflow_table_privileges.sql').sort();
 if(files.length!==8)throw new Error('Daftar forward berubah; tinjau ulang plan sebelum membuat artefak.');
 const sql=['-- REVIEW WAJIB: backup, schema diff, maintenance dan izin production terpisah.','begin;',`lock table supabase_migrations.schema_migrations in exclusive mode;`,`do $$ begin if (select array_agg(version::text order by version) from supabase_migrations.schema_migrations) is distinct from array[${expected.map(v=>`'${v}'`).join(',')}]::text[] then raise exception 'History berubah atau forward sudah diterapkan; jangan replay/repair otomatis.';end if;end $$;`];
 const snapshot=JSON.parse(fs.readFileSync(path.join(root,'docs/baselines/production-pr08-schema.json'),'utf8'));

@@ -119,7 +119,8 @@ export default function LoginPage() {
 
             <SubmitButton />
 
-            <p className="text-[11px] text-center text-neutral-500">Akun dan jabatan dikelola oleh Super Admin.</p>
+            <p className="text-xs text-center text-neutral-600">Belum punya akun? <Link href="/register" className="font-semibold text-brand-red underline">Daftar Akun</Link></p>
+            <p className="text-[11px] text-center text-neutral-500">Akun baru menunggu aktivasi dan penetapan jabatan oleh Super Admin.</p>
           </form>
 
 

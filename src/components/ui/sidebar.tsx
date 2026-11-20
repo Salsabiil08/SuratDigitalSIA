@@ -51,6 +51,7 @@ export function Sidebar({ user, unreadNotificationsCount, className }: SidebarPr
   if (access?.signatures) suratItems.push({ label: 'Tanda Tangan', href: '/pengesahan' });
   if (access?.correspondence) suratItems.push({ label: 'Disposisi', href: '/disposisi' });
   const adminItems: NavItem[] = access?.administration ? [
+    { label: 'Akun Pengguna', href: '/admin/pengguna' },
     { label: 'Master Organisasi', href: '/admin/organisasi' },
     { label: 'Seri Penomoran', href: '/admin/seri' },
     { label: 'Riwayat Aktivitas', href: '/admin/log' },

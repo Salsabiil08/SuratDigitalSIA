@@ -1,6 +1,8 @@
 'use server';
 import { createClient } from '@/lib/supabase/server';
 import { clearLocalSession, getCurrentUser, requireUser } from '@/server/auth';
+import {registrationInput,type RegistrationState} from '@/domain/registration';
+import {registrationOptions} from '@/server/registration';
 import { redirect } from 'next/navigation';
 
 export async function loginAction(_prev: { error?: string } | null, form: FormData) {
@@ -19,8 +21,22 @@ export async function loginAction(_prev: { error?: string } | null, form: FormDa
   redirect('/');
 }
 
-export async function registerAction(_prev: { error?: string } | null, _form: FormData) {
-  return { error: 'Pendaftaran akun dan penetapan jabatan dilakukan oleh pengelola perusahaan. Hubungi administrator.' };
+export async function registerAction(_prev: RegistrationState | null, form: FormData):Promise<RegistrationState> {
+ try{
+  if(await getCurrentUser())return {error:'Keluar dari akun terlebih dahulu untuk mendaftarkan pengguna baru.'};
+  const input=registrationInput(form),options=await registrationOptions();
+  if(options.error)return {error:options.error};
+  if(!options.units.some(u=>u.id===input.unitId)||!options.positions.some(p=>p.id===input.positionId))return {error:'Unit atau jabatan sudah tidak aktif. Muat ulang formulir.'};
+  const db=await createClient();
+  const {data,error}=await db.auth.signUp({email:input.email,password:input.password,options:{data:{full_name:input.fullName,siadocs_registration:true,requested_unit_id:input.unitId,requested_position_id:input.positionId}}});
+  if(error){
+   if(error.status===429||error.code==='over_email_send_rate_limit')return {error:'Batas pengiriman pendaftaran sementara tercapai. Tunggu sebelum mencoba lagi.'};
+   return {error:'Pendaftaran belum berhasil. Periksa email/kata sandi atau hubungi pengelola jika layanan pendaftaran belum tersedia.'};
+  }
+  if(!data.user)return {error:'Pendaftaran belum dapat dipastikan. Periksa email dan hubungi pengelola.'};
+  if(data.session){const signedOut=await db.auth.signOut();if(signedOut.error)return {error:'Permintaan mungkin sudah tercatat. Tutup sesi dan hubungi pengelola untuk memeriksa aktivasi.'};}
+  return {success:true,message:'Permintaan pendaftaran telah diproses. Verifikasi email jika diminta, lalu tunggu Super Admin memeriksa unit dan jabatan Anda. Jika email sudah terdaftar, gunakan halaman Masuk.'};
+ }catch(e){return {error:e instanceof Error&&/nama lengkap|alamat email|Kata sandi|Konfirmasi|Pilih unit/.test(e.message)?e.message:'Layanan pendaftaran belum dapat dihubungi. Coba kembali.'};}
 }
 
 export async function logoutAction() {

@@ -8,3 +8,5 @@ do $$ begin
   if not exists (select 1 from pg_roles where rolname = 'authenticated') then create role authenticated nologin; end if;
   if not exists (select 1 from pg_roles where rolname = 'service_role') then create role service_role nologin; end if;
 end $$;
+
+alter table auth.users add column if not exists raw_user_meta_data jsonb not null default '{}'::jsonb;
