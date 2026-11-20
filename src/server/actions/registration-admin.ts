@@ -2,7 +2,7 @@
 import { requireSuperAdmin } from '@/server/auth';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { revalidatePath } from 'next/cache';
-export async function decideRegistration(_prev: {error?:string;success?:string},form:FormData) {
+export async function decideRegistration(_prev: {error?:string;success?:string},form:FormData):Promise<{error?:string;success?:string}> {
  try {
  const actor=await requireSuperAdmin();
  const action=String(form.get('action')||'');
