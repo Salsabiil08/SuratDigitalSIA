@@ -24,12 +24,23 @@ async def main():
     elif action=='ACCEPT':state['status']='DONE';state['submissions'][-1]['decision']={'decision':'ACCEPT','note':payload['note'],'created_at':'2026-11-23T04:00:00Z'}
     state['revision']+=1;await route.fulfill(json={'success':True})
    await context.route('**/ux-data*',data);await context.route('**/ux-action*',act)
+   preview_attempts=[]
+   async def preview(route):
+    preview_attempts.append(1)
+    if len(preview_attempts)==1:await route.fulfill(status=503,json={'error':'Pratinjau uji belum tersedia.'})
+    else:await route.fulfill(path='test-results/editor-harness/guided-signed.docx')
+   await context.route('**/ux-preview',preview)
    page=await context.new_page();await page.goto(base+'/?actor=recipient')
    await page.get_by_role('button',name='Uji Validasi',exact=True).click()
    assert await page.locator('#ux-name').evaluate('(el)=>el.validationMessage')=='Isi bagian ini terlebih dahulu.'
    await page.locator('#ux-name').fill('Nama');await page.get_by_role('button',name='Uji Validasi',exact=True).click()
    assert await page.locator('#ux-choice').evaluate('(el)=>el.validationMessage')=='Pilih salah satu pilihan terlebih dahulu.'
    await page.locator('#ux-choice').select_option('one')
+   await page.locator('iframe').locator('..').scroll_into_view_if_needed()
+   retry=page.get_by_role('button',name='Muat Ulang Pratinjau',exact=True)
+   await retry.wait_for(timeout=20000);await retry.click()
+   await page.frame_locator('iframe').locator('.docx-wrapper').wait_for(timeout=20000)
+   assert len(preview_attempts)>=2
    await page.get_by_role('button',name='Mulai Kerjakan',exact=True).click()
    await page.get_by_text('Tahap: Diproses',exact=True).wait_for()
    await page.get_by_role('button',name='Kirim Hasil untuk Diperiksa',exact=True).click()
@@ -48,6 +59,12 @@ async def main():
    await page.goto(base+'/?actor=giver');await page.get_by_role('button',name='Periksa Hasil',exact=True).click();await page.get_by_role('dialog').get_by_role('button',name='Terima Hasil dan Selesaikan',exact=True).click();await page.get_by_text('Tahap: Selesai',exact=True).wait_for()
    assert await page.get_by_text('Hasil pertama',exact=False).count()>0 and await page.get_by_text('Lengkapi analisis',exact=False).count()>0
    assert await page.get_by_text('Hasil diperbaiki',exact=False).count()>0
+   await page.locator('iframe').locator('..').scroll_into_view_if_needed()
+   # Explicitly exercise retry without resubmitting any workflow action.
+   if await page.get_by_role('button',name='Muat Ulang Pratinjau',exact=True).count():
+    await page.get_by_role('button',name='Muat Ulang Pratinjau',exact=True).click()
+   await page.frame_locator('iframe').locator('.docx-wrapper').wait_for(timeout=20000)
+   assert actions==['START','SUBMIT','RETURN','SUBMIT','ACCEPT']
    if name=='desktop':
     await page.get_by_role('button',name='Uji Popup Gagal',exact=True).click();popup=page.locator('[data-action-popup]').filter(has_text='Tindakan uji belum berhasil.')
     await popup.hover();await page.wait_for_timeout(8300);assert await popup.count()==1

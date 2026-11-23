@@ -345,7 +345,7 @@ export function DisposisiClient({
                 Hasil: {selected.followUpNote}
               </p>
             )}
-            <Field required
+            <Field required={tab === "INBOX"}
               label={
                 tab === "INBOX"
                   ? "Catatan hasil pekerjaan"

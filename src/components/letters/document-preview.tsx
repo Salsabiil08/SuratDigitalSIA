@@ -1,4 +1,5 @@
 "use client";
+import {Button} from '@/components/ui/button';
 import {ActionNotice} from "@/components/ui/action-notice";
 import { useEffect, useRef, useState } from "react";
 export function DocumentPreview({
@@ -24,6 +25,8 @@ export function DocumentPreview({
     return () => observer.disconnect();
   }, []);
   const [error, setError] = useState("");
+  const [attempt,setAttempt]=useState(0);
+  const [loading,setLoading]=useState(false);
   useEffect(() => {
     if (!visible) return;
     let alive = true;
@@ -31,6 +34,7 @@ export function DocumentPreview({
     pdfReady.current = false;
     let blobUrl = "";
     setError("");
+    setLoading(true);
     async function show() {
       try {
         const res = await fetch(url, { cache: "no-store", signal: controller.signal });
@@ -49,7 +53,7 @@ export function DocumentPreview({
         if (alive) onLoaded?.();
       } catch (e) {
         if (alive) setError(e instanceof Error ? e.message : "Pratinjau gagal.");
-      }
+      } finally {if(alive)setLoading(false);}
     }
     void show();
     return () => {
@@ -59,14 +63,11 @@ export function DocumentPreview({
     };
     // onLoaded is intentionally a notification, not a render dependency.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [url, format, visible]);
+  }, [url, format, visible, attempt]);
   return (
     <div ref={container} className="space-y-2">
-      {error && (
-        <ActionNotice>
-          {error}
-        </ActionNotice>
-      )}
+      {loading&&<p role="status" className="text-sm text-neutral-600">Pratinjau sedang disiapkan.</p>}
+      {error && <><ActionNotice>{error}</ActionNotice><Button variant="secondary" onClick={()=>setAttempt(n=>n+1)}>Muat Ulang Pratinjau</Button></>}
         <iframe
           hidden={!!error}
           ref={frame}
