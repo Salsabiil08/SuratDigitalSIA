@@ -289,7 +289,7 @@ export function DisposisiClient({
                   <Button
                     size="sm"
                     disabled={busy || ((d.requiresLetter || (d.integrated&&!!d.responseLetterId)) && !d.responseFinal)}
-                    disabledReason={(d.requiresLetter || (d.integrated&&!!d.responseLetterId)) && !d.responseFinal ? "Surat tindak lanjut belum siap. Selesaikan finalisasi dan pengiriman kepada pemberi disposisi." : undefined}
+                    disabledReason={(d.requiresLetter || (d.integrated&&!!d.responseLetterId)) && !d.responseFinal ? (d.integrated ? "Surat tindak lanjut belum siap. Selesaikan finalisasi dan pengiriman kepada pemberi disposisi." : "Selesaikan finalisasi surat tindak lanjut terlebih dahulu.") : undefined}
                     onClick={() => {
                       setSelected(d);
                       setNote(d.followUpNote || "");setAttachmentIds(d.files.map(f=>f.id));
@@ -297,13 +297,6 @@ export function DisposisiClient({
                   >
                     Kirim Hasil untuk Diperiksa
                   </Button>
-                  {(d.requiresLetter||(d.integrated&&!!d.responseLetterId)) && !d.responseFinal && (
-                    <p className="w-full text-xs text-neutral-500">
-                      Simpan, ajukan, dan selesaikan surat tindak lanjut
-                      dan kirim resmi kepada pemberi terlebih dahulu. Nomor serta pengesahan mengikuti alur
-                      surat biasa.
-                    </p>
-                  )}
                 </>
               )}
             {tab === "OUTBOX" && d.status === "IN_REVIEW" && (

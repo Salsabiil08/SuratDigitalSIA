@@ -8,6 +8,6 @@ export function DispositionLetterPanel({letterId,context}:{letterId:string;conte
  {context.canCreate&&<Link prefetch={false} className="inline-flex rounded-full bg-brand-red text-white px-4 py-2 text-sm" href={`/disposisi?surat=${encodeURIComponent(letterId)}`}>Buat Disposisi</Link>}
  <p className="text-sm">Hasil diperiksa pemberi disposisi. Balasan resmi terkirim dan disposisi selesai adalah dua status yang berbeda.</p>
  {context.tasks.map(t=><p key={t.id} className="text-sm break-words"><Link prefetch={false} className="text-brand-red underline" href={`/disposisi?tugas=${encodeURIComponent(t.id)}`}>Buka Disposisi — {t.subject}</Link></p>)}
- {context.links.map(l=><p key={l.id} className="text-sm break-words"><Link prefetch={false} className="text-brand-red underline" href={`/surat/${encodeURIComponent(l.letterId)}`}>Surat Tindak Lanjut: {l.officialNumber||'Belum bernomor'} — {l.subject}</Link></p>)}
+ {context.links.map(l=><p key={l.id} className="text-sm break-words"><Link prefetch={false} className="text-brand-red underline" href={`/surat/${encodeURIComponent(l.letterId)}`}>{context.tasks.some(t=>t.id===l.dispositionId&&t.isResult)?'Surat Asal Disposisi':'Surat Terkait Disposisi'}: {l.officialNumber||'Belum bernomor'} — {l.subject}</Link></p>)}
  </Card>;
 }
