@@ -1,4 +1,5 @@
 import {richTextDocx} from './rich-docx';
+import {billingLetterBody} from './billing-docx';
 import fs from 'node:fs';
 import path from 'node:path';
 import JSZip from 'jszip';
@@ -10,6 +11,14 @@ export interface SignerInfo {
 }
 
 export interface LetterDocxData {
+  billing?: {
+    bankName: string;
+    accountNumber: string;
+    accountHolder: string;
+    fromTitle: string;
+    toTitle: string;
+    items: import('../domain/billing').BillingItem[];
+  };
   officialNumber?: string;
   letterDate?: string;
   subject?: string;
@@ -125,7 +134,7 @@ export async function generateLetterDocx(data: LetterDocxData): Promise<Buffer> 
       </w:p>`;
 
   // Rakit w:body lengkap
-  const bodyXml = `
+  const bodyXml = data.billing ? billingLetterBody(data, sectPrXml) : `
     <w:body>
       <!-- Ruang Meta Surat (Nomor, Lampiran, Perihal, Tanggal) -->
       <w:tbl>
@@ -352,7 +361,7 @@ export async function generateLetterDocx(data: LetterDocxData): Promise<Buffer> 
 
   // Rekonstruksi document.xml dengan w:body baru
   let finalBody = bodyXml;
-  if (data.signaturePlaceholders && data.signatureCount) {
+  if (data.signaturePlaceholders && data.signatureCount && !data.billing) {
     let slot = 0;
     finalBody = finalBody.replace(/(<w:p><w:pPr><w:jc w:val="center"\/><w:spacing w:after="720"\/>[\s\S]*?<\/w:p>)/g, (block) => {
       slot++;

@@ -1,6 +1,7 @@
+import {validateBillingItems} from '@/domain/billing';
 import {assertPeerInternalAuthorization} from "@/domain/peer-internal";
 import {assertReviewerHierarchy} from "@/server/reviewer-hierarchy";
-import {sanitizeLetterHtml,plainTextHtml,letterText} from '@/domain/rich-text';
+import {sanitizeLetterHtml,plainTextHtml,letterText,escapeText} from '@/domain/rich-text';
 import { randomUUID, createHash } from "node:crypto";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -200,6 +201,14 @@ export async function saveDraft(
   );
   if (signers.some((s) => !s))
     throw new Error("Pilih pejabat penandatangan aktif.");
+  if (input.letterTypeCode === 'Tag') {
+    if (!input.billing) throw new Error('Lengkapi rincian pembayaran.');
+    validateBillingItems(input.billing.items);
+    input.billing = {...input.billing, layout: 'PAYMENT_REQUEST', accountNumber: input.billing.items[0]!.accountNumber!, accountHolder: input.billing.items[0]!.payeeName!};
+    input.recipientName = signers[1]?.name || '';
+    input.recipientOrg = 'PT Semen Indonesia Aceh';
+    input.recipientAddress = 'Kantor PT Semen Indonesia Aceh';
+  }
   let bytes: Uint8Array, format: DocumentFormat;
   let name = "Surat.docx";
   if (input.source === "UPLOAD") {
@@ -224,24 +233,23 @@ export async function saveDraft(
     // Only canonical, allow-listed rich text reaches DOCX and storage.
     const escaped = input.content;
     const rec = people.find((p) => p.id === input.recipientUserId);
-    let billing = "";
-    if (input.billing) {
+    let billingData: import('@/lib/docx-generator').LetterDocxData['billing'];
+    if (input.letterTypeCode === 'Tag') {
+      if (!input.billing) throw new Error('Lengkapi rincian pembayaran.');
       const b = input.billing;
-      const total = b.items.reduce((s, i) => s + Number(i.amount), 0);
-      billing =
-        "\n\nRincian tagihan:\n" +
-        b.items
-          .map(
-            (i, j) =>
-              `${j + 1}. ${i.description}: Rp ${i.amount.toLocaleString("id-ID")}`,
-          )
-          .join("\n") +
-        `\nTotal: Rp ${total.toLocaleString("id-ID")} (${terbilangRupiah(total)})\nBank: ${banks.find((x) => x.id === b.bankId)?.name || b.bankName || ""}\nRekening: ${b.accountNumber} a.n. ${b.accountHolder}`;
+      billingData = {
+        bankName: banks.find(x => x.id === b.bankId)?.name || b.bankName || '',
+        accountNumber: b.accountNumber,
+        accountHolder: b.accountHolder,
+        fromTitle: `${signers[0]?.title || 'Senior Manager'} PT Semen Indonesia Aceh`,
+        toTitle: `${signers[1]?.title || 'Direktur Utama'} PT Semen Indonesia Aceh`,
+        items: b.items,
+      };
     }
     bytes = await generateLetterDocx({
       officialNumber: "{{OFFICIAL_NUMBER}}",
       letterDate:
-        "Aceh Besar, " +
+        (input.letterTypeCode === "Tag" ? "" : "Aceh Besar, ") +
         new Date(input.letterDate + "T12:00:00+07:00").toLocaleDateString(
           "id-ID",
           {
@@ -258,7 +266,8 @@ export async function saveDraft(
         : [input.recipientOrg, input.recipientAddress]
             .filter(Boolean)
             .join("\n"),
-      contentHtml: escaped + (billing ? plainTextHtml(billing) : ""),
+      contentHtml: billingData ? escaped.replace("bank yang tercantum",escapeText(billingData.bankName)) : escaped,
+      billing: billingData,
       signatureCount: signers.length,
       signers: signers.map((s) => ({ name: s!.name, title: s!.title })),
       signerName: signers[0]?.name || user.fullName,

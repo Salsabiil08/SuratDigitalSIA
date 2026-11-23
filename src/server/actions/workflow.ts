@@ -25,8 +25,8 @@ export async function getWorkflowLetter(id: string) {
     { data: versions, error: ve },
     { data: approvals, error: ae },
     { data: signatures, error: se },
-    { data: billing },
-    { data: items },
+    { data: billing, error: be },
+    { data: items, error: ie },
     { data: cancellations, error: ce },
     { data: reviews, error: re },
     { data: delivery, error: de },
@@ -56,7 +56,7 @@ export async function getWorkflowLetter(id: string) {
     db.from("billing_details").select("*").eq("letter_id", id).maybeSingle(),
     db
       .from("billing_items")
-      .select("description,amount")
+      .select("description,amount,document_number,payee_name,bank_name,account_number")
       .eq("letter_id", id)
       .order("line_no"),
     db
@@ -71,7 +71,7 @@ export async function getWorkflowLetter(id: string) {
     readReplyContext(id),
     readDispositionLetterContext(id),
   ]);
-  if (ve || ae || se || ce || re) throw new Error((ve || ae || se || ce || re)!.message);
+  if (ve || ae || se || ce || re || be || ie) throw new Error((ve || ae || se || ce || re || be || ie)!.message);
   if(de)throw new Error('Informasi pengiriman belum dapat diambil.');
   let ccOptions: {id:string;full_name:string}[]=[];
   if(delivery?.ccEnabled&&delivery?.canDispatch){const {data:ccPeople,error:cce}=await db.from('profiles').select('id,full_name').eq('is_active',true);if(cce)throw new Error('Penerima tembusan belum dapat diambil.');ccOptions=ccPeople||[];}
@@ -85,7 +85,7 @@ export async function getWorkflowLetter(id: string) {
     approvals: approvals || [],
     signatures: signatures || [],
     billing,
-    items: items || [],
+    items: (items || []).map(i=>({description:i.description,amount:Number(i.amount),documentNumber:i.document_number||'',payeeName:i.payee_name||billing?.payee_name||'',bankName:i.bank_name||'',accountNumber:i.account_number||billing?.account_number||''})),
     cancellations: cancellations || [],
     reviews: reviews || [],
     isCreator: l.creator_id === user.id,

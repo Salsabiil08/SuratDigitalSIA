@@ -16,6 +16,12 @@ export async function renderDocxInFrame(blob:Blob,frame:HTMLIFrameElement){
           useBase64URL: true,
           ignoreFonts: true,
         });
+        // Hide technical signing markers in the display copy only; stored bytes remain intact.
+        const textNodes=doc.createTreeWalker(doc.body,NodeFilter.SHOW_TEXT);
+        let textNode: Node | null;
+        while ((textNode=textNodes.nextNode())) {
+          textNode.textContent=textNode.textContent?.replace(/\{\{(?:SIGNATURE_\d+|STAMP)\}\}/g,'') || '';
+        }
         // Word grouped vector logos are unsupported by docx-preview. Only the exact existing SIA header gets this visual fallback.
         const {default:JSZip}=await import('jszip');
         const zip=await JSZip.loadAsync(await blob.arrayBuffer());

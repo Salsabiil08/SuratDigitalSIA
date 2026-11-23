@@ -94,14 +94,14 @@ export function LetterEditor({
           reviewerId: "",
           dispositionId,
           letterTypeCode: billing ? "Tag" : "IN",
-          subject: dispositionSeed?.subject||"",
+          subject: dispositionSeed?.subject||(billing ? "Permintaan Pembayaran" : ""),
           letterDate: jakartaDate(),
           dateReason: "",
           recipientUserId: dispositionSeed?.recipientId||"",
           recipientName: "",
           recipientOrg: "",
           recipientAddress: "",
-          content: "",
+          content: billing ? "<p>Mohon dapat disetujui pembayaran melalui bank yang tercantum, sebagai berikut:</p>" : "",
           contentFormat: "HTML",
           signatureMode: "IN_APP",
           signerIds: [],
@@ -113,8 +113,7 @@ export function LetterEditor({
                 accountNumber: "",
                 accountHolder: "",
                 items: [
-                  { description: "", amount: 0 },
-                  { description: "", amount: 0 },
+                  { description: "", amount: 0, documentNumber: "", payeeName: "", bankName: "", accountNumber: "" },
                 ],
               }
             : undefined,
@@ -324,6 +323,8 @@ export function LetterEditor({
                 ))}
               </Select>
             </Field>
+          ) : isBill ? (
+            <p className="rounded-lg bg-neutral-50 p-3 text-sm">Kepada: Direktur Utama PT Semen Indonesia Aceh. Dari: SM pengaju yang dipilih pada bagian pengesahan. Penerima pembayaran diisi pada rincian tagihan.</p>
           ) : (
             <div className="grid sm:grid-cols-2 gap-4">
               <Field
@@ -381,7 +382,7 @@ export function LetterEditor({
           {input.source === "CREATE" ? (
             <>
               <Field
-                label="Isi Surat"
+                label={isBill ? "Kalimat Pengantar Pembayaran" : "Isi Surat"}
                 htmlFor="letter-content"
                 required
               >
@@ -451,8 +452,9 @@ export function LetterEditor({
         </Card>
         {isBill && input.billing && (
           <Card className="p-5 space-y-4">
-            <h2 className="font-bold">Rincian Tagihan — khusus Finance</h2>
-            <Field label="Bank" htmlFor="bank" required>
+            <h2 className="font-bold">Rincian Permintaan Pembayaran</h2>
+            <p className="text-sm text-neutral-600">Setiap baris akan ditampilkan sebagai tabel pada surat. Isi bank penyalur serta rekening masing-masing penerima.</p>
+            <Field label="Bank Penyalur Pembayaran" htmlFor="bank" required>
               <Select
                 id="bank"
                 value={input.billing.bankId}
@@ -486,35 +488,15 @@ export function LetterEditor({
                 />
               </Field>
             )}
-            <Field label="Nomor Rekening" htmlFor="account" required>
-              <Input
-                id="account"
-                value={input.billing.accountNumber}
-                onChange={(e) =>
-                  change("billing", {
-                    ...input.billing!,
-                    accountNumber: e.target.value,
-                  })
-                }
-                required
-              />
-            </Field>
-            <Field label="Atas Nama Rekening" htmlFor="payee" required>
-              <Input
-                id="payee"
-                value={input.billing.accountHolder}
-                onChange={(e) =>
-                  change("billing", {
-                    ...input.billing!,
-                    accountHolder: e.target.value,
-                  })
-                }
-                required
-              />
-            </Field>
             {input.billing.items.map((item, index) => (
               <div className="grid sm:grid-cols-2 gap-3" key={index}>
-                <Field label={`Uraian ${index + 1}`} htmlFor={`item-${index}`}>
+                <div className="sm:col-span-2 font-semibold">Rincian {index + 1}</div>
+                {([{key:'documentNumber',label:'No Dokumen'},{key:'payeeName',label:'Penerima Pembayaran'},{key:'bankName',label:'Bank Penerima'},{key:'accountNumber',label:'No Rekening Penerima'}] as const).map(({key,label})=>(
+                  <Field key={key} label={label} htmlFor={`${key}-${index}`} required>
+                    <Input id={`${key}-${index}`} value={item[key] || ''} required maxLength={key==='documentNumber'?120:500} onChange={e=>{const items=[...input.billing!.items];items[index]={...item,[key]:e.target.value};change('billing',{...input.billing!,items});}}/>
+                  </Field>
+                ))}
+                <Field label={`Keterangan ${index + 1}`} htmlFor={`item-${index}`}>
                   <Input
                     id={`item-${index}`}
                     required
@@ -558,14 +540,14 @@ export function LetterEditor({
                     ...input.billing!,
                     items: [
                       ...input.billing!.items,
-                      { description: "", amount: 0 },
+                      { description: "", amount: 0, documentNumber: "", payeeName: input.billing!.accountHolder, bankName: options.banks.find(b=>b.id===input.billing!.bankId)?.name||input.billing!.bankName||"", accountNumber: input.billing!.accountNumber },
                     ],
                   })
                 }
               >
                 Tambah Rincian
               </Button>
-              {input.billing.items.length > 2 && (
+              {input.billing.items.length > 1 && (
                 <Button
                   type="button"
                   variant="ghost"

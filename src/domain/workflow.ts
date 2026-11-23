@@ -38,7 +38,8 @@ export interface DraftInput {
     bankName?: string;
     accountNumber: string;
     accountHolder: string;
-    items: { description: string; amount: number }[];
+    layout?: 'PAYMENT_REQUEST';
+    items: import('./billing').BillingItem[];
   };
 }
 export function jakartaDate(now = new Date()) {

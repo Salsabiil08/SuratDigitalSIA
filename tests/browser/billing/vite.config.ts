@@ -1,0 +1,3 @@
+import {defineConfig} from 'vite';
+import path from 'node:path';
+export default defineConfig({root:path.resolve('tests/browser/billing'),resolve:{alias:{'@':path.resolve('src'),'next/navigation':path.resolve('tests/browser/editor/router.ts'),'next/link':path.resolve('tests/browser/editor/link.tsx')}},oxc:{jsx:{runtime:'automatic'}},server:{host:'127.0.0.1',port:3122}});
