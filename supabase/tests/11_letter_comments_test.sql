@@ -43,6 +43,8 @@ do $$begin
  assert not has_table_privilege('authenticated','letter_comments','UPDATE');
  assert not has_table_privilege('authenticated','letter_comments','DELETE');
  assert not has_function_privilege('anon','add_letter_comment(uuid,text,uuid)','EXECUTE');
+ assert not (select prosecdef from pg_proc where oid='public.add_letter_comment(uuid,text,uuid)'::regprocedure);
+ assert not (select prosecdef from pg_proc where oid='public.get_letter_comment_context(uuid)'::regprocedure);
 end $$;
 select set_config('request.jwt.claim.sub','a0000000-0000-0000-0000-000000000004',true);
 do $$begin assert not exists(select 1 from letter_comments);assert not exists(select 1 from letter_comment_summaries);end $$;
