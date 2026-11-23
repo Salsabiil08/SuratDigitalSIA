@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 import { readLetter, downloadVersion } from "@/server/letter-workflow";
 import { fillOfficialNumber, DOCUMENT_MIME } from "@/lib/letter-document";
+import { correctLegacyInternalOutput } from '@/lib/legacy-internal-output';
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
@@ -31,7 +32,7 @@ export async function GET(
       sourceLetter = { ...letter, current_version_id: version.id };
     }
     const doc = await downloadVersion(sourceLetter,false);
-    // Dokumen final disajikan persis bytes snapshot; tidak diregenerasi saat diunduh.
+    // Verify the original snapshot first; corrections below affect only the presentation copy.
     let bytes = letter.finalized_at && !blank ? doc.bytes : await fillOfficialNumber(doc.bytes,doc.format,letter.official_number,blank);
     if(context.recipientRole && context.dispatch && request.method==='GET'){
       const matches=doc.version.id===context.dispatch.version_id && doc.version.file_hash===context.dispatch.file_hash;
@@ -77,7 +78,8 @@ export async function GET(
       }
       bytes = Buffer.from(await pdf.save());
     }
-    return new NextResponse(new Uint8Array(bytes), {
+    const output = await correctLegacyInternalOutput(bytes, letter, doc.format);
+    return new NextResponse(new Uint8Array(output), {
       headers: {
         "Content-Type": DOCUMENT_MIME[doc.format],
         "Content-Disposition": `${new URL(request.url).searchParams.has("download") ? "attachment" : "inline"}; filename="Surat${blank ? "-tanpa-TTD" : ""}.${doc.format.toLowerCase()}"`,
