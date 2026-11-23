@@ -1,3 +1,4 @@
+"use client";
 import * as React from 'react';
 import { cn } from '@/lib/utils';
 
@@ -5,10 +6,16 @@ export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
   variant?: 'primary' | 'secondary' | 'outline' | 'danger' | 'ghost';
   size?: 'sm' | 'md' | 'lg';
   isLoading?: boolean;
+  disabledReason?: string;
+  loadingLabel?: string;
 }
 
 export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant = 'primary', size = 'md', isLoading = false, disabled, children, ...props }, ref) => {
+  ({ className, variant = 'primary', size = 'md', isLoading = false, disabled, disabledReason, loadingLabel = "Memproses…", children, ...props }, ref) => {
+    const [ready,setReady]=React.useState(false);
+    React.useEffect(()=>setReady(true),[]);
+    const reason=disabledReason||(!ready?"Menyiapkan tindakan…":undefined);
+    const reasonId=React.useId();
     const baseStyles =
       'btn-beauty inline-flex items-center justify-center font-semibold focus-visible:outline-2 focus-visible:outline-offset-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none select-none cursor-pointer';
 
@@ -32,15 +39,20 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     };
 
     return (
+      <span className={cn("inline-flex flex-col items-start gap-1 align-top",className?.includes("w-full") && "w-full")} >
       <button
         ref={ref}
-        disabled={disabled || isLoading}
+        disabled={!ready || disabled || !!reason || isLoading}
+        aria-describedby={reason ? reasonId : props["aria-describedby"]}
+        title={!ready ? "Menyiapkan tindakan…" : reason || props.title}
         aria-busy={isLoading||undefined}
         className={cn(baseStyles, variants[variant], sizes[size], className)}
         {...props}
       >
-        {children}
+        {isLoading ? loadingLabel : children}
       </button>
+      {reason && <span id={reasonId} className="block text-xs text-neutral-600 max-w-sm">{reason}</span>}
+      </span>
     );
   }
 );

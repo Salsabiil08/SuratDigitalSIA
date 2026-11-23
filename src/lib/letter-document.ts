@@ -48,13 +48,13 @@ export async function inspectDocument(
   const xml = await part.async("string");
   if (requireAreas && xml.split("{{OFFICIAL_NUMBER}}").length !== 2)
     throw new Error(
-      "Tambahkan satu placeholder {{OFFICIAL_NUMBER}} untuk nomor resmi sebelum mengajukan.",
+      "Area nomor surat belum dikenali. Gunakan template SIADocs, lalu unggah kembali.",
     );
   if (requireAreas)
     for (let i = 1; i <= count; i++)
       if (xml.split(`{{SIGNATURE_${i}}}`).length !== 2)
         throw new Error(
-          `Tambahkan satu placeholder {{SIGNATURE_${i}}} dalam satu teks Word, lalu unggah ulang. Posisi TTD belum dikenali.`,
+          `Area tanda tangan ke-${i} belum dikenali. Lengkapi area tanda tangan pada dokumen, lalu unggah kembali.`,
         );
   return [];
 }
@@ -117,7 +117,7 @@ export async function applyDocumentImages(
     const image = images[i]!;
     if (xml.split(image.marker).length !== 2)
       throw new Error(
-        `Posisi ${image.marker} belum dikenali atau lebih dari satu. Perbaiki draft terlebih dahulu.`,
+        image.marker==='{{STAMP}}'?'Area stempel belum dapat digunakan. Minta pembuat memperbaiki dokumen sebelum melanjutkan.':'Area tanda tangan belum dapat digunakan. Minta pembuat memperbaiki dokumen sebelum melanjutkan.',
       );
     const pngWidth=Buffer.from(image.bytes).readUInt32BE(16),pngHeight=Buffer.from(image.bytes).readUInt32BE(20);
     const isStamp=image.marker==='{{STAMP}}';

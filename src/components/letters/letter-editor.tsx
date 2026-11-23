@@ -263,11 +263,11 @@ export function LetterEditor({
           </Field>
           <Field label={`Pemeriksa Surat${reviewRule?.requires_review ? ' (wajib sebelum pengajuan)' : ' (opsional)'}`} htmlFor="letter-reviewer"
             hint="Pilih pejabat di atas jabatan Anda yang memiliki mandat pemeriksaan. Isi tetap diedit oleh pembuat surat.">
-            <Select id="letter-reviewer" value={input.reviewerId || ""} onChange={e => change('reviewerId', e.target.value)}>
+            <Select id="letter-reviewer" disabled={reviewers.length===0} value={input.reviewerId || ""} onChange={e => change('reviewerId', e.target.value)}>
               <option value="">{reviewRule?.requires_review ? 'Pilih pemeriksa berwenang' : 'Tanpa pemeriksa'}</option>
               {reviewers.map(p => <option key={p.id} value={p.id}>{p.name} — {p.title}</option>)}
             </Select>
-            {reviewers.length === 0 && <p className="text-xs text-amber-800">Belum ada pemeriksa dengan kewenangan jenis dan unit ini. Penugasan perlu ditetapkan perusahaan sebelum surat wajib pemeriksaan dapat diajukan.</p>}
+            {reviewers.length === 0 && <p className="text-xs text-amber-800">Belum ada pemeriksa yang tersedia untuk surat ini. Hubungi pengelola agar pemeriksa ditetapkan. Draf tetap dapat disimpan.</p>}
           </Field>
           <Field
             label="Tanggal Surat"
@@ -407,7 +407,7 @@ export function LetterEditor({
                     : "Dokumen Impor (PDF/DOCX, maks. 3 MB)"
                 }
                 htmlFor="document-file"
-                hint="Untuk mengubah isi impor, unduh lalu edit di Word/editor PDF, kemudian unggah versi koreksi selama Draft. DOCX memerlukan {{OFFICIAL_NUMBER}}, {{SIGNATURE_1}} dan {{SIGNATURE_2}} untuk dua TTD. Tambahkan {{STAMP}} bila memakai stempel."
+                hint="Gunakan template SIADocs agar nomor dan area tanda tangan dapat dikenali. Untuk mengoreksi dokumen impor, edit berkas di luar aplikasi lalu unggah kembali selama masih draf."
               >
                 <Input
                   id="document-file"

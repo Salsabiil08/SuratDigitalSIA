@@ -52,7 +52,7 @@ export async function downloadVersion(letter: any, materialize = true) {
     .storage.from(DOCUMENT_BUCKET)
     .download(version.storage_path);
   if (error || !data)
-    throw new Error("Dokumen tidak tersedia di Supabase Storage.");
+    throw new Error("Dokumen belum dapat diambil. Silakan coba kembali.");
   const bytes = Buffer.from(await data.arrayBuffer());
   if (version.file_hash && hashBytes(bytes) !== version.file_hash)
     throw new Error("Hash dokumen berbeda dari catatan versi.");
@@ -84,7 +84,7 @@ export async function storeBytes(
     .storage.from(bucket)
     .upload(path, bytes, { contentType: DOCUMENT_MIME[format], upsert: false });
   if (error)
-    throw new Error("Gagal menyimpan dokumen ke Supabase: " + error.message);
+    throw new Error("Dokumen belum tersimpan. Periksa koneksi, lalu coba kembali.");
   return { path, hash: hashBytes(bytes), format };
 }
 export async function peopleOptions() {

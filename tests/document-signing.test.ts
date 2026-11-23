@@ -58,13 +58,13 @@ describe("Pengesahan dokumen nyata", () => {
   it("menolak placeholder yang hilang dan gambar bukan PNG", async () => {
     const doc = await generateLetterDocx({ signatureCount: 0 });
     await expect(inspectDocument(doc, "DOCX", 1, [], true)).rejects.toThrow(
-      /placeholder/,
+      /nomor surat/,
     );
     await expect(
       applyDocumentImages(doc, "DOCX", [
         { marker: "{{SIGNATURE_1}}", bytes: png },
       ]),
-    ).rejects.toThrow(/Posisi/);
+    ).rejects.toThrow(/Area tanda tangan/);
     await expect(
       applyDocumentImages(doc, "DOCX", [
         { marker: "{{SIGNATURE_1}}", bytes: Buffer.from("<svg/>") },

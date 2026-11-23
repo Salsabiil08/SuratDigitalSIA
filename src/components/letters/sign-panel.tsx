@@ -23,6 +23,7 @@ export function SignPanel({
   const [confirmed, setConfirmed] = useState(false);
   const [loaded, setLoaded] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [saved,setSaved]=useState(false);
   const [error, setError] = useState("");
   function reset() {
     if (preview) URL.revokeObjectURL(preview);
@@ -32,6 +33,7 @@ export function SignPanel({
     setLoaded(false);
   }
   async function send(isPreview: boolean) {
+    if(busy||saved)return;
     setBusy(true);
     setError("");
     try {
@@ -59,7 +61,7 @@ export function SignPanel({
         );
         setHash(res.headers.get("X-Document-Hash") || "");
         setPreview(URL.createObjectURL(await res.blob()));
-      } else onSaved();
+      } else {setSaved(true);onSaved();}
     } catch (e) {
       setError(e instanceof Error ? e.message : "Gagal menandatangani.");
     } finally {
@@ -135,7 +137,7 @@ export function SignPanel({
           />
         </Field>
       )}
-      <Button variant="secondary" onClick={() => send(true)} isLoading={busy}>
+      <Button variant="secondary" disabled={saved} disabledReason={saved?"Tanda tangan berhasil disimpan. Menunggu status terbaru.":undefined} onClick={() => send(true)} isLoading={busy}>
         Pratinjau Hasil TTD dan Stempel
       </Button>
       {preview && (
@@ -155,7 +157,7 @@ export function SignPanel({
             dokumen sesuai naskah yang disetujui tanpa perubahan isi.
           </label>
           <Button
-            disabled={!confirmed || !loaded}
+            disabled={saved || !confirmed || !loaded} disabledReason={saved?"Tanda tangan berhasil disimpan. Menunggu status terbaru.":!loaded?"Tunggu pratinjau selesai dimuat.":!confirmed?"Centang konfirmasi setelah memeriksa hasil tanda tangan.":undefined} loadingLabel="Menandatangani…"
             isLoading={busy}
             onClick={() => send(false)}
           >

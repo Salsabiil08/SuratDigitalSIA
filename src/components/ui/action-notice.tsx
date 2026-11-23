@@ -1,14 +1,15 @@
 'use client';
+import {NOTICE_DURATION,readableMessage} from '@/domain/ui-feedback';
 import {createContext,useCallback,useContext,useEffect,useId,useMemo,useState,type ReactNode} from 'react';
 import {createPortal} from 'react-dom';
 type Kind='error'|'success'|'info';
 type Notice={id:string;kind:Kind;children:ReactNode};
 const Context=createContext<{show:(notice:Notice)=>void;remove:(id:string)=>void}|null>(null);
 function Popup({notice,remove}:{notice:Notice;remove:(id:string)=>void}){
-  const [paused,setPaused]=useState(false);
-  useEffect(()=>{if(notice.kind!=='success'||paused)return;const timer=window.setTimeout(()=>remove(notice.id),6000);return()=>window.clearTimeout(timer);},[notice,paused,remove]);
+  const [hovered,setHovered]=useState(false),[focused,setFocused]=useState(false);const paused=hovered||focused;
+  useEffect(()=>{if(paused)return;const timer=window.setTimeout(()=>remove(notice.id),NOTICE_DURATION[notice.kind]);return()=>window.clearTimeout(timer);},[notice,paused,remove]);
   const error=notice.kind==='error';
-  return <div data-action-popup="true" role={error?'alert':'status'} aria-atomic="true" onMouseEnter={()=>setPaused(true)} onMouseLeave={()=>setPaused(false)} onFocus={()=>setPaused(true)} onBlur={()=>setPaused(false)}
+  return <div data-action-popup="true" role={error?'alert':'status'} aria-atomic="true" onMouseEnter={()=>setHovered(true)} onMouseLeave={()=>setHovered(false)} onFocus={()=>setFocused(true)} onBlur={e=>{if(!e.currentTarget.contains(e.relatedTarget as Node))setFocused(false);}}
     className={`action-notice-popup rounded-xl border shadow-lg p-4 flex items-start gap-3 bg-white ${error?'border-red-300 text-red-800':notice.kind==='success'?'border-emerald-300 text-emerald-800':'border-amber-300 text-amber-900'}`} style={{pointerEvents:'auto'}}>
     <span aria-hidden="true" className="font-bold shrink-0">{error?'!':notice.kind==='success'?'✓':'i'}</span>
     <div className="min-w-0 flex-1 text-sm whitespace-pre-wrap break-words">{notice.children}</div>
@@ -25,7 +26,8 @@ export function ActionNoticeProvider({children}:{children:ReactNode}){
 }
 export function ActionNotice({kind='error',children,eventKey}:{kind?:Kind;children:ReactNode;eventKey?:unknown}){
   const context=useContext(Context),id=useId();
+  children=typeof children==='string'?readableMessage(children):children;
   useEffect(()=>{if(!context)return;context.show({id,kind,children});return()=>context.remove(id);},[context,id,kind,children,eventKey]);
   // A safe inline fallback also keeps standalone server-rendered error pages readable.
-  return context?null:<p role={kind==='error'?'alert':'status'}>{children}</p>;
+  return kind==='error'?<p className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800" role={context?'note':'alert'}>{children}</p>:context?null:<p role="status">{children}</p>;
 }

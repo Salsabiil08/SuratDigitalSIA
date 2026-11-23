@@ -6,7 +6,7 @@ export function startLiveUpdates(options:{refresh:()=>Promise<void>;blocked:()=>
     inFlight=true;
     try{await options.refresh();}catch{if(!disposed)options.onError();}finally{inFlight=false;}
   };
-  const timer=options.poll?env.window.setInterval(()=>void sync(),20000):undefined;
+  const timer=options.poll?env.window.setInterval(()=>void sync(),15000):undefined;
   env.window.addEventListener('focus',sync);env.window.addEventListener('online',sync);env.document.addEventListener('visibilitychange',sync);
   return ()=>{disposed=true;if(timer!==undefined)env.window.clearInterval(timer);env.window.removeEventListener('focus',sync);env.window.removeEventListener('online',sync);env.document.removeEventListener('visibilitychange',sync);};
 }

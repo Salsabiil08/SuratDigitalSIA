@@ -1,3 +1,4 @@
+import {AccessDenied} from '@/components/ui/access-denied';
 import { getMasterSeri } from '@/server/admin';
 import { getCurrentUser } from '@/server/auth';
 import { redirect } from 'next/navigation';
@@ -14,20 +15,12 @@ export default async function AdminSeriPage() {
   if (!user) {
     redirect('/login');
   }
+  if (!user.isSuperAdmin) return <AccessDenied/>;
 
   const { types, series } = await getMasterSeri();
 
-  const fallbackTypes = types.length > 0 ? types : [
-    { id: '1', code: 'IN', name: 'Surat Internal', category: 'INTERNAL', seriesBasis: 'CREATOR_UNIT', requiredAttachment: false, defaultSignatureCount: 0, isActive: true },
-    { id: '2', code: 'KRE', name: 'Surat Eksternal', category: 'EXTERNAL', seriesBasis: 'SIGNER_POSITION', requiredAttachment: false, defaultSignatureCount: 1, isActive: true },
-    { id: '3', code: 'Tag', name: 'Surat Pengantar Tagihan', category: 'BILLING', seriesBasis: 'CREATOR_UNIT', requiredAttachment: true, defaultSignatureCount: 2, isActive: true },
-  ];
-
-  const fallbackSeries = series.length > 0 ? series : [
-    { id: '1', letterTypeId: '1', letterTypeName: 'Surat Internal', pattern: '{URUT}{TGL}-{JENIS}/{UNIT}/SIA/{BLN}.{THN}', status: 'ACTIVE', unitCode: 'Semua Unit' },
-    { id: '2', letterTypeId: '2', letterTypeName: 'Surat Eksternal', pattern: '{URUT}{TGL}/KRE.{JABATAN}/{BLN}.{THN}', status: 'ACTIVE', positionCode: 'DIR / SM' },
-    { id: '3', letterTypeId: '3', letterTypeName: 'Surat Pengantar Tagihan', pattern: '{URUT}{TGL}-Tag/{UNIT}/SIA/{BLN}.{THN}', status: 'ACTIVE', unitCode: 'FIN' },
-  ];
+  const fallbackTypes=types;
+  const fallbackSeries=series;
 
   return (
     <div className="flex flex-col gap-3.5 sm:gap-4 w-full">
@@ -36,10 +29,10 @@ export default async function AdminSeriPage() {
         className="pb-0"
         actions={
           <div className="flex items-center gap-2">
-            <Button variant="secondary" size="sm" className="h-8 px-3 text-xs">
+            <Button disabledReason="Penambahan jenis surat belum tersedia pada halaman ini." variant="secondary" size="sm" className="h-8 px-3 text-xs">
               + Tambah Jenis Surat
             </Button>
-            <Button variant="primary" size="sm" className="h-8 px-3 text-xs bg-brand-red hover:bg-[#8F0808]">
+            <Button disabledReason="Penambahan seri belum tersedia pada halaman ini." variant="primary" size="sm" className="h-8 px-3 text-xs bg-brand-red hover:bg-[#8F0808]">
               + Tambah Pola Seri
             </Button>
           </div>
@@ -51,7 +44,7 @@ export default async function AdminSeriPage() {
         <CardHeader className="py-2.5 px-4 border-b border-[#EEEEEA]">
           <CardTitle className="text-sm font-bold">Jenis Surat Resmi ({fallbackTypes.length})</CardTitle>
           <p className="text-[11px] text-neutral-500 mt-0.5">
-            Seluruh surat bermuara pada satu entitas letters dengan aturan persetujuan dan tanda tangan spesifik
+            Jenis surat menentukan persetujuan, penomoran, dan tanda tangan yang diperlukan.
           </p>
         </CardHeader>
         <div className="overflow-x-auto max-h-[260px] overflow-y-auto">
@@ -74,7 +67,7 @@ export default async function AdminSeriPage() {
                 <TableCell className="font-medium">{t.name}</TableCell>
                 <TableCell>
                   <Chip variant={t.category === 'BILLING' ? 'amber' : t.category === 'EXTERNAL' ? 'blue' : 'gray'}>
-                    {t.category}
+                    {({INTERNAL:'Internal',EXTERNAL:'Eksternal',BILLING:'Pengantar Tagihan'} as Record<string,string>)[t.category]||t.category}
                   </Chip>
                 </TableCell>
                 <TableCell className="text-xs text-neutral-600">

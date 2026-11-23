@@ -56,6 +56,8 @@ export function LetterDetailClient({
     fn: () => Promise<{ success: boolean; error?: string }>,
     success: string,
   ) {
+    if (busyRef.current) return;
+    busyRef.current=true;
     setBusy(true);
     setError("");
     setMsg("");
@@ -63,10 +65,11 @@ export function LetterDetailClient({
       const r = await fn();
       if (!r.success) throw new Error(r.error);
       setMsg(success);
-      await reload();
+      try {await reload();}catch{setSyncError("Tindakan berhasil. Status terbaru belum dapat dimuat. Gunakan Perbarui status.");}
     } catch (e) {
       setError(e instanceof Error ? e.message : "Proses gagal.");
     } finally {
+      busyRef.current=false;
       setBusy(false);
     }
   }
@@ -181,15 +184,15 @@ export function LetterDetailClient({
         <h2 className="font-bold">Pengiriman dan Penerimaan</h2>
         <p className="text-sm">Dokumen: {l.finalized_at?'Final dan terkunci':'Belum final'} · Pengiriman: {data.delivery?.dispatch?'Terkirim':'Belum dikirim'}</p>
         {data.delivery?.dispatch && <>
-          <p className="text-sm">Dikirim pada {new Date(data.delivery.dispatch.sent_at).toLocaleString('id-ID',{timeZone:'Asia/Jakarta'})} WIB. Versi dan sidik dokumen pengiriman dicatat tetap.</p>
-          {(data.delivery.recipients as {profile_id:string;recipient_role:string;read_at:string|null;received_at:string|null}[]).map(r=><p key={r.profile_id} className="text-sm">{r.recipient_role==='PRIMARY'?'Penerima utama':'Tembusan'} · {r.read_at?'Dokumen sudah dibuka':'Belum dibuka'} · {r.recipient_role==='CC'?'Salinan, tanpa konfirmasi penerimaan utama':r.received_at?'Penerimaan dikonfirmasi':'Belum ada konfirmasi penerimaan'} · {r.recipient_role==='CC'?'Tidak otomatis wajib membalas':data.replyContext.recipients.find(x=>x.profileId===r.profile_id)?.repliedAt?'Sudah Dibalas':'Belum ada balasan resmi terkirim'}</p>)}
+          <p className="text-sm">Dikirim pada {new Date(data.delivery.dispatch.sent_at).toLocaleString('id-ID',{timeZone:'Asia/Jakarta'})} WIB. Dokumen yang dikirim disimpan sebagai bukti pengiriman.</p>
+          {(data.delivery.recipients as {profile_id:string;recipient_role:string;read_at:string|null;received_at:string|null}[]).map(r=><p key={r.profile_id} className="text-sm">{r.recipient_role==='PRIMARY'?'Penerima utama':'Tembusan'} · {r.read_at?'Dibaca pada '+new Date(r.read_at).toLocaleString('id-ID',{timeZone:'Asia/Jakarta'})+' WIB':'Belum dibaca'} · {r.recipient_role==='CC'?'Salinan, tanpa konfirmasi penerimaan utama':r.received_at?'Penerimaan dikonfirmasi':'Belum ada konfirmasi penerimaan'} · {r.recipient_role==='CC'?'Tidak otomatis wajib membalas':data.replyContext.recipients.find(x=>x.profileId===r.profile_id)?.repliedAt?'Sudah Dibalas':'Belum ada balasan resmi terkirim'}</p>)}
           <p className="text-xs text-neutral-600">Membuka surat tidak mengonfirmasi penerimaan.</p>
           {data.delivery.recipientRole==='PRIMARY' && !data.delivery.recipients.find((r:any)=>r.profile_id===data.userId)?.received_at && <Button isLoading={busy} onClick={()=>act(()=>receiveInternalLetterAction(data.delivery.dispatch.id),'Penerimaan Anda telah dicatat.')}>Konfirmasi Terima Surat</Button>}
         </>}
         {data.delivery?.canDispatch && l.finalized_at && l.status==='NUMBERED' && !data.delivery.dispatch && <>
           {data.delivery.ccEnabled&&<fieldset className="space-y-1"><legend className="text-sm font-semibold">Tembusan (opsional)</legend>{data.ccOptions.filter(p=>p.id!==l.recipient_user_id).map(p=><label key={p.id} className="flex gap-2 text-sm"><input type="checkbox" checked={ccIds.includes(p.id)} onChange={e=>setCcIds(e.target.checked?[...ccIds,p.id]:ccIds.filter(id=>id!==p.id))}/>{p.full_name}</label>)}</fieldset>}
           <label className="flex gap-2 text-sm"><input type="checkbox" checked={sendConfirmed} onChange={e=>setSendConfirmed(e.target.checked)}/>Saya mengirim dokumen final ini kepada {l.recipient?.full_name||'penerima utama yang tercatat'}. Pengiriman resmi dicatat dan penerima mendapat akses.</label>
-          <Button disabled={!sendConfirmed} isLoading={busy} onClick={()=>act(()=>sendInternalLetterAction(id,ccIds),'Surat resmi telah dikirim. Penerimaan menunggu konfirmasi penerima.')}>Kirim Surat Internal</Button>
+          <Button disabled={!sendConfirmed} disabledReason={!sendConfirmed?"Centang konfirmasi pengiriman terlebih dahulu.":undefined} loadingLabel="Mengirim…" isLoading={busy} onClick={()=>act(()=>sendInternalLetterAction(id,ccIds),'Surat resmi telah dikirim. Penerimaan menunggu konfirmasi penerima.')}>Kirim Surat Internal</Button>
         </>}
       </Card>}
       <Card id="preview" className="p-5 space-y-4 scroll-mt-24">
@@ -199,7 +202,7 @@ export function LetterDetailClient({
             <DocumentPreview
               url={documentUrl}
               format={v.file_format}
-              onLoaded={() => setPreviewed(true)}
+              onLoaded={() => {setPreviewed(true);void reload().catch(()=>setSyncError("Status pembacaan belum dapat diperbarui. Gunakan Perbarui status."));}}
             />
             <DocumentDownloads id={id} current={v}
               unsigned={data.versions.find(version => version.version_kind === 'NUMBERED')}
@@ -216,6 +219,7 @@ export function LetterDetailClient({
           </p>
         )}
       </Card>
+      {editable && l.review_status==='NOT_STARTED' && !l.reviewer_id && <p className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm">Pemeriksa wajib belum dipilih. <Link className="font-semibold text-red-800 underline" href={`/surat/${id}/edit`}>Lengkapi Pemeriksa</Link>. Jika daftar kosong, hubungi pengelola. Draf tetap tersimpan.</p>}
       <div className="flex flex-wrap items-center gap-3">
         {editable && (
           <>
@@ -224,8 +228,8 @@ export function LetterDetailClient({
             </Link>
             {creatorApprovalRequired && ["PASSED","NOT_REQUIRED"].includes(l.review_status) && <label className="text-sm flex items-start gap-2"><input type="checkbox" checked={confirmSelf} onChange={e=>setConfirmSelf(e.target.checked)}/>Saya mengajukan dan menyetujui versi ini sesuai kewenangan saya. Persetujuan pejabat lain, nomor resmi, dan tanda tangan tetap melalui tahapnya.</label>}
             <Button
-              disabled={!previewed}
-              isLoading={busy}
+              disabled={!previewed} disabledReason={!previewed?"Tunggu pratinjau selesai dimuat, lalu periksa dokumen.":l.review_status==='NOT_STARTED'&&!l.reviewer_id?"Pilih pemeriksa melalui Edit / Koreksi Draft. Jika daftar kosong, hubungi pengelola.":creatorApprovalRequired&&!confirmSelf&&["PASSED","NOT_REQUIRED"].includes(l.review_status)?"Centang persetujuan sesuai kewenangan Anda sebelum mengajukan.":undefined}
+              isLoading={busy} loadingLabel="Mengajukan…"
               onClick={() =>
                 act(
                   async () => {
@@ -257,7 +261,7 @@ export function LetterDetailClient({
       {data.reviews.length > 0 && <Card className="p-5 space-y-3">
         <h2 className="font-bold">Riwayat Pemeriksaan</h2>
         {data.reviews.map(r => <div key={r.id} className="text-sm border-b pb-2">
-          <p>{r.reviewer?.full_name} — {r.status === 'PASSED' ? 'Lolos pemeriksaan' : r.status === 'REVISION_REQUESTED' ? 'Perlu perbaikan' : 'Menunggu pemeriksaan'}{r.version_id !== l.current_version_id ? ' (versi sebelumnya; tidak berlaku untuk versi ini)' : ''}</p>
+          <p>{r.reviewer?.full_name} — {r.status === 'PASSED' ? 'Lolos pemeriksaan' : r.status === 'REVISION_REQUESTED' ? 'Perlu perbaikan' : 'Menunggu pemeriksaan'}{r.version_id !== l.current_version_id ? ' (pemeriksaan naskah sebelum perubahan dokumen)' : ''}</p>
           {r.decision_note && <p>Catatan: {r.decision_note}</p>}
           {r.comments.map((c: { id: string; note: string }) => <p key={c.id}>Catatan pemeriksa: {c.note}</p>)}
         </div>)}
@@ -268,9 +272,9 @@ export function LetterDetailClient({
         <label htmlFor="review-note" className="block text-sm">Catatan (wajib untuk memberi catatan atau meminta perbaikan)</label>
         <textarea id="review-note" className="w-full border rounded-xl p-3" value={note} onChange={e => setNote(e.target.value)} />
         <div className="flex gap-3 flex-wrap">{([['COMMENT','Simpan Catatan'],['PASS','Lolos Pemeriksaan'],['REQUEST_REVISION','Minta Perbaikan']] as const).map(([action,label]) =>
-          <Button key={action} disabled={!previewed} isLoading={busy} variant={action === 'PASS' ? 'primary' : 'secondary'} onClick={() => act(() => decideReviewAction(activeReview.id, activeReview.version_id, l.revision, action, note), 'Hasil pemeriksaan tersimpan.')}>{label}</Button>)}</div>
+          <Button key={action} disabled={!previewed} disabledReason={!previewed?"Tunggu pratinjau selesai dimuat, lalu periksa dokumen.":action!=='PASS'&&!note.trim()?"Isi catatan pemeriksaan terlebih dahulu.":undefined} isLoading={busy} variant={action === 'PASS' ? 'primary' : 'secondary'} onClick={() => act(() => decideReviewAction(activeReview.id, activeReview.version_id, l.revision, action, note), 'Hasil pemeriksaan tersimpan.')}>{label}</Button>)}</div>
       </Card>}
-      {data.approvals.length>0 && <Card className="p-5 space-y-2"><h2 className="font-bold">Riwayat Persetujuan</h2>{data.approvals.map(a=><p key={a.id} className="text-sm">Tahap {a.step_order}: {a.approver?.full_name} — {displayLabel(a.status)}{a.version_id!==l.current_version_id?' (versi sebelumnya)':''}{a.decision_origin==='CREATOR_SUBMISSION'?' — dikonfirmasi pembuat saat pengajuan':''}</p>)}</Card>}
+      {data.approvals.length>0 && <Card className="p-5 space-y-2"><h2 className="font-bold">Riwayat Persetujuan</h2>{data.approvals.map(a=><p key={a.id} className="text-sm">Tahap {a.step_order}: {a.approver?.full_name} — {displayLabel(a.status)}{a.version_id!==l.current_version_id?(a.cycle===l.approval_cycle&&a.version_id===l.approval_plan_version?' — Persetujuan sebelum penerbitan nomor':' — Persetujuan terdahulu; periksa riwayat perubahan'):''}{a.decision_origin==='CREATOR_SUBMISSION'?' — dikonfirmasi pembuat saat pengajuan':''}</p>)}</Card>}
       {data.isCreator && !l.official_number && !l.finalized_at && ['IN_REVIEW','READY_TO_ISSUE'].includes(l.status) && <Card className="p-5 space-y-3"><h2 className="font-bold">Koreksi Pengajuan</h2><p className="text-sm">Tarik pengajuan untuk menyimpan versi koreksi. Keputusan lama tetap tercatat dan tidak berlaku untuk versi baru.</p><textarea aria-label="Alasan koreksi" className="border rounded-xl p-3 w-full" value={note} onChange={e=>setNote(e.target.value)}/><Button variant="secondary" isLoading={busy} onClick={()=>act(()=>restartApprovalAction(id,l.revision,note),'Pengajuan ditarik. Edit dan simpan versi baru sebelum mengajukan kembali.')}>Tarik untuk Koreksi</Button></Card>}
       {activeApproval && (
         <Card className="p-5 space-y-4">
@@ -297,7 +301,7 @@ export function LetterDetailClient({
               <Button
                 key={action}
                 variant={action === "APPROVE" ? "primary" : "secondary"}
-                disabled={!previewed}
+                disabled={!previewed} disabledReason={!previewed?"Tunggu pratinjau selesai dimuat, lalu periksa dokumen.":action!=="APPROVE"&&!note.trim()?"Isi catatan alasan terlebih dahulu.":undefined}
                 isLoading={busy}
                 onClick={() =>
                   act(
@@ -319,7 +323,7 @@ export function LetterDetailClient({
             letter={l}
             request={signing}
             onSaved={() => {
-              setMsg("Tanda tangan dan versi hasil tersimpan di Supabase.");
+              setMsg("Surat berhasil ditandatangani.");
               void reload().catch(()=>setError("Status belum dapat diperbarui. Coba lagi."));
             }}
           />
@@ -352,11 +356,12 @@ export function LetterDetailClient({
                 l.required_signature_count > 0 &&
                 l.signature_status !== "UPLOADED")
             }
-            isLoading={busy}
+            disabledReason={!previewed ? "Tunggu pratinjau selesai dimuat, lalu periksa dokumen." : l.signature_mode==='IN_APP' && l.required_signature_count>0 && l.signature_status!=='UPLOADED' ? "Tunggu seluruh tanda tangan wajib selesai." : l.signature_mode==='EXTERNAL'&&l.required_signature_count>0&&!external ? "Centang konfirmasi bahwa tanda tangan di luar SIADocs telah selesai." : undefined}
+            isLoading={busy} loadingLabel="Memfinalisasi…"
             onClick={() =>
               act(
                 () => finalizeLetterAction(id, l.revision, external),
-                "Surat selesai dan dokumen final terkunci.",
+                "Dokumen berhasil difinalisasi dan dikunci.",
               )
             }
           >
@@ -384,6 +389,7 @@ export function LetterDetailClient({
           {data.isCreator && (
             <Button
               variant="secondary"
+              disabledReason={!note.trim()?"Isi alasan pembatalan terlebih dahulu.":undefined}
               isLoading={busy}
               onClick={() =>
                 act(
@@ -393,7 +399,7 @@ export function LetterDetailClient({
                       editable ? "CANCEL_DRAFT" : "REQUEST",
                       note,
                     ),
-                  "Permohonan pembatalan diproses sesuai kewenangan.",
+                  editable ? "Draf berhasil dibatalkan." : "Permohonan pembatalan berhasil diajukan.",
                 )
               }
             >

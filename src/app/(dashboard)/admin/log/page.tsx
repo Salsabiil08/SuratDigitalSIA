@@ -1,3 +1,4 @@
+import {AccessDenied} from '@/components/ui/access-denied';
 import { getAuditLogs, AuditLogData } from '@/server/admin';
 import { getCurrentUser } from '@/server/auth';
 import { redirect } from 'next/navigation';
@@ -31,9 +32,8 @@ export const dynamic = 'force-dynamic';
 
 export default async function AdminLogPage() {
   const user = await getCurrentUser();
-  if (!user || !user.isSuperAdmin) {
-    redirect('/');
-  }
+  if (!user) redirect('/login');
+  if (!user.isSuperAdmin) return <AccessDenied/>;
 
   const logs = await getAuditLogs(50);
 

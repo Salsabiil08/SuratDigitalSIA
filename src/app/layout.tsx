@@ -1,3 +1,4 @@
+import {IndonesianValidation} from '@/components/ui/indonesian-validation';
 import {ActionNoticeProvider} from "@/components/ui/action-notice";
 import type { Metadata } from 'next';
 import { Inter, Playfair_Display } from 'next/font/google';
@@ -29,7 +30,7 @@ export default function RootLayout({
   return (
     <html lang="id" className={`${inter.variable} ${playfair.variable}`}>
       <body className="antialiased min-h-screen bg-page-gradient text-[#1C1C1E]">
-        <ActionNoticeProvider>{children}</ActionNoticeProvider>
+        <ActionNoticeProvider><IndonesianValidation/>{children}</ActionNoticeProvider>
       </body>
     </html>
   );

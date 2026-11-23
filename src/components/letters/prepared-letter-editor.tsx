@@ -1,3 +1,4 @@
+import {RecoveryState} from '@/components/ui/recovery-state';
 import {ActionNotice} from "@/components/ui/action-notice";
 import {readDispositionDraftSeed} from "@/server/disposition-integration";
 import { LetterEditor } from "./letter-editor";
@@ -28,9 +29,7 @@ export async function PreparedLetterEditor(props: {
     );
   } catch (e) {
     return (
-      <ActionNotice>
-        {e instanceof Error ? e.message : "Formulir tidak dapat dibuka."}
-      </ActionNotice>
+      <RecoveryState title="Formulir tidak dapat dibuka" message={e instanceof Error ? e.message : "Silakan coba kembali."} href="/surat" label="Kembali ke Daftar Surat"/>
     );
   }
 }

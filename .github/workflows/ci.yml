@@ -57,6 +57,11 @@ jobs:
           billing_server_pid=$!
           trap 'kill "$billing_server_pid" 2>/dev/null || true' EXIT
           python scripts/readiness/billing-browser.py
+      - run: |
+          ./node_modules/.bin/vite --config tests/browser/ux/vite.config.ts > test-results/ux-server.log 2>&1 &
+          ux_server_pid=$!
+          trap 'kill "$ux_server_pid" 2>/dev/null || true' EXIT
+          python scripts/readiness/ux-browser.py
       - uses: actions/upload-artifact@v4
         if: always()
         with:

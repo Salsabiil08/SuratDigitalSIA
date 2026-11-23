@@ -54,21 +54,23 @@ export interface AuditLogData {
  * Mengambil data Master Organisasi (Unit & Jabatan).
  */
 export async function getMasterOrganisasi() {
+  await requireSuperAdmin();
   try {
     const supabase = createAdminClient();
 
-    const { data: units } = await supabase
+    const { data: units, error: ue } = await supabase
       .from('organizational_units')
       .select('*')
       .eq('is_active', true)
       .order('code');
 
-    const { data: positions } = await supabase
+    const { data: positions, error: pe } = await supabase
       .from('positions')
       .select('*')
       .eq('is_active', true)
       .order('level', { ascending: false });
 
+    if(ue||pe)throw new Error("query");
     return {
       units: (units || []).map((u) => ({
         id: u.id,
@@ -85,7 +87,7 @@ export async function getMasterOrganisasi() {
       })),
     };
   } catch (err) {
-    return { units: [], positions: [] };
+    throw new Error("Data organisasi belum dapat dimuat. Silakan coba kembali.");
   }
 }
 
@@ -93,15 +95,16 @@ export async function getMasterOrganisasi() {
  * Mengambil data Master Jenis Surat & Seri Penomoran.
  */
 export async function getMasterSeri() {
+  await requireSuperAdmin();
   try {
     const supabase = createAdminClient();
 
-    const { data: types } = await supabase
+    const { data: types, error: te } = await supabase
       .from('letter_types')
       .select('*')
       .order('code');
 
-    const { data: series } = await supabase
+    const { data: series, error: se } = await supabase
       .from('number_series')
       .select(`
         id,
@@ -114,6 +117,7 @@ export async function getMasterSeri() {
       `)
       .order('pattern');
 
+    if(te||se)throw new Error("query");
     return {
       types: (types || []).map((t) => ({
         id: t.id,
@@ -136,7 +140,7 @@ export async function getMasterSeri() {
       })),
     };
   } catch (err) {
-    return { types: [], series: [] };
+    throw new Error("Seri penomoran belum dapat dimuat. Silakan coba kembali.");
   }
 }
 
@@ -165,7 +169,7 @@ export async function getAuditLogs(limit = 50): Promise<AuditLogData[]> {
       .limit(limit);
 
     if (error || !logs) {
-      return [];
+      throw new Error("Riwayat aktivitas belum dapat dimuat.");
     }
 
     return logs.map((l) => ({
@@ -180,6 +184,6 @@ export async function getAuditLogs(limit = 50): Promise<AuditLogData[]> {
       statusAfter: l.status_after ? displayLabel(l.status_after) : undefined,
     }));
   } catch (err) {
-    return [];
+    throw new Error("Riwayat aktivitas belum dapat dimuat.");
   }
 }
