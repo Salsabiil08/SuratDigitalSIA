@@ -244,36 +244,7 @@ export async function generateLetterDocx(data: LetterDocxData): Promise<Buffer> 
       <!-- Ruang Tanda Tangan Sesuai Jumlah Penandatangan (0, 1, atau 2) -->
       ${
         data.signatureCount === 0
-          ? `
-      <!-- 0 Tanda Tangan: Surat Internal (Hanya Unit Pengirim, Tanpa Pengesahan Pejabat) -->
-      <w:tbl>
-        <w:tblPr>
-          <w:tblW w:w="9497" w:type="dxa"/>
-          <w:tblBorders>
-            <w:top w:val="none"/><w:left w:val="none"/><w:bottom w:val="none"/><w:right w:val="none"/>
-            <w:insideH w:val="none"/><w:insideV w:val="none"/>
-          </w:tblBorders>
-        </w:tblPr>
-        <w:tr>
-          <w:tc><w:tcPr><w:tcW w:w="5200" w:type="dxa"/></w:tcPr>
-            <w:p><w:pPr><w:spacing w:after="0"/></w:pPr></w:p>
-          </w:tc>
-          <w:tc><w:tcPr><w:tcW w:w="4297" w:type="dxa"/></w:tcPr>
-            <w:p><w:pPr><w:jc w:val="center"/><w:spacing w:after="40"/></w:pPr>
-              <w:r><w:rPr><w:rFonts w:ascii="${fontName}" w:hAnsi="${fontName}"/><w:sz w:val="22"/></w:rPr><w:t>Unit Pengirim,</w:t></w:r>
-            </w:p>
-            <w:p><w:pPr><w:jc w:val="center"/><w:spacing w:after="720"/></w:pPr>
-              <w:r><w:rPr><w:rFonts w:ascii="${fontName}" w:hAnsi="${fontName}"/><w:b/><w:sz w:val="22"/></w:rPr><w:t>PT SEMEN INDONESIA ACEH</w:t></w:r>
-            </w:p>
-            <w:p><w:pPr><w:jc w:val="center"/><w:spacing w:after="40"/></w:pPr>
-              <w:r><w:rPr><w:rFonts w:ascii="${fontName}" w:hAnsi="${fontName}"/><w:b/><w:u w:val="single"/><w:sz w:val="22"/></w:rPr><w:t>${escapeXml(signerName || 'Staff Pengirim')}</w:t></w:r>
-            </w:p>
-            <w:p><w:pPr><w:jc w:val="center"/><w:spacing w:after="0"/></w:pPr>
-              <w:r><w:rPr><w:rFonts w:ascii="${fontName}" w:hAnsi="${fontName}"/><w:color w:val="444444"/><w:sz w:val="20"/></w:rPr><w:t>${escapeXml(signerTitle || 'Unit Kerja Internal SIA')}</w:t></w:r>
-            </w:p>
-          </w:tc>
-        </w:tr>
-      </w:tbl>`
+          ? ''
           : data.signatureCount === 2
           ? `
       <!-- 2 Tanda Tangan: Surat Penagihan / 2 Pejabat Berdampingan -->

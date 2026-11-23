@@ -53,8 +53,12 @@ describe('Docx Generator with Master Kop Surat & Font SIG', () => {
     });
     const zip0 = await JSZip.loadAsync(buf0);
     const docXml0 = await zip0.file('word/document.xml')!.async('string');
-    expect(docXml0).toContain('Unit Pengirim,');
-    expect(docXml0).toContain('Rina Dewi');
+    expect(docXml0).not.toContain('Unit Pengirim,');
+    expect(docXml0).not.toContain('Rina Dewi');
+    expect(docXml0).not.toContain('Staff Accounting');
+    expect(docXml0).not.toContain('{{SIGNATURE_');
+    expect(docXml0).not.toContain('{{STAMP}}');
+    expect(docXml0).toContain('00115-IN/ACH/SIA/11.2026');
 
     // 1 TTD: Surat Eksternal
     const buf1 = await generateLetterDocx({
