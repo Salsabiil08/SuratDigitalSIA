@@ -123,3 +123,13 @@ do $$ declare t uuid;l uuid;begin
 end $$;
 SQL
 echo "DRAF HASIL KONKUREN LULUS: 20 retry, satu surat/versi/relasi; tugas belum selesai"
+# Comment retries must not duplicate comments, notifications or audit.
+$PSQL <<'SQL'
+create table test_support.comment_target(letter_id uuid);
+do $$declare d uuid;begin d:=test_support.disposition_origin('a0000000-0000-0000-0000-000000000005','a0000000-0000-0000-0000-000000000006');insert into test_support.comment_target select letter_id from internal_dispatches where id=d;end $$;
+SQL
+seq 1 20 | xargs -P 10 -I{} $PSQL -c "begin;select set_config('request.jwt.claim.sub','a0000000-0000-0000-0000-000000000006',true);select add_letter_comment((select letter_id from test_support.comment_target),'Komentar konkurensi','f9000000-0000-0000-0000-000000000001');commit;" >/dev/null
+$PSQL <<'SQL'
+do $$declare l uuid;comment_id uuid;begin select letter_id into l from test_support.comment_target;assert (select count(*) from letter_comments c join internal_dispatches d on d.id=c.dispatch_id where d.letter_id=l)=1;select lc.id into comment_id from letter_comments lc join internal_dispatches d on d.id=lc.dispatch_id where d.letter_id=l;assert (select count(*) from audit_logs where action='LETTER_COMMENT_ADDED' and entity_id=comment_id::text)=1;assert (select count(*) from notifications where letter_id=l and event_type='LETTER_COMMENT_ADDED')=1;assert not exists(select 1 from official_reply_links where origin_letter_id=l);end $$;
+SQL
+echo "KOMENTAR KONKUREN LULUS: 20 retry, satu komentar/notifikasi/audit; tidak membuat surat baru"

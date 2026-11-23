@@ -1,0 +1,62 @@
+begin;
+do $$
+declare sender uuid:='a0000000-0000-0000-0000-000000000005';recipient uuid:='a0000000-0000-0000-0000-000000000006';cc uuid:='a0000000-0000-0000-0000-000000000004';d uuid;l uuid;draft uuid;c uuid;k uuid:=gen_random_uuid();failed boolean;j jsonb;ledger text;n integer;
+begin
+ draft:=test_support.draft(sender);
+ perform set_config('request.jwt.claim.sub',sender::text,true);
+ assert (get_letter_comment_context(draft)->>'canComment')::boolean=false;
+ failed:=false;begin perform add_letter_comment(draft,'Belum terkirim',gen_random_uuid());exception when others then failed:=true;end;assert failed,'Draf tidak boleh dikomentari';
+ update internal_delivery_settings set cc_enabled=true;
+ d:=test_support.disposition_origin(sender,recipient,array[cc]);select letter_id into l from internal_dispatches where id=d;
+ select md5(to_jsonb(x)::text) into ledger from (select (select jsonb_agg(to_jsonb(t) order by id) from letters t) letters,(select jsonb_agg(to_jsonb(t) order by id) from letter_versions t) versions,(select jsonb_agg(to_jsonb(t) order by id) from number_counters t) counters,(select jsonb_agg(to_jsonb(t) order by id) from number_issuances t) issuances) x;
+ perform set_config('request.jwt.claim.sub',recipient::text,true);
+ j:=get_letter_comment_context(l);assert (j->>'canRead')::boolean and (j->>'canComment')::boolean;
+ c:=add_letter_comment(l,'Dokumen sudah saya periksa.',k);
+ assert add_letter_comment(l,'Dokumen sudah saya periksa.',k)=c,'Retry harus mengembalikan komentar yang sama';
+ assert (select count(*) from letter_comments where dispatch_id=d)=1;
+ assert (select count(*) from audit_logs where entity_id=c::text and action='LETTER_COMMENT_ADDED')=1;
+ assert (select count(*) from notifications where dispatch_id=d and event_type='LETTER_COMMENT_ADDED')=1;
+ assert (select recipient_id=sender from notifications where dispatch_id=d and event_type='LETTER_COMMENT_ADDED');
+ assert (get_letter_comment_context(l)->>'recipientCommented')::boolean;
+ assert (select received_at is null and read_at is null from dispatch_recipients where dispatch_id=d and profile_id=recipient),'Komentar tidak mengonfirmasi baca/terima atau mengubah balasan resmi';
+ assert app.official_reply_status(d,recipient) is null;
+ assert not exists(select 1 from official_reply_links where origin_dispatch_id=d),'Komentar tidak membuat surat balasan';
+ failed:=false;begin perform add_letter_comment(l,'Isi diubah',k);exception when others then failed:=true;end;assert failed,'Kunci tidak boleh dipakai untuk isi lain';
+ failed:=false;begin perform add_letter_comment(l,'   ',gen_random_uuid());exception when others then failed:=true;end;assert failed;
+ failed:=false;begin perform add_letter_comment(l,repeat('a',5001),gen_random_uuid());exception when others then failed:=true;end;assert failed;
+ perform set_config('request.jwt.claim.sub',sender::text,true);perform add_letter_comment(l,'Terima kasih atas tanggapannya.',gen_random_uuid());
+ assert (select count(*) from letter_comments where dispatch_id=d)=2;
+ assert (select count(*) from notifications where dispatch_id=d and recipient_id=recipient and event_type='LETTER_COMMENT_ADDED')=1;
+ perform set_config('request.jwt.claim.sub',cc::text,true);assert not (get_letter_comment_context(l)->>'canRead')::boolean,'CC tidak otomatis mendapat akses komentar';
+ failed:=false;begin perform add_letter_comment(l,'CC mencoba',gen_random_uuid());exception when others then failed:=true;end;assert failed;
+ perform set_config('request.jwt.claim.sub','a0000000-0000-0000-0000-000000000001',true);
+ failed:=false;begin perform add_letter_comment(l,'Admin mencoba',gen_random_uuid());exception when others then failed:=true;end;assert failed;
+ assert (select md5(to_jsonb(x)::text) from (select (select jsonb_agg(to_jsonb(t) order by id) from letters t) letters,(select jsonb_agg(to_jsonb(t) order by id) from letter_versions t) versions,(select jsonb_agg(to_jsonb(t) order by id) from number_counters t) counters,(select jsonb_agg(to_jsonb(t) order by id) from number_issuances t) issuances) x)=ledger,'Komentar mengubah surat/nomor/dokumen';
+ perform set_config('test.comments.letter',l::text,true);perform set_config('test.comments.dispatch',d::text,true);
+end $$;
+set local role authenticated;
+select set_config('request.jwt.claim.sub','a0000000-0000-0000-0000-000000000006',true);
+do $$begin
+ assert (select count(*) from letter_comments)=2;
+ assert (select count(*) from letter_comment_summaries)=2;
+ assert not has_table_privilege('authenticated','letter_comments','INSERT');
+ assert not has_table_privilege('authenticated','letter_comments','UPDATE');
+ assert not has_table_privilege('authenticated','letter_comments','DELETE');
+ assert not has_function_privilege('anon','add_letter_comment(uuid,text,uuid)','EXECUTE');
+end $$;
+select set_config('request.jwt.claim.sub','a0000000-0000-0000-0000-000000000004',true);
+do $$begin assert not exists(select 1 from letter_comments);assert not exists(select 1 from letter_comment_summaries);end $$;
+select set_config('request.jwt.claim.sub','a0000000-0000-0000-0000-000000000001',true);
+do $$begin assert not exists(select 1 from letter_comments);end $$;
+reset role;
+-- A mandatory notification failure must roll back the new comment and audit.
+create function pg_temp.reject_comment_notification() returns trigger language plpgsql as $$begin if new.event_type='LETTER_COMMENT_ADDED' then raise exception 'Injected notification failure';end if;return new;end $$;
+create trigger test_comment_notification before insert on notifications for each row execute function pg_temp.reject_comment_notification();
+do $$declare failed boolean:=false;n integer;a integer;begin
+ select count(*) into n from letter_comments;select count(*) into a from audit_logs;
+ perform set_config('request.jwt.claim.sub','a0000000-0000-0000-0000-000000000006',true);
+ begin perform add_letter_comment(current_setting('test.comments.letter')::uuid,'Tidak boleh tersimpan parsial',gen_random_uuid());exception when others then failed:=true;end;
+ assert failed;assert (select count(*) from letter_comments)=n;assert (select count(*) from audit_logs)=a;
+end $$;
+drop trigger test_comment_notification on notifications;
+rollback;

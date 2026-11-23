@@ -1,0 +1,12 @@
+import {beforeEach,it,expect,vi} from 'vitest';
+const m=vi.hoisted(()=>({user:vi.fn(),client:vi.fn(),rpc:vi.fn(),revalidate:vi.fn()}));
+vi.mock('@/server/auth',()=>({requireUser:m.user}));vi.mock('@/lib/supabase/server',()=>({createClient:m.client}));vi.mock('next/cache',()=>({revalidatePath:m.revalidate}));
+vi.mock('@/lib/supabase/admin',()=>({createAdminClient:()=>{throw new Error('Komentar wajib menggunakan sesi Auth');}}));
+import {postLetterComment} from '../src/server/actions/letter-comments';
+import {readCommentContext} from '../src/server/letter-comments';
+const key='e0000000-0000-0000-0000-000000000001';
+beforeEach(()=>{vi.resetAllMocks();m.user.mockResolvedValue({id:'session-user'});m.client.mockResolvedValue({rpc:m.rpc});m.rpc.mockResolvedValue({data:'comment-id',error:null});});
+it('uses the Auth client and never accepts an actor identity from the browser',async()=>{expect(await postLetterComment('letter',' Tanggapan saya ',key)).toEqual({success:true,id:'comment-id'});expect(m.rpc).toHaveBeenCalledWith('add_letter_comment',{p_letter:'letter',p_body:'Tanggapan saya',p_key:key});});
+it('rejects inactive sessions, blank comments and invalid retry keys before mutation',async()=>{m.user.mockRejectedValueOnce(new Error('Masuk dahulu'));expect((await postLetterComment('l','Isi',key)).success).toBe(false);expect(m.rpc).not.toHaveBeenCalled();expect((await postLetterComment('l',' ',key)).success).toBe(false);expect((await postLetterComment('l','Isi','invalid')).success).toBe(false);expect(m.rpc).not.toHaveBeenCalled();});
+it('does not claim success or refresh a reply status when saving fails',async()=>{m.rpc.mockResolvedValue({data:null,error:{message:'Injected failure'}});expect((await postLetterComment('l','Isi',key)).success).toBe(false);expect(m.revalidate).not.toHaveBeenCalled();});
+it('does not turn a failed comment query into an empty successful thread',async()=>{m.rpc.mockResolvedValue({data:null,error:{message:'DB error'}});await expect(readCommentContext('l')).rejects.toThrow(/belum dapat dimuat/);});

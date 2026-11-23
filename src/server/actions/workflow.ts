@@ -1,3 +1,4 @@
+import {readCommentContext} from '@/server/letter-comments';
 "use server";
 import {assertPeerLetterPlan} from "@/server/peer-internal";
 import {assertReviewerHierarchy} from "@/server/reviewer-hierarchy";
@@ -32,6 +33,7 @@ export async function getWorkflowLetter(id: string) {
     { data: delivery, error: de },
     replyContext,
     dispositionContext,
+    commentContext,
   ] = await Promise.all([
     db
       .from("letter_versions")
@@ -70,12 +72,14 @@ export async function getWorkflowLetter(id: string) {
     createAdminClient().rpc('get_internal_delivery_context',{p_actor:user.id,p_letter:id}),
     readReplyContext(id),
     readDispositionLetterContext(id),
+    readCommentContext(id),
   ]);
   if (ve || ae || se || ce || re || be || ie) throw new Error((ve || ae || se || ce || re || be || ie)!.message);
   if(de)throw new Error('Informasi pengiriman belum dapat diambil.');
   let ccOptions: {id:string;full_name:string}[]=[];
   if(delivery?.ccEnabled&&delivery?.canDispatch){const {data:ccPeople,error:cce}=await db.from('profiles').select('id,full_name').eq('is_active',true);if(cce)throw new Error('Penerima tembusan belum dapat diambil.');ccOptions=ccPeople||[];}
   return {
+    commentContext,
     dispositionContext,
     replyContext,
     ccOptions,

@@ -19,7 +19,8 @@
       "fix/pr08-peer-internal": false,
       "fix/pr08-account-registration": false,
       "fix/pr08-billing-template": false,
-      "fix/pr08-ux-feedback": false
+      "fix/pr08-ux-feedback": false,
+      "fix/pr08-comment-replies": false
     }
   }
 }

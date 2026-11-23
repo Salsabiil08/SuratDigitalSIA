@@ -1,4 +1,6 @@
 "use client";
+import {LetterCommentsPanel} from "@/components/letters/letter-comments-panel";
+import {responseLabel} from "@/domain/letter-comments";
 import {ActionNotice} from "@/components/ui/action-notice";
 import {DispositionLetterPanel} from "@/components/letters/disposition-letter-panel";
 import {OfficialReplyPanel} from "@/components/letters/official-reply-panel";
@@ -110,6 +112,7 @@ export function LetterDetailClient({
         <p className="text-xs text-neutral-500">Status diperbarui otomatis saat halaman aktif.</p>
         {syncError&&<p role="status" className="text-xs text-amber-800">{syncError}</p>}
       </Card>
+      <LetterCommentsPanel letterId={id} context={data.commentContext} onChanged={()=>{void reload().catch(()=>setSyncError("Komentar terkirim. Status tanggapan belum dapat diperbarui."));}}/>
       <OfficialReplyPanel letterId={id} context={data.replyContext}/>
       <DispositionLetterPanel letterId={id} context={data.dispositionContext}/>
       {error && (
@@ -185,7 +188,7 @@ export function LetterDetailClient({
         <p className="text-sm">Dokumen: {l.finalized_at?'Final dan terkunci':'Belum final'} · Pengiriman: {data.delivery?.dispatch?'Terkirim':'Belum dikirim'}</p>
         {data.delivery?.dispatch && <>
           <p className="text-sm">Dikirim pada {new Date(data.delivery.dispatch.sent_at).toLocaleString('id-ID',{timeZone:'Asia/Jakarta'})} WIB. Dokumen yang dikirim disimpan sebagai bukti pengiriman.</p>
-          {(data.delivery.recipients as {profile_id:string;recipient_role:string;read_at:string|null;received_at:string|null}[]).map(r=><p key={r.profile_id} className="text-sm">{r.recipient_role==='PRIMARY'?'Penerima utama':'Tembusan'} · {r.read_at?'Dibaca pada '+new Date(r.read_at).toLocaleString('id-ID',{timeZone:'Asia/Jakarta'})+' WIB':'Belum dibaca'} · {r.recipient_role==='CC'?'Salinan, tanpa konfirmasi penerimaan utama':r.received_at?'Penerimaan dikonfirmasi':'Belum ada konfirmasi penerimaan'} · {r.recipient_role==='CC'?'Tidak otomatis wajib membalas':data.replyContext.recipients.find(x=>x.profileId===r.profile_id)?.repliedAt?'Sudah Dibalas':'Belum ada balasan resmi terkirim'}</p>)}
+          {(data.delivery.recipients as {profile_id:string;recipient_role:string;read_at:string|null;received_at:string|null}[]).map(r=><p key={r.profile_id} className="text-sm">{r.recipient_role==='PRIMARY'?'Penerima utama':'Tembusan'} · {r.read_at?'Dibaca pada '+new Date(r.read_at).toLocaleString('id-ID',{timeZone:'Asia/Jakarta'})+' WIB':'Belum dibaca'} · {r.recipient_role==='CC'?'Salinan, tanpa konfirmasi penerimaan utama':r.received_at?'Penerimaan dikonfirmasi':'Belum ada konfirmasi penerimaan'} · {r.recipient_role==='CC'?'Tidak otomatis wajib membalas':responseLabel(!!data.commentContext?.recipientCommented,!!data.replyContext.recipients.find(x=>x.profileId===r.profile_id)?.repliedAt)}</p>)}
           <p className="text-xs text-neutral-600">Membuka surat tidak mengonfirmasi penerimaan.</p>
           {data.delivery.recipientRole==='PRIMARY' && !data.delivery.recipients.find((r:any)=>r.profile_id===data.userId)?.received_at && <Button isLoading={busy} onClick={()=>act(()=>receiveInternalLetterAction(data.delivery.dispatch.id),'Penerimaan Anda telah dicatat.')}>Konfirmasi Terima Surat</Button>}
         </>}

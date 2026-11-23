@@ -22,11 +22,11 @@ export function OfficialReplyPanel({letterId,context}:{letterId:string;context:R
  }
  if(!context.seed&&!context.links.length)return null;
  return <Card className="p-5 space-y-3">
-  <h2 className="font-bold">Hubungan Surat dan Balasan Resmi</h2>
+  <h2 className="font-bold">Balasan dengan Surat Resmi (Opsional)</h2>
   {error&&<ActionNotice>{error}</ActionNotice>}
-  {context.seed&&<><p className="text-sm">Balasan menggunakan surat dan nomor baru. Kategori awal mengikuti surat asal; periksa sebelum mengajukan.</p><Button onClick={create} isLoading={busy}>Balas dengan Surat Resmi</Button></>}
+  {context.seed&&<><p className="text-sm">Jika diperlukan, balasan resmi menggunakan surat dan nomor baru. Kategori awal mengikuti surat asal; periksa sebelum mengajukan.</p><Button onClick={create} isLoading={busy}>Balas dengan Surat Resmi</Button></>}
 
-  {context.links.length===0?<p className="text-sm text-neutral-500">Tidak ada hubungan surat yang dapat ditampilkan untuk akun ini.</p>:<ul className="space-y-3">{context.links.map(link=><li key={link.id} className="border rounded-xl p-3 text-sm break-words">
+  {context.links.length===0?null:<ul className="space-y-3">{context.links.map(link=><li key={link.id} className="border rounded-xl p-3 text-sm break-words">
    <p className="font-semibold">{link.direction==='ORIGIN'?'Surat asal':'Surat balasan'}: {link.subject}</p>
    <p>Nomor: {link.officialNumber||'Belum diterbitkan'} · Identitas: {link.letterId}</p>
    <p>Hubungan dibuat oleh {link.actorName} pada {mailboxDate(link.createdAt)}</p>
