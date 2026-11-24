@@ -14,6 +14,7 @@ import { PageHeader } from "@/components/ui/page-header";
 import { Card } from "@/components/ui/card";
 import { Field, Input, Select, Textarea } from "@/components/ui/field";
 import { Button } from "@/components/ui/button";
+import {PdfPlacement} from './pdf-placement';
 import { RupiahInput } from "@/components/ui/rupiah-input";
 import {peerInternal} from "@/domain/peer-internal";
 import { higherReviewer } from "@/domain/reviewer-hierarchy";
@@ -61,13 +62,6 @@ function draftFromData(
       : undefined,
   };
 }
-const emptyArea = (): SignatureArea => ({
-  page: 1,
-  x: 340,
-  y: 620,
-  width: 140,
-  height: 55,
-});
 export function LetterEditor({
   source = "CREATE",
   billing = false,
@@ -127,6 +121,7 @@ export function LetterEditor({
   }, []);
   const [file, setFile] = useState<File | null>(null);
   const [attachment, setAttachment] = useState<File | null>(null);
+  const [stampPrepared,setStampPrepared]=useState(!!initialData?.letter.stamp_area);
   const [currentFormat, setCurrentFormat] = useState(
     initialData?.versions.find(
       (v) => v.id === initialData.letter.current_version_id,
@@ -195,8 +190,8 @@ export function LetterEditor({
         signerIds: ids,
         mandatoryApproverIds: input.mandatoryApproverIds?.slice(0,count) || ids,
         additionalApproverIds: peer ? [] : input.additionalApproverIds,
-        stampArea: peer ? undefined : input.stampArea,
-        areas: currentFormat === "PDF" ? input.areas.slice(0, count) : [],
+        stampArea: peer || input.signatureMode==='EXTERNAL' ? undefined : input.stampArea,
+        areas: currentFormat === 'PDF' && input.signatureMode==='IN_APP' ? input.areas.slice(0, count) : [],
       };
       if(dispositionSeed&&!input.id){const keyName=`siadocs-disposition-draft-${dispositionSeed.dispositionId}`;let key=sessionStorage.getItem(keyName);if(!key){key=crypto.randomUUID();sessionStorage.setItem(keyName,key);}data.dispositionDraftKey=key;}
       const form = new FormData();
@@ -265,6 +260,7 @@ export function LetterEditor({
                   onChange={(e) => {
                     const f = e.target.files?.[0] || null;
                     setFile(f);
+                    if(f){setInput(old=>({...old,numberArea:undefined,areas:[],stampArea:undefined}));setStampPrepared(false);}
                     if (f)
                       setCurrentFormat(
                         f.name.toLowerCase().endsWith(".pdf") ? "PDF" : "DOCX",
@@ -632,59 +628,14 @@ export function LetterEditor({
 
         </Card>
         </>}
-        {currentFormat === "PDF" && input.source === "UPLOAD" && <Card className="p-5 space-y-4">
-          {currentFormat === "PDF" && input.source === "UPLOAD" && (
-            <div className="space-y-4">
-              <p className="text-sm">
-                Tentukan area nomor. Area tanda tangan diperlukan hanya jika penandatanganan dilakukan melalui SIADocs. Periksa hasilnya pada pratinjau.
-              </p>
-              <AreaEditor
-                label="Area nomor resmi"
-                value={
-                  input.numberArea || {
-                    page: 1,
-                    x: 80,
-                    y: 180,
-                    width: 350,
-                    height: 24,
-                  }
-                }
-                onChange={(area) => change("numberArea", area)}
-              />
-              {Array.from({ length: input.signatureMode==='IN_APP'?count:0 }, (_, i) => (
-                <AreaEditor
-                  key={i}
-                  label={`Area TTD ${i + 1}`}
-                  value={input.areas[i] || emptyArea()}
-                  onChange={(area) => {
-                    const areas = [...input.areas];
-                    areas[i] = area;
-                    change("areas", areas);
-                  }}
-                />
-              ))}
-              {count > 0 && input.signatureMode==='IN_APP' && <label className="flex items-center gap-2 text-sm">
-                <input
-                  type="checkbox"
-                  checked={!!input.stampArea}
-                  onChange={(e) =>
-                    change(
-                      "stampArea",
-                      e.target.checked ? emptyArea() : undefined,
-                    )
-                  }
-                />
-                Siapkan area stempel opsional
-              </label>}
-              {count > 0 && input.signatureMode==='IN_APP' && input.stampArea && (
-                <AreaEditor
-                  label="Area stempel"
-                  value={input.stampArea}
-                  onChange={(area) => change("stampArea", area)}
-                />
-              )}
-            </div>
-          )}
+        {currentFormat==='PDF' && input.source==='UPLOAD' && <Card className="p-5">
+          <PdfPlacement file={file} url={id?`/api/letters/${id}/document?original=1&revision=${initialData?.letter.revision||0}`:undefined}
+            numberArea={input.numberArea} signatureAreas={input.areas}
+            signatureLabels={input.signatureMode==='IN_APP'?Array.from({length:count},(_,i)=>isBill?(i===0?'TTD SM':'TTD Dirut'):'Tanda Tangan'):[]}
+            stampArea={input.stampArea} stampEnabled={stampPrepared && input.signatureMode==='IN_APP' && count>0}
+            onStampEnabled={enabled=>{setStampPrepared(enabled);if(!enabled)change('stampArea',undefined);}}
+            onPlace={(key,area)=>setInput(old=>{if(key==='number')return {...old,numberArea:area};if(key==='stamp')return {...old,stampArea:area};const index=Number(key.split('-')[1]);const areas=[...old.areas];areas[index]=area;return {...old,areas};})}
+            onReset={()=>setInput(old=>({...old,numberArea:undefined,areas:[],stampArea:undefined}))}/>
         </Card>}
         <div className="flex flex-wrap gap-3">
           <Button type="submit" isLoading={busy}>
@@ -709,57 +660,6 @@ export function LetterEditor({
     </div>
   );
 }
-export function AreaEditor({
-  label,
-  value,
-  onChange,
-}: {
-  label: string;
-  value: SignatureArea;
-  onChange: (a: SignatureArea) => void;
-}) {
-  return (
-    <fieldset className="border rounded-xl p-3">
-      <legend className="text-sm font-semibold px-2">{label}</legend>
-      <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
-        {(["page", "x", "y", "width", "height"] as const).map((key) => (
-          <Field
-            key={key}
-            label={
-              {
-                page: "Halaman",
-                x: "Kiri (x)",
-                y: "Atas (y)",
-                width: "Lebar",
-                height: "Tinggi",
-              }[key]
-            }
-            htmlFor={`${label}-${key}`}
-          >
-            <Input
-              id={`${label}-${key}`}
-              type="number"
-              value={value[key]}
-              min={key === "page" ? 1 : 0}
-              onChange={(e) =>
-                onChange({ ...value, [key]: Number(e.target.value) })
-              }
-            />
-          </Field>
-        ))}
-      </div>
-      <Button
-        type="button"
-        variant="ghost"
-        size="sm"
-        onClick={() => onChange({ ...value })}
-      >
-        Gunakan Area Ini
-      </Button>
-    </fieldset>
-  );
-}
-
 function OfficialChoice({people,value,onChange,id}:{people:{id:string;name:string;title:string}[];value:string;onChange:(value:string)=>void;id?:string}){
  if(people.length===1 && (!value||value===people[0]!.id))return <p className="py-2 text-sm font-semibold">{people[0]!.name}</p>;
  if(!people.length)return <p className="text-sm text-amber-800">Belum ada pejabat berwenang. Hubungi pengelola.</p>;

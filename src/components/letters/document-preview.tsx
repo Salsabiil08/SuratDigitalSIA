@@ -1,4 +1,5 @@
 "use client";
+import {PdfCanvas} from './pdf-canvas';
 import {Button} from '@/components/ui/button';
 import {ActionNotice} from "@/components/ui/action-notice";
 import { useEffect, useRef, useState } from "react";
@@ -15,7 +16,7 @@ export function DocumentPreview({
 }) {
   const frame = useRef<HTMLIFrameElement>(null);
   const container = useRef<HTMLDivElement>(null);
-  const pdfReady = useRef(false);
+  const [pdfBlob,setPdfBlob]=useState<Blob|null>(null);
   const [visible, setVisible] = useState(false);
   useEffect(() => {
     if (!container.current) return;
@@ -33,8 +34,8 @@ export function DocumentPreview({
     if (!visible) return;
     let alive = true;
     const controller = new AbortController();
-    pdfReady.current = false;
-    let blobUrl = "";
+    setPdfBlob(null);
+
     setError("");
     setLoading(true);
     async function show() {
@@ -44,13 +45,9 @@ export function DocumentPreview({
           throw new Error((await res.json()).error || "Pratinjau gagal.");
         onLayoutCopy?.(res.headers.get("X-SIADocs-Layout-Copy")==="1");
         const blob = await res.blob();
-        if (!alive || !frame.current) return;
-        if (format === "PDF") {
-          blobUrl = URL.createObjectURL(blob);
-          pdfReady.current = true;
-          frame.current.src = blobUrl;
-          return;
-        }
+        if (!alive) return;
+        if (format === 'PDF') {setPdfBlob(blob);return;}
+        if (!frame.current) return;
         const {renderDocxInFrame}=await import('@/lib/render-docx-preview');
         await renderDocxInFrame(blob,frame.current);
         if (alive) onLoaded?.();
@@ -62,7 +59,7 @@ export function DocumentPreview({
     return () => {
       alive = false;
       controller.abort();
-      if (blobUrl) URL.revokeObjectURL(blobUrl);
+
     };
     // Parent callbacks report load/copy state; they are notifications, not render dependencies.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -71,16 +68,13 @@ export function DocumentPreview({
     <div ref={container} className="space-y-2">
       {loading&&<p role="status" className="text-sm text-neutral-600">Pratinjau sedang disiapkan.</p>}
       {error && <><ActionNotice>{error}</ActionNotice><Button variant="secondary" onClick={()=>setAttempt(n=>n+1)}>Muat Ulang Pratinjau</Button></>}
-        <iframe
+        {format==='PDF'?(!error&&pdfBlob&&<div className="w-full h-[680px] overflow-auto bg-neutral-200 rounded-xl border p-2 sm:p-4"><PdfCanvas blob={pdfBlob} onLoaded={onLoaded}/></div>):<iframe
           hidden={!!error}
           ref={frame}
           sandbox="allow-same-origin"
           title="Pratinjau dokumen surat"
           className="w-full h-[680px] bg-neutral-100 border rounded-xl"
-          onLoad={() => {
-            if (format === "PDF" && pdfReady.current) onLoaded?.();
-          }}
-        />
+        />}
 
     </div>
   );

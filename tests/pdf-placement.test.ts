@@ -1,0 +1,5 @@
+import {expect,it} from 'vitest';import {placementFromDrag} from '../src/domain/pdf-placement';import {validateArea} from '../src/domain/workflow';
+const size={width:595,height:842},preset={width:220,height:24};
+it('maps reverse drags to valid top-left PDF coordinates',()=>{const area=placementFromDrag(1,size,{x:300,y:220},{x:100,y:180},preset);expect(area).toEqual({page:1,x:100,y:180,width:200,height:40});expect(()=>validateArea(area,[size])).not.toThrow();});
+it('clamps taps near page edges without moving the box outside the PDF',()=>{const area=placementFromDrag(1,size,{x:590,y:840},{x:590,y:840},preset);expect(area.x+area.width).toBeLessThanOrEqual(size.width);expect(area.y+area.height).toBeLessThanOrEqual(size.height);expect(()=>validateArea(area,[size])).not.toThrow();});
+it('supports multiple pages and negative pointer excursions',()=>{const area=placementFromDrag(2,size,{x:-20,y:-10},{x:600,y:850},preset);expect(area).toEqual({page:2,x:0,y:0,width:595,height:842});expect(()=>validateArea(area,[size,size])).not.toThrow();});

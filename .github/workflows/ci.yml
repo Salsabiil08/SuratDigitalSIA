@@ -67,6 +67,12 @@ jobs:
           comments_server_pid=$!
           trap 'kill "$comments_server_pid" 2>/dev/null || true' EXIT
           python scripts/readiness/comments-browser.py
+      - run: |
+          node scripts/readiness/pdf-placement-fixture.mjs
+          ./node_modules/.bin/vite --config tests/browser/pdf-placement/vite.config.ts > test-results/pdf-placement-server.log 2>&1 &
+          pdf_server_pid=$!
+          trap 'kill "$pdf_server_pid" 2>/dev/null || true' EXIT
+          python scripts/readiness/pdf-placement-browser.py
       - uses: actions/upload-artifact@v4
         if: always()
         with:

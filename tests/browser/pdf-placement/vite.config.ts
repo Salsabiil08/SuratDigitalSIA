@@ -1,0 +1,1 @@
+import fs from 'node:fs';import {defineConfig} from 'vite';import path from 'node:path';export default defineConfig({root:path.resolve('tests/browser/pdf-placement'),resolve:{alias:{'@':path.resolve('src')}},oxc:{jsx:{runtime:'automatic'}},server:{fs:{allow:[path.resolve('.'),fs.realpathSync('node_modules')]},host:'127.0.0.1',port:3123}});
