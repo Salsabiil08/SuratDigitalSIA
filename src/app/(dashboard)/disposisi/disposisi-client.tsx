@@ -162,11 +162,6 @@ export function DisposisiClient({
           ) : undefined
         }
       />
-      <p className="text-sm text-neutral-600">
-        Penerima mengerjakan arahan dan membuat surat tindak lanjut. Hasil
-        dikirim kembali kepada pemberi untuk diperiksa, diperbaiki bila perlu,
-        lalu diterima.
-      </p>
       {sourceLetterId&&!source&&<ActionNotice>Surat ini tidak tersedia untuk dibuatkan disposisi oleh akun Anda.</ActionNotice>}
       {selectedTaskId&&![...data.inbox,...data.outbox].some(d=>d.id===selectedTaskId)&&<ActionNotice>Disposisi tidak tersedia untuk akun Anda.</ActionNotice>}
       {message && (
@@ -204,9 +199,6 @@ export function DisposisiClient({
         <Card id={`disposisi-${d.id}`} key={d.id} className="p-5 space-y-3">
           <div className="flex flex-wrap items-center gap-2">
             <b>{d.subject}</b>
-            <Chip variant={d.status === "DONE" ? "green" : "blue"}>
-              {labels[d.status]}
-            </Chip>
             <Chip variant={d.priority === "URGENT" ? "red" : "gray"}>
               {priorities[d.priority]}
             </Chip>
@@ -244,11 +236,11 @@ export function DisposisiClient({
               <b>{d.status==='REVISION_REQUESTED'?'Perbaikan yang diminta:':'Catatan pemeriksaan terdahulu:'}</b> {d.reviewNote}
             </p>
           )}
-          {d.integrated&&<div className="space-y-2 text-sm"><p>Hasil: catatan wajib. {d.requiresLetter||d.responseLetterId?'Surat hasil wajib final dan dikirim resmi kepada pemberi.':'Lampiran dan surat hasil opsional sesuai arahan.'} Draf belum menyelesaikan tugas.</p>
+          {d.integrated&&<div className="space-y-2 text-sm">
           {d.files.map(f=><p key={f.id}><a className="text-brand-red underline" href={`/api/dispositions/${d.id}/attachments/${f.id}`}>Unduh lampiran hasil — {f.file_name}</a></p>)}
           {tab==='INBOX'&&['NEW','IN_PROGRESS','REVISION_REQUESTED'].includes(d.status)&&<label className="block">Tambah lampiran PDF/DOCX (maks. 1 MB)<input type="file" accept=".pdf,.docx" disabled={busy} onChange={async e=>{const f=e.target.files?.[0];if(!f)return;setMessage("");setBusy(true);try{const form=new FormData();form.set('file',f);form.set('key',intent(`upload-${d.id}`,{name:f.name,size:f.size,modified:f.lastModified}));const res=await fetch(`/api/dispositions/${d.id}/attachments`,{method:'POST',body:form});const j=await res.json();if(!res.ok)throw new Error(j.error);await refresh();setMessageKind('success');setMessage('Lampiran hasil tersimpan; belum diajukan untuk pemeriksaan.');}catch(err){setMessageKind('error');setMessage(err instanceof Error?err.message:'Unggah gagal.');}finally{setBusy(false);e.target.value='';}}}/></label>}
-          {d.submissions.length>0&&<h3 className="font-semibold">Riwayat Hasil dan Pemeriksaan</h3>}
-          {d.submissions.map(s=><div key={s.id} className="border rounded-xl p-3"><p>Hasil diajukan: {new Date(s.created_at).toLocaleString('id-ID',{timeZone:'Asia/Jakarta'})} WIB — {s.note}</p>{s.decision&&<p>{s.decision.decision==='RETURN'?'Perbaikan diminta':'Diterima / Selesai'}: {s.decision.note||'Hasil diterima'} — {new Date(s.decision.created_at).toLocaleString('id-ID',{timeZone:'Asia/Jakarta'})} WIB</p>}</div>)}
+          {d.submissions.length>0&&<details><summary className="cursor-pointer font-semibold">Riwayat hasil dan pemeriksaan</summary>
+          {d.submissions.map(s=><div key={s.id} className="border rounded-xl p-3"><p>Hasil diajukan: {new Date(s.created_at).toLocaleString('id-ID',{timeZone:'Asia/Jakarta'})} WIB — {s.note}</p>{s.decision&&<p>{s.decision.decision==='RETURN'?'Perbaikan diminta':'Diterima / Selesai'}: {s.decision.note||'Hasil diterima'} — {new Date(s.decision.created_at).toLocaleString('id-ID',{timeZone:'Asia/Jakarta'})} WIB</p>}</div>)}</details>}
           </div>}
           <div className="flex flex-wrap gap-2">
             {tab === "INBOX" &&
@@ -485,10 +477,6 @@ export function DisposisiClient({
               />
               Wajib membuat surat tindak lanjut
             </label>
-            <p className="text-xs text-neutral-500">
-              Penerima membuat surat baru dari disposisi ini. Setelah surat
-              selesai, hasil kembali kepada Anda untuk diperiksa.
-            </p>
             <Field label="Surat acuan (opsional)">
               <Select
                 value={letterId}

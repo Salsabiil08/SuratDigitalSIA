@@ -30,7 +30,8 @@
       "fix/pr08-outbox-copy": false,
       "fix/pr08-form-width": false,
       "fix/pr08-role-forms": false,
-      "fix/pr08-mailbox-caption": false
+      "fix/pr08-mailbox-caption": false,
+      "fix/pr08-concise-ux": false
     }
   }
 }

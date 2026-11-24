@@ -1,6 +1,6 @@
 "use client";
 import {ActionNotice} from "@/components/ui/action-notice";
-import { useCallback, useState } from "react";
+import { useCallback, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
@@ -166,8 +166,19 @@ export function LetterEditor({
   function updateSigner(index: number, value: string) {
     const ids = [...input.signerIds];
     ids[index] = value;
-    setInput(x=>({...x,signerIds:ids.slice(0,count),mandatoryApproverIds:x.mandatoryApproverIds?.length===count?x.mandatoryApproverIds:ids.slice(0,count)}));
+    setInput(x=>({...x,signerIds:ids.slice(0,count),mandatoryApproverIds:differentSigners?(x.mandatoryApproverIds||[]):ids.slice(0,count)}));
   }
+  const [differentSigners,setDifferentSigners]=useState(()=>!!initialData?.letter.mandatory_approver_ids?.some((value:string,i:number)=>value!==initialData.letter.signer_ids?.[i]));
+  useEffect(()=>{
+    if(peer || count===0)return;
+    setInput(old=>{
+      const signerIds=Array.from({length:count},(_,i)=>{const eligible=signers.filter(p=>!isBill||(i===0?p.position==='SM':p.position==='DIR'));return old.signerIds[i] || (eligible.length===1?eligible[0]!.id:'');});
+      const mandatoryApproverIds=Array.from({length:count},(_,i)=>{const eligible=signers.filter(p=>!isBill||(i===0?p.position==='SM':p.position==='DIR'));return differentSigners?(old.mandatoryApproverIds?.[i] || (eligible.length===1?eligible[0]!.id:'')):signerIds[i]!;});
+      if(JSON.stringify(signerIds)===JSON.stringify(old.signerIds)&&JSON.stringify(mandatoryApproverIds)===JSON.stringify(old.mandatoryApproverIds))return old;
+      return {...old,signerIds,mandatoryApproverIds};
+    });
+  },[peer,count,isBill,differentSigners,options.people]);
+  const canChooseDifferentSigners = differentSigners || Array.from({length:count},(_,i)=>signers.filter(p=>!isBill||(i===0?p.position==='SM':p.position==='DIR')).length).some(n=>n>1);
   const additionalApprovers=options.people.filter(p=>options.approverGrants.some(g=>g.approverId===p.id&&(!g.typeCode||g.typeCode===input.letterTypeCode)));
   async function save(preview: boolean) {
     setBusy(true);
@@ -579,19 +590,18 @@ export function LetterEditor({
         {(!internal || !!recipient) && !peer && <>
         {(count > 0 || additionalApprovers.length > 0) && <Card className="p-5 space-y-4">
 
-          <h2 className="font-bold">Persetujuan Surat</h2>
-          <p className="text-sm text-neutral-600">Pilih pejabat yang menyetujui surat.</p>
-          {Array.from({length:count},(_,index)=><Field key={`approval-${index}`} label={isBill?(index===0?'Penyetuju SM Finance':'Penyetuju Direktur'):'Penyetuju Formal (SM/Direktur)'} required>
-            <Select value={input.mandatoryApproverIds?.[index] || input.signerIds[index] || ''} onChange={e=>{const ids=[...(input.mandatoryApproverIds?.length?input.mandatoryApproverIds:input.signerIds)];ids[index]=e.target.value;change('mandatoryApproverIds',ids);}} required>
-              <option value="">Pilih pejabat penyetuju</option>{signers.filter(p=>!isBill||(index===0?p.position==='SM':p.position==='DIR')).map(p=><option key={p.id} value={p.id}>{p.name} — {p.title}</option>)}
-            </Select>
+          <h2 className="font-bold">{differentSigners?"Persetujuan Surat":"Persetujuan dan Tanda Tangan"}</h2>
+          
+          {Array.from({length:count},(_,index)=><Field key={`approval-${index}`} label={isBill?(index===0?'SM pengaju':'Direktur'):differentSigners?'Penyetuju surat':'Penyetuju dan penandatangan'} required>
+            <OfficialChoice people={signers.filter(p=>!isBill||(index===0?p.position==='SM':p.position==='DIR'))} value={input.mandatoryApproverIds?.[index] || input.signerIds[index] || ''} onChange={value=>{if(!differentSigners){updateSigner(index,value);return;}const ids=[...(input.mandatoryApproverIds||[])];ids[index]=value;change('mandatoryApproverIds',ids);}} />
           </Field>)}
           {additionalApprovers.length > 0 && <Field label="Penyetuju tambahan (opsional)">
             {additionalApprovers.map(p=><label key={p.id} className="flex gap-2 text-sm"><input type="checkbox" checked={input.additionalApproverIds?.includes(p.id)||false} onChange={e=>change('additionalApproverIds',e.target.checked?[...(input.additionalApproverIds||[]),p.id]:(input.additionalApproverIds||[]).filter(id=>id!==p.id))}/>{p.name} — {p.title}</label>)}
           </Field>}
         </Card>}
         <Card className="p-5 space-y-4">
-          <h2 className="font-bold">Tanda Tangan Dokumen</h2>
+          <h2 className="font-bold">Cara Penandatanganan</h2>
+          {count>0&&canChooseDifferentSigners&&<label className="flex gap-2 text-sm"><input type="checkbox" checked={differentSigners} onChange={e=>setDifferentSigners(e.target.checked)}/>Penandatangan berbeda dari penyetuju</label>}
 
           {internal && !peer && (
             <label className="flex items-center gap-2 text-sm">
@@ -613,7 +623,7 @@ export function LetterEditor({
                 : "Surat eksternal memerlukan satu tanda tangan SM atau Direktur."}
             </p>
           )}
-          {Array.from({ length: count }, (_, index) => (
+          {differentSigners && Array.from({ length: count }, (_, index) => (
             <Field
               key={index}
               label={
@@ -626,27 +636,7 @@ export function LetterEditor({
               htmlFor={`signer-${index}`}
               required
             >
-              <Select
-                id={`signer-${index}`}
-                value={input.signerIds[index] || ""}
-                onChange={(e) => updateSigner(index, e.target.value)}
-                required
-              >
-                <option value="">Pilih pejabat</option>
-                {signers
-                  .filter(
-                    (p) =>
-                      !isBill ||
-                      (index === 0
-                        ? p.position === "SM"
-                        : p.position === "DIR"),
-                  )
-                  .map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.name} — {p.title}
-                    </option>
-                  ))}
-              </Select>
+              <OfficialChoice id={`signer-${index}`} people={signers.filter(p=>!isBill||(index===0?p.position==='SM':p.position==='DIR'))} value={input.signerIds[index] || ''} onChange={value=>updateSigner(index,value)} />
             </Field>
           ))}
           {count > 0 && (
@@ -657,10 +647,10 @@ export function LetterEditor({
                 onChange={(e) => change("signatureMode", e.target.value as any)}
               >
                 <option value="IN_APP">
-                  Melalui SIADocs — gambar TTD atau unggah hasil basah
+                  Melalui SIADocs
                 </option>
                 <option value="EXTERNAL">
-                  Di luar SIADocs — unduh dan tanda tangan basah
+                  Di luar SIADocs — unduh surat
                 </option>
               </Select>
             </Field>
@@ -794,4 +784,10 @@ export function AreaEditor({
       </Button>
     </fieldset>
   );
+}
+
+function OfficialChoice({people,value,onChange,id}:{people:{id:string;name:string;title:string}[];value:string;onChange:(value:string)=>void;id?:string}){
+ if(people.length===1 && (!value||value===people[0]!.id))return <p className="py-2 text-sm font-semibold">{people[0]!.name}</p>;
+ if(!people.length)return <p className="text-sm text-amber-800">Belum ada pejabat berwenang. Hubungi pengelola.</p>;
+ return <Select id={id} value={value} onChange={e=>onChange(e.target.value)} required><option value="">Pilih pejabat</option>{people.map(p=><option key={p.id} value={p.id}>{p.name} — {p.title}</option>)}</Select>;
 }

@@ -23,7 +23,7 @@ it('names the next disposition actor without treating a reply as completion',()=
  for(const [status,name] of [['NEW','Pelaksana'],['IN_PROGRESS','Pelaksana'],['IN_REVIEW','Pemberi'],['REVISION_REQUESTED','Pelaksana']] as const){
   const html=renderToStaticMarkup(<DispositionStatusBanner task={{status,giverName:'Pemberi',recipientName:'Pelaksana'} as any}/>);expect(html).toContain('Menunggu: '+name);expect(html).toContain('Pemberi Disposisi');expect(html).toContain('Penerima Tugas');
  }
- const done=renderToStaticMarkup(<DispositionStatusBanner task={{status:'DONE',giverName:'Pemberi',recipientName:'Pelaksana'} as any}/>);expect(done).not.toContain('Menunggu:');expect(done).toContain('Hasil tugas telah diterima.');
+ const done=renderToStaticMarkup(<DispositionStatusBanner task={{status:'DONE',giverName:'Pemberi',recipientName:'Pelaksana'} as any}/>);expect(done).not.toContain('Menunggu:');expect(done).toContain('Tahap: Selesai');
 });
 it('offers recovery and uses the download section for external finalized letters',()=>{
  const html=renderToStaticMarkup(<RecoveryState title="Surat tidak dapat dibuka" message="Surat tidak ditemukan atau Anda tidak memiliki akses." href="/surat" label="Kembali ke Daftar Surat"/>);expect(html).toContain('href="/surat"');expect(html).toContain('Ke Dashboard');

@@ -54,9 +54,11 @@ async def main():
    assert await fix.is_disabled();assert await dialog.get_by_text('Isi catatan perbaikan untuk mengaktifkan tombol Minta Perbaikan.',exact=True).is_visible()
    await dialog.get_by_role('textbox').fill('Lengkapi analisis');await fix.click();await page.get_by_text('Tahap: Perlu Perbaikan',exact=True).wait_for()
    await page.goto(base+'/?actor=recipient');assert await page.get_by_text('Menunggu: Rina Penguji — Penerima Tugas',exact=True).is_visible()
-   assert await page.get_by_text('Hasil diajukan:',exact=False).count()==1
+   await page.get_by_text('Riwayat hasil dan pemeriksaan',exact=True).click()
+   assert await page.get_by_text('Hasil diajukan:',exact=False).is_visible()
    await page.get_by_role('button',name='Kirim Hasil untuk Diperiksa',exact=True).click();dialog=page.get_by_role('dialog');await dialog.get_by_role('textbox').fill('Hasil diperbaiki');await dialog.get_by_role('button',name='Kirim kepada Pemberi',exact=True).click();await page.get_by_text('Tahap: Menunggu Pemeriksaan',exact=True).wait_for()
    await page.goto(base+'/?actor=giver');await page.get_by_role('button',name='Periksa Hasil',exact=True).click();await page.get_by_role('dialog').get_by_role('button',name='Terima Hasil dan Selesaikan',exact=True).click();await page.get_by_text('Tahap: Selesai',exact=True).wait_for()
+   await page.get_by_text('Riwayat hasil dan pemeriksaan',exact=True).click()
    assert await page.get_by_text('Hasil pertama',exact=False).count()>0 and await page.get_by_text('Lengkapi analisis',exact=False).count()>0
    assert await page.get_by_text('Hasil diperbaiki',exact=False).count()>0
    await page.locator('iframe').locator('..').scroll_into_view_if_needed()

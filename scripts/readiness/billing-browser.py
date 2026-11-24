@@ -31,6 +31,8 @@ async def main():
    await page.get_by_role('button',name='Simpan Draft',exact=True).click()
    await page.wait_for_timeout(300)
    assert len(saved)==1,await page.locator('body').inner_text()
+   assert saved[0]['signerIds']==['sm','dir'] and saved[0]['mandatoryApproverIds']==['sm','dir']
+   assert await page.locator('#signer-0').count()==0 and await page.locator('#signer-1').count()==0
    assert len(saved[0]['billing']['items'])==1 and saved[0]['billing']['items'][0]['documentNumber']=='1900000110'
    await page.get_by_role('button',name='Tambah Rincian',exact=True).click()
    assert await page.locator('#item-1').count()==1

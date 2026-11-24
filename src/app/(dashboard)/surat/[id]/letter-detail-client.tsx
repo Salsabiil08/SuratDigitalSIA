@@ -98,23 +98,22 @@ export function LetterDetailClient({
     (s) => s.signer_id === data.userId && s.status === "PENDING",
   );
   const next=letterNextStep(l,{creator:data.isCreator,review:!!activeReview,approval:!!activeApproval,signing:!!signing,sent:!!data.delivery?.dispatch,recipient:!!data.delivery?.recipientRole,received:!!data.delivery?.recipients.find((r:any)=>r.profile_id===data.userId)?.received_at});
+  const pendingSigner = data.signatures.find(s=>s.status==='PENDING')?.signer as unknown as {full_name?:string}|{full_name?:string}[]|undefined;
+  const pendingSignerName = Array.isArray(pendingSigner)?pendingSigner[0]?.full_name:pendingSigner?.full_name;
+  const waitingName = !data.delivery?.dispatch && !activeReview && !activeApproval && !signing ? (
+    data.reviews.find(r=>r.status==='PENDING'&&r.version_id===l.current_version_id)?.reviewer?.full_name ||
+    data.approvals.find(a=>a.status==='PENDING'&&a.version_id===l.current_version_id&&a.cycle===l.approval_cycle)?.approver?.full_name ||
+    pendingSignerName
+  ) : null;
   const documentUrl = `/api/letters/${id}/document?areas=1&revision=${l.revision}`;
   return (
-    <div className="max-w-5xl space-y-5">
+    <div className="max-w-6xl w-full space-y-5">
       <Link className="text-brand-red text-sm underline" href={backTo}>
         Kembali ke {origin==='kotak-masuk'?'Kotak Masuk':origin==='kotak-keluar'?'Kotak Keluar':'Surat Saya'}
       </Link>
       <PageHeader title={l.subject} actions={<RefreshStatusButton refresh={reload} disabled={busy}/>}/>
-      <Card className="p-5 border-l-4 border-brand-red space-y-2">
-        <p className="text-xs font-semibold text-neutral-500">LANGKAH BERIKUTNYA</p>
-        <h2 className="font-bold text-lg">{next.title}</h2><p className="text-sm">{next.description}</p>
-        {next.target&&<a href={`#${next.target}`} className="inline-block text-brand-red font-semibold underline text-sm">{next.title} ↓</a>}
-        <p className="text-xs text-neutral-500">Status diperbarui otomatis saat halaman aktif.</p>
-        {syncError&&<p role="status" className="text-xs text-amber-800">{syncError}</p>}
-      </Card>
-      <LetterCommentsPanel letterId={id} context={data.commentContext} onChanged={()=>{void reload().catch(()=>setSyncError("Komentar terkirim. Status tanggapan belum dapat diperbarui."));}}/>
-      <OfficialReplyPanel letterId={id} context={data.replyContext}/>
-      <DispositionLetterPanel letterId={id} context={data.dispositionContext}/>
+      {next.target && !(data.delivery?.dispatch && (!data.delivery?.recipientRole || data.delivery?.recipientRole==='CC' || data.delivery?.recipients.find((r:any)=>r.profile_id===data.userId)?.received_at)) && <a href={`#${next.target}`} className="inline-flex rounded-full bg-brand-red text-white px-4 py-2 text-sm font-semibold">{next.title}</a>}
+      {syncError&&<p role="status" className="text-sm text-amber-800">{syncError}</p>}
       {error && (
         <ActionNotice>
           {error}
@@ -132,6 +131,7 @@ export function LetterDetailClient({
           </span>
           <span className="text-sm">{l.type.name}</span>
         </div>
+        {waitingName&&<p className="text-sm font-semibold">Menunggu: {waitingName}</p>}
         <dl className="grid sm:grid-cols-2 gap-3 text-sm">
           <div>
             <dt className="text-neutral-500">Nomor resmi</dt>
@@ -185,10 +185,10 @@ export function LetterDetailClient({
       </Card>
       {l.type.category==='INTERNAL' && <Card id="delivery" className="p-5 space-y-3 scroll-mt-24">
         <h2 className="font-bold">Pengiriman dan Penerimaan</h2>
-        <p className="text-sm">Dokumen: {l.finalized_at?'Final dan terkunci':'Belum final'} · Pengiriman: {data.delivery?.dispatch?'Terkirim':'Belum dikirim'}</p>
+        {!data.delivery?.dispatch && <p className="text-sm">Belum dikirim</p>}
         {data.delivery?.dispatch && <>
-          <p className="text-sm">Dikirim pada {new Date(data.delivery.dispatch.sent_at).toLocaleString('id-ID',{timeZone:'Asia/Jakarta'})} WIB. Dokumen yang dikirim disimpan sebagai bukti pengiriman.</p>
-          {(data.delivery.recipients as {profile_id:string;recipient_role:string;read_at:string|null;received_at:string|null}[]).map(r=><p key={r.profile_id} className="text-sm">{r.recipient_role==='PRIMARY'?'Penerima utama':'Tembusan'} · {r.read_at?'Dibaca pada '+new Date(r.read_at).toLocaleString('id-ID',{timeZone:'Asia/Jakarta'})+' WIB':'Belum dibaca'} · {r.recipient_role==='CC'?'Salinan, tanpa konfirmasi penerimaan utama':r.received_at?'Penerimaan dikonfirmasi':'Belum ada konfirmasi penerimaan'} · {r.recipient_role==='CC'?'Tidak otomatis wajib membalas':responseLabel(!!data.commentContext?.recipientCommented,!!data.replyContext.recipients.find(x=>x.profileId===r.profile_id)?.repliedAt)}</p>)}
+          <p className="text-sm">Dikirim pada {new Date(data.delivery.dispatch.sent_at).toLocaleString('id-ID',{timeZone:'Asia/Jakarta'})} WIB.</p>
+          {(data.delivery.recipients as {profile_id:string;recipient_role:string;read_at:string|null;received_at:string|null}[]).map(r=><p key={r.profile_id} className="text-sm">{r.recipient_role==='PRIMARY'?'Penerima utama':'Tembusan'} · {r.read_at?'Dibaca pada '+new Date(r.read_at).toLocaleString('id-ID',{timeZone:'Asia/Jakarta'})+' WIB':'Belum dibaca'} · {r.recipient_role==='CC'?'Salinan, tanpa konfirmasi penerimaan utama':r.received_at?'Penerimaan dikonfirmasi':'Belum ada konfirmasi penerimaan'}</p>)}
           <p className="text-xs text-neutral-600">Membuka surat tidak mengonfirmasi penerimaan.</p>
           {data.delivery.recipientRole==='PRIMARY' && !data.delivery.recipients.find((r:any)=>r.profile_id===data.userId)?.received_at && <Button isLoading={busy} onClick={()=>act(()=>receiveInternalLetterAction(data.delivery.dispatch.id),'Penerimaan Anda telah dicatat.')}>Konfirmasi Terima Surat</Button>}
         </>}
@@ -211,9 +211,7 @@ export function LetterDetailClient({
               unsigned={data.versions.find(version => version.version_kind === 'NUMBERED')}
               signatureCount={l.required_signature_count}
               fullVersionAccess={!!data.delivery?.fullVersionAccess} />
-            <p className="text-xs text-neutral-500">
-              Versi dokumen {v.version_no}
-            </p>
+
           </>
         ) : (
           <p className="text-sm text-amber-800">
@@ -261,14 +259,6 @@ export function LetterDetailClient({
           </Button>
         )}
       </div>
-      {data.reviews.length > 0 && <Card className="p-5 space-y-3">
-        <h2 className="font-bold">Riwayat Pemeriksaan</h2>
-        {data.reviews.map(r => <div key={r.id} className="text-sm border-b pb-2">
-          <p>{r.reviewer?.full_name} — {r.status === 'PASSED' ? 'Lolos pemeriksaan' : r.status === 'REVISION_REQUESTED' ? 'Perlu perbaikan' : 'Menunggu pemeriksaan'}{r.version_id !== l.current_version_id ? ' (pemeriksaan naskah sebelum perubahan dokumen)' : ''}</p>
-          {r.decision_note && <p>Catatan: {r.decision_note}</p>}
-          {r.comments.map((c: { id: string; note: string }) => <p key={c.id}>Catatan pemeriksa: {c.note}</p>)}
-        </div>)}
-      </Card>}
       {activeReview && <Card className="p-5 space-y-4">
         <h2 className="font-bold">Hasil Pemeriksaan Naskah</h2>
         <p className="text-sm">Beri catatan pemeriksaan. Perubahan isi dilakukan pembuat surat.</p>
@@ -277,7 +267,7 @@ export function LetterDetailClient({
         <div className="flex gap-3 flex-wrap">{([['COMMENT','Simpan Catatan'],['PASS','Lolos Pemeriksaan'],['REQUEST_REVISION','Minta Perbaikan']] as const).map(([action,label]) =>
           <Button key={action} disabled={!previewed} disabledReason={!previewed?"Tunggu pratinjau selesai dimuat, lalu periksa dokumen.":action!=='PASS'&&!note.trim()?"Isi catatan pemeriksaan terlebih dahulu.":undefined} isLoading={busy} variant={action === 'PASS' ? 'primary' : 'secondary'} onClick={() => act(() => decideReviewAction(activeReview.id, activeReview.version_id, l.revision, action, note), 'Hasil pemeriksaan tersimpan.')}>{label}</Button>)}</div>
       </Card>}
-      {data.approvals.length>0 && <Card className="p-5 space-y-2"><h2 className="font-bold">Riwayat Persetujuan</h2>{data.approvals.map(a=><p key={a.id} className="text-sm">Tahap {a.step_order}: {a.approver?.full_name} — {displayLabel(a.status)}{a.version_id!==l.current_version_id?(a.cycle===l.approval_cycle&&a.version_id===l.approval_plan_version?' — Persetujuan sebelum penerbitan nomor':' — Persetujuan terdahulu; periksa riwayat perubahan'):''}{a.decision_origin==='CREATOR_SUBMISSION'?' — dikonfirmasi pembuat saat pengajuan':''}</p>)}</Card>}
+
       {data.isCreator && !l.official_number && !l.finalized_at && ['IN_REVIEW','READY_TO_ISSUE'].includes(l.status) && <Card className="p-5 space-y-3"><h2 className="font-bold">Koreksi Pengajuan</h2><p className="text-sm">Tarik pengajuan untuk menyimpan versi koreksi. Keputusan lama tetap tercatat dan tidak berlaku untuk versi baru.</p><textarea aria-label="Alasan koreksi" className="border rounded-xl p-3 w-full" value={note} onChange={e=>setNote(e.target.value)}/><Button variant="secondary" isLoading={busy} onClick={()=>act(()=>restartApprovalAction(id,l.revision,note),'Pengajuan ditarik. Edit dan simpan versi baru sebelum mengajukan kembali.')}>Tarik untuk Koreksi</Button></Card>}
       {activeApproval && (
         <Card className="p-5 space-y-4">
@@ -448,12 +438,20 @@ export function LetterDetailClient({
           ))}
         </Card></details>
       )}
-      <Card className="p-5 space-y-3">
-        <h2 className="font-bold">Riwayat Persetujuan dan TTD</h2>
+      <LetterCommentsPanel letterId={id} context={data.commentContext} onChanged={()=>{void reload().catch(()=>setSyncError("Komentar terkirim. Status tanggapan belum dapat diperbarui."));}}/>
+      <OfficialReplyPanel letterId={id} context={data.replyContext}/>
+      <DispositionLetterPanel letterId={id} context={data.dispositionContext}/>
+      {(data.reviews.length>0 || data.approvals.length>0 || data.signatures.length>0) && <details id="history" className="rounded-xl border bg-white p-5 space-y-3"><summary className="cursor-pointer font-bold">Riwayat Surat</summary>
+        {data.reviews.map(r => <div key={r.id} className="text-sm border-b pb-2">
+          <p>{r.reviewer?.full_name} — {r.status === 'PASSED' ? 'Lolos pemeriksaan' : r.status === 'REVISION_REQUESTED' ? 'Perlu perbaikan' : 'Menunggu pemeriksaan'}{r.version_id !== l.current_version_id ? ' (pemeriksaan naskah sebelum perubahan dokumen)' : ''}</p>
+          {r.decision_note && <p>Catatan: {r.decision_note}</p>}
+          {r.comments.map((c: { id: string; note: string }) => <p key={c.id}>Catatan pemeriksa: {c.note}</p>)}
+        </div>)}
         {data.approvals.map((a) => (
           <p key={a.id} className="text-sm border-b py-2">
-            Siklus {a.cycle}, tahap {a.step_order}:{" "}
+            Pengajuan {a.cycle}, tahap {a.step_order}:{" "}
             {(a.approver as any)?.full_name} — {displayLabel(a.status)}
+            {a.version_id!==l.current_version_id && <span className="text-neutral-500"> · {a.cycle===l.approval_cycle && a.version_id===l.approval_plan_version ? "Naskah sebelum penomoran" : "Versi sebelumnya"}</span>}
             {a.decision_note ? ` · ${a.decision_note}` : ""}
             {a.decided_at
               ? ` · ${new Date(a.decided_at).toLocaleString("id-ID", { timeZone: "Asia/Jakarta" })} WIB`
@@ -465,9 +463,9 @@ export function LetterDetailClient({
             TTD {s.sign_order}: {(s.signer as any)?.full_name} —{" "}
             {displayLabel(s.status)}{" "}
             {s.method === "IMAGE"
-              ? "(gambar TTD, bukan TTE tersertifikasi)"
+              ? "· Gambar tanda tangan"
               : s.method === "WET_UPLOAD"
-                ? "(unggahan hasil TTD basah)"
+                ? "· Unggahan tanda tangan basah"
                 : ""}
             {s.stamp_included ? " · Dengan stempel" : ""}
             {s.uploaded_at
@@ -475,12 +473,7 @@ export function LetterDetailClient({
               : ""}
           </p>
         ))}
-        {data.approvals.length === 0 && (
-          <p className="text-sm text-neutral-500">
-            Belum ada tahapan persetujuan.
-          </p>
-        )}
-      </Card>
+      </details>}
     </div>
   );
 }

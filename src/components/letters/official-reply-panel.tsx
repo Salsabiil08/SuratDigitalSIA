@@ -21,17 +21,17 @@ export function OfficialReplyPanel({letterId,context}:{letterId:string;context:R
   }catch(e){setError(e instanceof Error?e.message:'Balasan belum dapat dibuat.');}finally{setBusy(false);}
  }
  if(!context.seed&&!context.links.length)return null;
- return <Card className="p-5 space-y-3">
-  <h2 className="font-bold">Balasan dengan Surat Resmi (Opsional)</h2>
+ return <details className="rounded-xl border bg-white p-4 space-y-3">
+  <summary className="cursor-pointer font-semibold">Surat terkait dan balasan resmi</summary>
   {error&&<ActionNotice>{error}</ActionNotice>}
-  {context.seed&&<><p className="text-sm">Jika diperlukan, balasan resmi menggunakan surat dan nomor baru. Kategori awal mengikuti surat asal; periksa sebelum mengajukan.</p><Button onClick={create} isLoading={busy}>Balas dengan Surat Resmi</Button></>}
+  {context.seed&&<><Button onClick={create} isLoading={busy}>Balas dengan Surat Resmi</Button></>}
 
   {context.links.length===0?null:<ul className="space-y-3">{context.links.map(link=><li key={link.id} className="border rounded-xl p-3 text-sm break-words">
    <p className="font-semibold">{link.direction==='ORIGIN'?'Surat asal':'Surat balasan'}: {link.subject}</p>
-   <p>Nomor: {link.officialNumber||'Belum diterbitkan'} · Identitas: {link.letterId}</p>
+   <p>Nomor: {link.officialNumber||'Belum diterbitkan'}</p>
    <p>Hubungan dibuat oleh {link.actorName} pada {mailboxDate(link.createdAt)}</p>
    <p>{link.direction==='ORIGIN'?'Balasan ini':'Balasan'}: {link.sentAt?`Sudah dikirim pada ${mailboxDate(link.sentAt)}`:'Belum dikirim; belum tercatat sebagai balasan terkirim'}</p>
    <Link prefetch={false} className="text-brand-red underline" href={`/surat/${encodeURIComponent(link.letterId)}`}>Buka {link.direction==='ORIGIN'?'Surat Asal':'Surat Balasan'}</Link>
   </li>)}</ul>}
- </Card>;
+ </details>;
 }

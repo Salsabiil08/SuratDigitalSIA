@@ -21,6 +21,7 @@ async def main():
    async def letter(route):official.append(1);await route.fulfill(json={})
    await context.route('**/comment-data',data);await context.route('**/comment-action',post);await context.route('**/official-reply',letter)
    page=await context.new_page();await page.goto(base)
+   await page.get_by_text('Surat terkait dan balasan resmi',exact=True).click()
    assert await page.get_by_role('button',name='Balas dengan Surat Resmi',exact=True).is_visible()
    await page.get_by_role('button',name='Balas dengan Komentar',exact=True).click()
    send=page.get_by_role('button',name='Kirim Komentar',exact=True);assert await send.is_disabled()

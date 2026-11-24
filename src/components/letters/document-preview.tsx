@@ -78,7 +78,7 @@ export function DocumentPreview({
             if (format === "PDF" && pdfReady.current) onLoaded?.();
           }}
         />
-      {format === 'DOCX' && <p className="text-xs text-neutral-500">Tata letak pratinjau dapat sedikit berbeda dari Word.</p>}
+
     </div>
   );
 }
