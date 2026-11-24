@@ -63,8 +63,8 @@ export function LiveClock({ variant = 'default', className = '' }: LiveClockProp
       <div className={`flex items-center gap-2 px-2.5 py-1 bg-black/25 text-white rounded-full text-xs font-mono border border-white/15 shadow-xs shrink-0 select-none ${className}`}>
         <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
         <span className="font-bold tracking-tight text-white">{timeStr}</span>
-        <span className="text-white/40">&bull;</span>
-        <span className="text-white/80 text-[11px] font-sans font-medium">{shortDateStr}</span>
+        <span className="hidden xl:inline text-white/40">&bull;</span>
+        <span className="hidden xl:inline text-white/80 text-[11px] font-sans font-medium">{shortDateStr}</span>
       </div>
     );
   }

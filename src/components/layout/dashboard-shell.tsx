@@ -136,7 +136,7 @@ export function DashboardShell({
           {/* Sisi Kanan: Jam Realtime, Notifikasi Bell, Profil Pengguna & Logout */}
           <div className="flex items-center gap-2 sm:gap-3 shrink-0">
             {/* Jam Realtime Topbar */}
-            <div className="hidden xl:block">
+            <div className="hidden sm:block">
               <LiveClock variant="topbar" />
             </div>
 
