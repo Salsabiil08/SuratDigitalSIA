@@ -26,7 +26,8 @@
       "fix/pr08-remove-header-search": false,
       "fix/pr08-user-activities": false,
       "fix/pr08-remove-two-test-letters": false,
-      "fix/pr08-inbox-copy": false
+      "fix/pr08-inbox-copy": false,
+      "fix/pr08-outbox-copy": false
     }
   }
 }
