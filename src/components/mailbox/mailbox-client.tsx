@@ -23,7 +23,6 @@ export function MailboxClient({folder,data,query}:{folder:MailboxFolder;data:Mai
    <Button type="submit">Cari</Button>
   </form>
   <nav aria-label="Filter kotak surat" className="flex gap-2 flex-wrap">{Object.entries(MAILBOX_FILTERS).map(([key,label])=><Link key={key} prefetch={false} aria-current={query.filter===key?'page':undefined} href={mailboxHref(folder,{...current,filter:key as MailboxFilter,page:1})} className={`rounded-full border px-3 py-2 text-sm ${query.filter===key?'bg-red-50 border-red-300 text-brand-red':'bg-white text-neutral-700'}`}>{label}</Link>)}</nav>
-  <p className="text-xs text-neutral-600">{data.total} surat sesuai pencarian dan filter. Filter penerimaan hanya menghitung penerima utama; CC tidak memerlukan konfirmasi penerimaan utama.</p>
   {data.items.length===0?<Card className="p-6 text-sm text-neutral-600">{query.q||query.filter!=='ALL'?'Tidak ada surat yang sesuai pencarian atau filter ini.':'Belum ada surat resmi di '+title.toLowerCase()+'.'}</Card>:<div className="space-y-3">{data.items.map(item=>{
    const summary=recipientSummary(item.recipients);
    return <Card key={item.dispatch_id} className="p-4 sm:p-5 space-y-3">
