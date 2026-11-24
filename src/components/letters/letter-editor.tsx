@@ -14,6 +14,7 @@ import { PageHeader } from "@/components/ui/page-header";
 import { Card } from "@/components/ui/card";
 import { Field, Input, Select, Textarea } from "@/components/ui/field";
 import { Button } from "@/components/ui/button";
+import { RupiahInput } from "@/components/ui/rupiah-input";
 import {peerInternal} from "@/domain/peer-internal";
 import { higherReviewer } from "@/domain/reviewer-hierarchy";
 import { terbilangRupiah } from "@/domain/terbilang";
@@ -463,8 +464,8 @@ export function LetterEditor({
         </Card>
         {isBill && input.billing && (
           <Card className="p-5 space-y-4">
-            <h2 className="font-bold">Rincian Permintaan Pembayaran</h2>
-            <p className="text-sm text-neutral-600">Setiap baris akan ditampilkan sebagai tabel pada surat. Isi bank penyalur serta rekening masing-masing penerima.</p>
+            <h2 className="font-bold">{input.source==='UPLOAD'?'Data Pencatatan Tagihan':'Rincian Permintaan Pembayaran'}</h2>
+            <p className="text-sm text-neutral-600">{input.source==='UPLOAD'?'Isi sesuai dokumen yang diunggah. Data ini tidak mengubah dokumen impor.':'Isi rincian pembayaran yang akan dicantumkan pada surat.'}</p>
             <Field label="Bank Penyalur Pembayaran" htmlFor="bank" required>
               <Select
                 id="bank"
@@ -501,13 +502,13 @@ export function LetterEditor({
             )}
             {input.billing.items.map((item, index) => (
               <div className="grid sm:grid-cols-2 gap-3" key={index}>
-                <div className="sm:col-span-2 font-semibold">Rincian {index + 1}</div>
+                <div className="sm:col-span-2 flex items-center justify-between gap-3"><h3 className="font-semibold">Rincian {index + 1}</h3>{input.billing!.items.length>1 && <Button type="button" variant="ghost" size="sm" aria-label={`Hapus rincian ${index+1}`} onClick={()=>change('billing',{...input.billing!,items:input.billing!.items.filter((_,i)=>i!==index)})}>Hapus</Button>}</div>
                 {([{key:'documentNumber',label:'No Dokumen'},{key:'payeeName',label:'Penerima Pembayaran'},{key:'bankName',label:'Bank Penerima'},{key:'accountNumber',label:'No Rekening Penerima'}] as const).map(({key,label})=>(
                   <Field key={key} label={label} htmlFor={`${key}-${index}`} required>
                     <Input id={`${key}-${index}`} value={item[key] || ''} required maxLength={key==='documentNumber'?120:500} onChange={e=>{const items=[...input.billing!.items];items[index]={...item,[key]:e.target.value};change('billing',{...input.billing!,items});}}/>
                   </Field>
                 ))}
-                <Field label={`Keterangan ${index + 1}`} htmlFor={`item-${index}`}>
+                <Field label={`Keterangan ${index + 1}`} htmlFor={`item-${index}`} required>
                   <Input
                     id={`item-${index}`}
                     required
@@ -519,26 +520,8 @@ export function LetterEditor({
                     }}
                   />
                 </Field>
-                <Field
-                  label={`Nominal ${index + 1}`}
-                  htmlFor={`amount-${index}`}
-                >
-                  <Input
-                    id={`amount-${index}`}
-                    type="number"
-                    min="0.01"
-                    step="0.01"
-                    required
-                    value={item.amount || ""}
-                    onChange={(e) => {
-                      const items = [...input.billing!.items];
-                      items[index] = {
-                        ...item,
-                        amount: Number(e.target.value),
-                      };
-                      change("billing", { ...input.billing!, items });
-                    }}
-                  />
+                <Field label={`Nominal ${index + 1} (Rp)`} htmlFor={`amount-${index}`} required>
+                  <RupiahInput id={`amount-${index}`} value={item.amount} onValueChange={amount=>{const items=[...input.billing!.items];items[index]={...item,amount};change('billing',{...input.billing!,items});}}/>
                 </Field>
               </div>
             ))}
@@ -551,27 +534,14 @@ export function LetterEditor({
                     ...input.billing!,
                     items: [
                       ...input.billing!.items,
-                      { description: "", amount: 0, documentNumber: "", payeeName: input.billing!.accountHolder, bankName: options.banks.find(b=>b.id===input.billing!.bankId)?.name||input.billing!.bankName||"", accountNumber: input.billing!.accountNumber },
+                      { description: "", amount: 0, documentNumber: "", payeeName: "", bankName: "", accountNumber: "" },
                     ],
                   })
                 }
               >
                 Tambah Rincian
               </Button>
-              {input.billing.items.length > 1 && (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  onClick={() =>
-                    change("billing", {
-                      ...input.billing!,
-                      items: input.billing!.items.slice(0, -1),
-                    })
-                  }
-                >
-                  Hapus Baris Terakhir
-                </Button>
-              )}
+
             </div>
             <p className="text-sm">
               Total: Rp{" "}
