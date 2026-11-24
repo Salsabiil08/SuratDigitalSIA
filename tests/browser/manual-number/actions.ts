@@ -1,0 +1,1 @@
+export async function reserveManualNumber(input:any){const w=window as any;(w.requests ||= []).push(input);await new Promise(r=>setTimeout(r,100));if(w.requests.length===1)return {success:false,error:'Koneksi terputus. Coba lagi.'};return {success:true,id:'reserved-fixture',number:'00025-IN/FIN/SIA/11.2026'};}

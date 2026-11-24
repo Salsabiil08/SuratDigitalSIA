@@ -26,6 +26,8 @@ function draftFromData(
   const l = data.letter,
     v = data.versions.find((v) => v.id === l.current_version_id);
   return {
+    manualNumberId:l.manual_number_reservation_id || undefined,
+    manualNumberConfirmed:false,
     id: l.id,
     categoryCode: l.document_category?.code || "",
     reviewerId: l.reviewer_id || "",
@@ -63,6 +65,7 @@ function draftFromData(
   };
 }
 export function LetterEditor({
+  manualReservation,
   source = "CREATE",
   billing = false,
   id,
@@ -71,6 +74,7 @@ export function LetterEditor({
   initialOptions,
   initialData,
 }: {
+  manualReservation?:import("@/server/manual-numbers").ManualNumber;
   source?: "CREATE" | "UPLOAD";
   billing?: boolean;
   id?: string;
@@ -80,18 +84,21 @@ export function LetterEditor({
   initialData?: Awaited<ReturnType<typeof getWorkflowLetter>>;
 }) {
   const router = useRouter();
+  const manualNumber=manualReservation || initialData?.manualNumber;
   const options = initialOptions;
   const [input, setInput] = useState<DraftInput>(() =>
     initialData
       ? draftFromData(initialData)
       : {
+          manualNumberId:manualReservation?.id,
+          manualNumberConfirmed:false,
           source,
           categoryCode: "",
           reviewerId: "",
           reviewRequested: false,
           dispositionId,
-          letterTypeCode: billing ? "Tag" : "IN",
-          subject: dispositionSeed?.subject||(billing ? "Permintaan Pembayaran" : ""),
+          letterTypeCode: manualReservation?.typeCode || (billing ? "Tag" : "IN"),
+          subject: manualReservation?.subject || dispositionSeed?.subject||(billing ? "Permintaan Pembayaran" : ""),
           letterDate: jakartaDate(),
           dateReason: "",
           recipientUserId: dispositionSeed?.recipientId||"",
@@ -100,8 +107,8 @@ export function LetterEditor({
           recipientAddress: "",
           content: billing ? "<p>Mohon dapat disetujui pembayaran melalui bank yang tercantum, sebagai berikut:</p>" : "",
           contentFormat: "HTML",
-          signatureMode: "IN_APP",
-          signerIds: [],
+          signatureMode: manualReservation ? "EXTERNAL" : "IN_APP",
+          signerIds: manualReservation?.reserved_signer_id ? [manualReservation.reserved_signer_id] : [],
           areas: [],
           billing: billing
             ? {
@@ -182,6 +189,7 @@ export function LetterEditor({
     setBusy(true);
     setError("");
     try {
+      if(manualNumber && !input.manualNumberConfirmed)throw new Error("Konfirmasi nomor pada dokumen unggahan terlebih dahulu.");
       const ids = input.signerIds.slice(0, count);
       if (ids.length !== count || ids.some((id) => !id))
         throw new Error("Pilih seluruh pejabat penandatangan wajib.");
@@ -242,6 +250,7 @@ export function LetterEditor({
         }}
         className="space-y-5"
       >
+        {manualNumber && <Card className="p-5 space-y-3"><h2 className="font-bold">Nomor Surat</h2><p className="font-mono break-all">{manualNumber.official_number}</p><label className="flex gap-2 text-sm"><input type="checkbox" required checked={!!input.manualNumberConfirmed} onChange={e=>change("manualNumberConfirmed",e.target.checked)}/>Saya sudah mencantumkan nomor ini pada dokumen yang diunggah.</label></Card>}
         {input.source==='UPLOAD' && <Card className="p-5 space-y-4"><h2 className="font-bold">Unggah Surat</h2>
               <Field
                 label={
@@ -250,7 +259,7 @@ export function LetterEditor({
                     : "Dokumen Impor (PDF/DOCX, maks. 3 MB)"
                 }
                 htmlFor="document-file"
-                hint="Isi dan format surat dipertahankan. DOCX memerlukan tempat nomor otomatis; untuk dokumen tanpa tempat tersebut, unggah PDF dan tentukan area nomor."
+                hint={manualNumber ? "Unggah surat yang sudah Anda beri nomor. Isi dokumen dipertahankan." : "Isi dan format surat dipertahankan. DOCX memerlukan tempat nomor otomatis; untuk dokumen tanpa tempat tersebut, unggah PDF dan tentukan area nomor."}
               >
                 <Input
                   id="document-file"
@@ -260,6 +269,7 @@ export function LetterEditor({
                   onChange={(e) => {
                     const f = e.target.files?.[0] || null;
                     setFile(f);
+                    change("manualNumberConfirmed",false);
                     if(f){setInput(old=>({...old,numberArea:undefined,areas:[],stampArea:undefined}));setStampPrepared(false);}
                     if (f)
                       setCurrentFormat(
@@ -285,7 +295,7 @@ export function LetterEditor({
               <Select
                 id="letter-type"
                 value={input.letterTypeCode}
-                disabled={!!id || billing}
+                disabled={!!id || billing || !!manualNumber}
                 onChange={(e) => setType(e.target.value as any)}
               >
                 <option value="IN">Internal</option>
@@ -628,8 +638,8 @@ export function LetterEditor({
 
         </Card>
         </>}
-        {currentFormat==='PDF' && input.source==='UPLOAD' && <Card className="p-5">
-          <PdfPlacement file={file} url={id?`/api/letters/${id}/document?original=1&revision=${initialData?.letter.revision||0}`:undefined}
+        {currentFormat==='PDF' && input.source==='UPLOAD' && (!manualNumber || input.signatureMode==='IN_APP' && count>0) && <Card className="p-5">
+          <PdfPlacement omitNumber={!!manualNumber} file={file} url={id?`/api/letters/${id}/document?original=1&revision=${initialData?.letter.revision||0}`:undefined}
             numberArea={input.numberArea} signatureAreas={input.areas}
             signatureLabels={input.signatureMode==='IN_APP'?Array.from({length:count},(_,i)=>isBill?(i===0?'TTD SM':'TTD Dirut'):'Tanda Tangan'):[]}
             stampArea={input.stampArea} stampEnabled={stampPrepared && input.signatureMode==='IN_APP' && count>0}

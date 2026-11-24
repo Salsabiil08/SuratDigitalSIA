@@ -3,12 +3,12 @@ import {useEffect,useState} from 'react';
 import type {SignatureArea} from '@/domain/workflow';
 import {PdfCanvas,type PdfArea} from './pdf-canvas';
 import {Button} from '@/components/ui/button';
-export function PdfPlacement({file,url,numberArea,signatureAreas,signatureLabels,stampArea,stampEnabled,onStampEnabled,onPlace,onReset}:{file:File|null;url?:string;numberArea?:SignatureArea;signatureAreas:SignatureArea[];signatureLabels:string[];stampArea?:SignatureArea;stampEnabled:boolean;onStampEnabled:(value:boolean)=>void;onPlace:(key:string,area:SignatureArea)=>void;onReset:()=>void}){
+export function PdfPlacement({omitNumber=false,file,url,numberArea,signatureAreas,signatureLabels,stampArea,stampEnabled,onStampEnabled,onPlace,onReset}:{omitNumber?:boolean;file:File|null;url?:string;numberArea?:SignatureArea;signatureAreas:SignatureArea[];signatureLabels:string[];stampArea?:SignatureArea;stampEnabled:boolean;onStampEnabled:(value:boolean)=>void;onPlace:(key:string,area:SignatureArea)=>void;onReset:()=>void}){
  const [blob,setBlob]=useState<Blob|null>(null),[error,setError]=useState(''),[attempt,setAttempt]=useState(0),[active,setActive]=useState('number'),[selecting,setSelecting]=useState(true);
  useEffect(()=>{const controller=new AbortController();let alive=true;setBlob(null);setError('');setActive('number');if(file){setBlob(file);return;}if(!url)return;
   void (async()=>{try{const res=await fetch(url,{cache:'no-store',signal:controller.signal});if(!res.ok)throw new Error();const bytes=await res.blob();if(alive)setBlob(bytes);}catch{if(alive)setError('PDF belum dapat dimuat. Coba kembali.');}})();return()=>{alive=false;controller.abort();};
  },[file,url,attempt]);
- const slots:PdfArea[]=[{key:'number',label:'Nomor Surat',area:numberArea,defaultSize:{width:220,height:24}},...signatureLabels.map((label,i)=>({key:`signature-${i}`,label,area:signatureAreas[i],defaultSize:{width:140,height:55}})),...(stampEnabled?[{key:'stamp',label:'Stempel',area:stampArea,defaultSize:{width:90,height:60}}]:[])];
+ const slots:PdfArea[]=[...(omitNumber?[]:[{key:'number',label:'Nomor Surat',area:numberArea,defaultSize:{width:220,height:24}}]),...signatureLabels.map((label,i)=>({key:`signature-${i}`,label,area:signatureAreas[i],defaultSize:{width:140,height:55}})),...(stampEnabled?[{key:'stamp',label:'Stempel',area:stampArea,defaultSize:{width:90,height:60}}]:[])];
  const current=slots.find(s=>s.key===active)||slots[0]!;
  function place(key:string,area:SignatureArea){onPlace(key,area);const index=slots.findIndex(s=>s.key===key);const next=slots.slice(index+1).find(s=>!s.area);if(next)setActive(next.key);}
  return <div className="space-y-3">

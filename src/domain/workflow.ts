@@ -7,6 +7,8 @@ export interface SignatureArea {
   height: number;
 }
 export interface DraftInput {
+  manualNumberId?: string;
+  manualNumberConfirmed?: boolean;
   mandatoryApproverIds?: string[];
   additionalApproverIds?: string[];
   categoryCode?: string;

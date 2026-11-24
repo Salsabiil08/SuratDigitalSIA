@@ -138,7 +138,7 @@ export function LetterDetailClient({
           <div>
             <dt className="text-neutral-500">Nomor resmi</dt>
             <dd className="font-mono font-bold">
-              {l.official_number || "Belum diterbitkan"}
+              {l.official_number || data.manualNumber?.official_number || "Belum diterbitkan"}
             </dd>
           </div>
           <div>
@@ -254,11 +254,11 @@ export function LetterDetailClient({
             onClick={() =>
               act(
                 () => issueLetterNumberAction(id),
-                "Nomor resmi berhasil diterbitkan. Tanggal surat tetap.",
+                l.manual_number_reservation_id ? "Dokumen bernomor siap dilanjutkan." : "Nomor resmi berhasil diterbitkan. Tanggal surat tetap.",
               )
             }
           >
-            Terbitkan Nomor Surat
+            {l.manual_number_reservation_id ? "Lanjutkan Dokumen Bernomor" : "Terbitkan Nomor Surat"}
           </Button>
         )}
       </div>

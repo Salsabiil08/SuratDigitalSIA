@@ -61,8 +61,8 @@ export async function issueLetterNumberAction(id: string) {
     if (l.creator_id !== user.id)
       throw new Error("Hanya pembuat dapat menerbitkan nomor.");
     const { data, error } = await createAdminClient().rpc(
-      "issue_letter_number",
-      { p_letter_id: id, p_actor: user.id, p_idempotency_key: `issue-${id}` },
+      l.manual_number_reservation_id ? "activate_manual_letter_number" : "issue_letter_number",
+      { p_letter_id: id, p_actor: user.id, ...(l.manual_number_reservation_id ? {} : {p_idempotency_key: `issue-${id}`}) },
     );
     if (error) throw new Error(error.message);
     const numbered = await readLetter(id);

@@ -78,7 +78,9 @@ export async function getWorkflowLetter(id: string) {
   if(de)throw new Error('Informasi pengiriman belum dapat diambil.');
   let ccOptions: {id:string;full_name:string}[]=[];
   if(delivery?.ccEnabled&&delivery?.canDispatch){const {data:ccPeople,error:cce}=await db.from('profiles').select('id,full_name').eq('is_active',true);if(cce)throw new Error('Penerima tembusan belum dapat diambil.');ccOptions=ccPeople||[];}
+  const manualNumber=l.manual_number_reservation_id ? (await createAdminClient().from("manual_number_reservations").select("id,official_number,subject,reserved_signer_id,letter_id,status").eq("id",l.manual_number_reservation_id).eq("letter_id",id).single()).data : null;
   return {
+    manualNumber,
     commentContext,
     dispositionContext,
     replyContext,
@@ -110,14 +112,19 @@ export async function reviewLetterAction(
       await assertPeerLetterPlan(l);
       if(l.reviewer_id)await assertReviewerHierarchy(l.creator_id,l.reviewer_id);
       const doc = await downloadVersion(l, false);
+      if(l.manual_number_reservation_id){
+        const {data:r,error}=await createAdminClient().from("manual_number_reservations").select("uploaded_version_id,uploaded_hash,confirmed_at,owner_id").eq("id",l.manual_number_reservation_id).eq("letter_id",id).single();
+        if(error || !r || r.owner_id!==user.id || !r.confirmed_at || r.uploaded_version_id!==doc.version.id || r.uploaded_hash!==doc.version.file_hash)throw new Error("Konfirmasi ulang dokumen yang sudah diberi nomor.");
+      }
       await inspectDocument(
         doc.bytes,
         doc.format,
         l.signature_mode==='EXTERNAL'?0:l.required_signature_count,
         l.signature_mode==='EXTERNAL'?[]:l.signature_areas,
         true,
+        ...(l.manual_number_reservation_id ? [false] : []),
       );
-      if (doc.format === "PDF" && !l.number_area)
+      if (doc.format === "PDF" && !l.manual_number_reservation_id && !l.number_area)
         throw new Error(
           "Tentukan area nomor resmi pada PDF sebelum mengajukan.",
         );

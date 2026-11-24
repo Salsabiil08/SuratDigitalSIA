@@ -38,7 +38,7 @@ export async function GET(
     if(variant === 'unsigned' && doc.version.version_kind === 'SIGNED')throw new Error('Versi surat tanpa tanda tangan belum tersedia.');
     if(variant === 'signed' && doc.version.version_kind !== 'SIGNED')throw new Error('Surat bertanda tangan belum tersedia.');
     // Verify the original snapshot first; corrections below affect only the presentation copy.
-    let bytes = letter.finalized_at && !blank ? doc.bytes : await fillOfficialNumber(doc.bytes,doc.format,letter.official_number,blank);
+    let bytes = (letter.manual_number_reservation_id || letter.finalized_at && !blank) ? doc.bytes : await fillOfficialNumber(doc.bytes,doc.format,letter.official_number,blank);
     if(context.recipientRole && context.dispatch && request.method==='GET'){
       const matches=doc.version.id===context.dispatch.version_id && doc.version.file_hash===context.dispatch.file_hash;
       if(!matches&&!context.fullVersionAccess)throw new Error('Snapshot pengiriman tidak sesuai.');

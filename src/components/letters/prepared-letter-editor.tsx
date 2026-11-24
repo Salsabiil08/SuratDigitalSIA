@@ -7,6 +7,7 @@ import {
   getWorkflowLetter,
 } from "@/server/actions/workflow";
 export async function PreparedLetterEditor(props: {
+  manualReservation?: import("@/server/manual-numbers").ManualNumber;
   id?: string;
   source?: "CREATE" | "UPLOAD";
   billing?: boolean;

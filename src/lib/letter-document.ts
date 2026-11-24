@@ -13,6 +13,7 @@ export async function inspectDocument(
   count = 0,
   areas: SignatureArea[] = [],
   requireAreas = false,
+  requireNumber = true,
 ) {
   if (!bytes.length || bytes.length > 3 * 1024 * 1024)
     throw new Error("Ukuran dokumen maksimal 3 MB untuk unggah melalui web.");
@@ -46,7 +47,7 @@ export async function inspectDocument(
   const part = zip.file("word/document.xml");
   if (!part) throw new Error("Berkas DOCX tidak valid.");
   const xml = await part.async("string");
-  if (requireAreas && xml.split("{{OFFICIAL_NUMBER}}").length !== 2)
+  if (requireAreas && requireNumber && xml.split("{{OFFICIAL_NUMBER}}").length !== 2)
     throw new Error(
       "Area nomor surat belum dikenali. Gunakan template SIADocs, lalu unggah kembali.",
     );

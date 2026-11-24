@@ -57,7 +57,7 @@ export async function downloadVersion(letter: any, materialize = true) {
   if (version.file_hash && hashBytes(bytes) !== version.file_hash)
     throw new Error("Hash dokumen berbeda dari catatan versi.");
   return {
-    bytes: materialize
+    bytes: materialize && !letter.manual_number_reservation_id
       ? await fillOfficialNumber(
           bytes,
           version.file_format,
@@ -180,6 +180,8 @@ export async function saveDraft(
     )
       throw new Error("Draft tidak dapat diubah.");
   }
+  if(old?.manual_number_reservation_id) input.manualNumberId=old.manual_number_reservation_id;
+  if(input.manualNumberId && (input.source!=="UPLOAD" || input.manualNumberConfirmed!==true)) throw new Error("Konfirmasi nomor pada dokumen unggahan terlebih dahulu.");
   if (!old || input.letterDate !== old.letter_date)
     validateLetterDate(
       input.letterDate,
@@ -316,8 +318,9 @@ export async function saveDraft(
       data.billing.items.reduce((s: any, i: any) => s + Number(i.amount), 0),
     );
   const { data: id, error } = await createAdminClient().rpc(
-    "save_letter_draft",
+    input.manualNumberId ? "save_manual_numbered_draft" : "save_letter_draft",
     {
+      ...(input.manualNumberId ? {p_reservation:input.manualNumberId,p_confirmed:input.manualNumberConfirmed===true} : {}),
       p_actor: user.id,
       p_data: data,
       p_document: { ...document, name, attachments },
@@ -326,7 +329,7 @@ export async function saveDraft(
   if (error) {
     await createAdminClient()
       .storage.from(DOCUMENT_BUCKET)
-      .remove([document.path]);
+      .remove([document.path,...attachments.map(a=>a.path)]);
     throw new Error(error.message);
   }
   if(input.replyToDispatchId||input.dispositionDraftKey){
