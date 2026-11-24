@@ -17,7 +17,8 @@ export async function GET(
     const letter = await readLetter((await params).id);
     const {data:context,error:contextError}=await createAdminClient().rpc('get_internal_delivery_context',{p_actor:user.id,p_letter:letter.id});
     if(contextError||!context)throw new Error('Anda tidak berwenang melihat dokumen ini.');
-    const blank = new URL(request.url).searchParams.get("blank") === "1";
+    const variant = new URL(request.url).searchParams.get("variant");
+    const blank = new URL(request.url).searchParams.get("blank") === "1" || (variant === "unsigned" && !!letter.official_number && letter.required_signature_count > 0);
     if(blank&&!context.fullVersionAccess)throw new Error('Salinan sebelum pengesahan tidak tersedia melalui hak penerima/pengiriman.');
     let sourceLetter = {...letter,current_version_id:context.documentVersionId};
     if (blank) {
@@ -33,6 +34,9 @@ export async function GET(
       sourceLetter = { ...letter, current_version_id: version.id };
     }
     const doc = await downloadVersion(sourceLetter,false);
+    if(blank && letter.required_signature_count > 0 && doc.version.version_kind !== 'NUMBERED')throw new Error('Versi surat tanpa tanda tangan belum tersedia.');
+    if(variant === 'unsigned' && doc.version.version_kind === 'SIGNED')throw new Error('Versi surat tanpa tanda tangan belum tersedia.');
+    if(variant === 'signed' && doc.version.version_kind !== 'SIGNED')throw new Error('Surat bertanda tangan belum tersedia.');
     // Verify the original snapshot first; corrections below affect only the presentation copy.
     let bytes = letter.finalized_at && !blank ? doc.bytes : await fillOfficialNumber(doc.bytes,doc.format,letter.official_number,blank);
     if(context.recipientRole && context.dispatch && request.method==='GET'){
@@ -88,6 +92,7 @@ export async function GET(
         "Content-Disposition": `${new URL(request.url).searchParams.has("download") ? "attachment" : "inline"}; filename="Surat${corrected ? "-salinan-format" : ""}${blank ? "-tanpa-TTD" : ""}.${doc.format.toLowerCase()}"`,
         "Cache-Control": "private, no-store",
         "X-Content-Type-Options": "nosniff",
+        "X-SIADocs-Document-Variant": blank || doc.version.version_kind !== "SIGNED" ? "unsigned" : "signed",
         ...(corrected ? {"X-SIADocs-Layout-Copy":"1"} : {}),
       },
     });

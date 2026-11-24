@@ -18,8 +18,9 @@ export function DocumentDownloads({id,current,unsigned,signatureCount,fullVersio
     if(active.current||!source)return;
     active.current=true;setBusy(true);setError('');controller.current=new AbortController();
     try{
-      const response=await fetch(`/api/letters/${id}/document?download=1${source.blank?'&blank=1':''}`,{cache:'no-store',signal:controller.current.signal});
+      const response=await fetch(`/api/letters/${id}/document?download=1${source.blank?'&blank=1':''}&variant=${availableKind}`,{cache:'no-store',signal:controller.current.signal});
       if(!response.ok){const body=await response.json().catch(()=>null);throw new Error(body?.error||'Dokumen belum dapat diunduh. Coba lagi.');}
+      if(response.headers.get('X-SIADocs-Document-Variant')!==availableKind)throw new Error('Versi unduhan tidak sesuai. Perbarui halaman lalu coba lagi.');
       const expected=source.format==='PDF'?'application/pdf':'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
       if(!response.headers.get('content-type')?.includes(expected))throw new Error('Format dokumen berubah. Perbarui status lalu coba lagi.');
       let blob=await response.blob();
