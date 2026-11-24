@@ -47,7 +47,7 @@ export default async function AdminSeriPage() {
             Jenis surat menentukan persetujuan, penomoran, dan tanda tangan yang diperlukan.
           </p>
         </CardHeader>
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto max-h-[260px] overflow-y-auto">
           <Table>
           <TableHeader>
             <TableRow>
@@ -105,7 +105,7 @@ export default async function AdminSeriPage() {
             <code className="bg-neutral-100 px-1 py-0.5 rounded">{'{JENIS}'}</code>
           </p>
         </CardHeader>
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto max-h-[260px] overflow-y-auto">
           <Table>
           <TableHeader>
             <TableRow>
