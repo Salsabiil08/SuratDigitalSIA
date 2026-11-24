@@ -113,8 +113,8 @@ export async function reviewLetterAction(
       await inspectDocument(
         doc.bytes,
         doc.format,
-        l.required_signature_count,
-        l.signature_areas,
+        l.signature_mode==='EXTERNAL'?0:l.required_signature_count,
+        l.signature_mode==='EXTERNAL'?[]:l.signature_areas,
         true,
       );
       if (doc.format === "PDF" && !l.number_area)

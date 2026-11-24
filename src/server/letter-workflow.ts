@@ -207,10 +207,12 @@ export async function saveDraft(
   if (signers.some((s) => !s))
     throw new Error("Pilih pejabat penandatangan aktif.");
   if (input.letterTypeCode === 'Tag') {
+    if(input.source==='CREATE'){
     if (!input.billing) throw new Error('Lengkapi rincian pembayaran.');
     input.billing={...input.billing,items:billingItemsWithSharedPayment(input.billing,banks.find(bank=>bank.id===input.billing!.bankId)?.name)};
     validateBillingItems(input.billing.items);
     input.billing = {...input.billing, layout: 'PAYMENT_REQUEST', accountNumber: input.billing.items[0]!.accountNumber!, accountHolder: input.billing.items[0]!.payeeName!};
+    }else input.billing=undefined;
     input.recipientName = signers[1]?.name || '';
     input.recipientOrg = 'PT Semen Indonesia Aceh';
     input.recipientAddress = 'Kantor PT Semen Indonesia Aceh';

@@ -229,6 +229,14 @@ describe("Database: alur nyata dengan akun berbeda", { concurrent: false }, () =
       l.revision,
     ]);
   });
+  it('impor tagihan tanpa rincian ulang tidak membuat data pembayaran palsu',async()=>{
+    await expect(draft(5,'Tag',[3,2],{source:'UPLOAD',billing:undefined})).rejects.toThrow(/Finance/);
+    const id=await draft(6,'Tag',[3,2],{source:'UPLOAD',billing:undefined,reviewRequested:false});
+    expect((await get(id)).source).toBe('UPLOAD');expect(await rows('select * from billing_details where letter_id=$1',[id])).toHaveLength(0);expect(await rows('select * from billing_items where letter_id=$1',[id])).toHaveLength(0);
+    await act(id,6,'PREVIEW');await expect(act(id,6,'SUBMIT')).rejects.toThrow(/lampiran/i);
+    await run("insert into letter_attachments(letter_id,file_name,storage_path,mime_type,size_bytes,uploaded_by) values($1,'bukti.pdf','import-proof','application/pdf',100,$2)",[id,actor(6)]);
+    await act(id,6,'SUBMIT');await expect(act(id,2,'APPROVE')).rejects.toThrow(/penyetuju/);await act(id,3,'APPROVE');await act(id,2,'APPROVE');expect((await get(id)).status).toBe('READY_TO_ISSUE');expect((await get(id)).official_number).toBeNull();
+  });
   it('impor tagihan tetap khusus Finance, wajib lampiran, dan persetujuan SM lalu Direktur',async()=>{
     const bank=(await rows('select id from master_bank limit 1'))[0].id;
     const billing={layout:'PAYMENT_REQUEST',bankId:bank,accountNumber:'123',accountHolder:'Penerima',items:[{documentNumber:'INV-UJI',description:'Jasa uji',payeeName:'Penerima',bankName:'BANK UJI',accountNumber:'123',amount:100}]};

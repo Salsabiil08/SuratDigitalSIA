@@ -247,6 +247,41 @@ export function LetterEditor({
         }}
         className="space-y-5"
       >
+        {input.source==='UPLOAD' && <Card className="p-5 space-y-4"><h2 className="font-bold">Unggah Surat</h2>
+              <Field
+                label={
+                  id
+                    ? "Ganti Dokumen Impor (opsional)"
+                    : "Dokumen Impor (PDF/DOCX, maks. 3 MB)"
+                }
+                htmlFor="document-file"
+                hint="Isi dan format surat dipertahankan. DOCX memerlukan tempat nomor otomatis; untuk dokumen tanpa tempat tersebut, unggah PDF dan tentukan area nomor."
+              >
+                <Input
+                  id="document-file"
+                  type="file"
+                  accept=".pdf,.docx"
+                  required={!id}
+                  onChange={(e) => {
+                    const f = e.target.files?.[0] || null;
+                    setFile(f);
+                    if (f)
+                      setCurrentFormat(
+                        f.name.toLowerCase().endsWith(".pdf") ? "PDF" : "DOCX",
+                      );
+                  }}
+                />
+              </Field>
+              {id && (
+                <a
+                  className="text-brand-red underline text-sm"
+                  href={`/api/letters/${id}/document?download=1`}
+                >
+                  Unduh versi impor untuk koreksi
+                </a>
+              )}
+
+        </Card>}
         <Card className="p-5 space-y-4">
           <h2 className="font-bold">Data Surat</h2>
           <div className="grid sm:grid-cols-2 gap-4">
@@ -390,8 +425,8 @@ export function LetterEditor({
           </Field>
         </Card>
         <Card className="p-5 space-y-4">
-          <h2 className="font-bold">Dokumen dan Isi</h2>
-          {input.source === "CREATE" ? (
+          <h2 className="font-bold">{input.source==='UPLOAD'?'Lampiran':'Dokumen dan Isi'}</h2>
+          {input.source === "CREATE" && (
             <>
               <Field
                 label={isBill ? "Kalimat Pengantar Pembayaran" : "Isi Surat"}
@@ -410,41 +445,6 @@ export function LetterEditor({
                 Unduh kop DOCX
               </a>
             </>
-          ) : (
-            <>
-              <Field
-                label={
-                  id
-                    ? "Ganti Dokumen Impor (opsional)"
-                    : "Dokumen Impor (PDF/DOCX, maks. 3 MB)"
-                }
-                htmlFor="document-file"
-                hint="Gunakan template SIADocs agar nomor dan area tanda tangan dapat dikenali. Untuk mengoreksi dokumen impor, edit berkas di luar aplikasi lalu unggah kembali selama masih draf."
-              >
-                <Input
-                  id="document-file"
-                  type="file"
-                  accept=".pdf,.docx"
-                  required={!id}
-                  onChange={(e) => {
-                    const f = e.target.files?.[0] || null;
-                    setFile(f);
-                    if (f)
-                      setCurrentFormat(
-                        f.name.toLowerCase().endsWith(".pdf") ? "PDF" : "DOCX",
-                      );
-                  }}
-                />
-              </Field>
-              {id && (
-                <a
-                  className="text-brand-red underline text-sm"
-                  href={`/api/letters/${id}/document?download=1`}
-                >
-                  Unduh versi impor untuk koreksi
-                </a>
-              )}
-            </>
           )}
           <Field
             label={
@@ -462,10 +462,10 @@ export function LetterEditor({
             />
           </Field>
         </Card>
-        {isBill && input.billing && (
+        {isBill && input.source==='CREATE' && input.billing && (
           <Card className="p-5 space-y-4">
-            <h2 className="font-bold">{input.source==='UPLOAD'?'Data Pencatatan Tagihan':'Rincian Permintaan Pembayaran'}</h2>
-            <p className="text-sm text-neutral-600">{input.source==='UPLOAD'?'Isi sesuai dokumen yang diunggah. Data ini tidak mengubah dokumen impor.':'Isi rincian pembayaran yang akan dicantumkan pada surat.'}</p>
+            <h2 className="font-bold">Rincian Permintaan Pembayaran</h2>
+            <p className="text-sm text-neutral-600">Isi rincian pembayaran yang akan dicantumkan pada surat.</p>
             <Field label="Bank Penyalur Pembayaran" htmlFor="bank" required>
               <Select
                 id="bank"
@@ -636,7 +636,7 @@ export function LetterEditor({
           {currentFormat === "PDF" && input.source === "UPLOAD" && (
             <div className="space-y-4">
               <p className="text-sm">
-                Tentukan posisi nomor pada dokumen. Jika tanda tangan diperlukan, tentukan juga areanya. Periksa hasilnya pada pratinjau.
+                Tentukan area nomor. Area tanda tangan diperlukan hanya jika penandatanganan dilakukan melalui SIADocs. Periksa hasilnya pada pratinjau.
               </p>
               <AreaEditor
                 label="Area nomor resmi"
@@ -651,7 +651,7 @@ export function LetterEditor({
                 }
                 onChange={(area) => change("numberArea", area)}
               />
-              {Array.from({ length: count }, (_, i) => (
+              {Array.from({ length: input.signatureMode==='IN_APP'?count:0 }, (_, i) => (
                 <AreaEditor
                   key={i}
                   label={`Area TTD ${i + 1}`}
@@ -663,7 +663,7 @@ export function LetterEditor({
                   }}
                 />
               ))}
-              {count > 0 && <label className="flex items-center gap-2 text-sm">
+              {count > 0 && input.signatureMode==='IN_APP' && <label className="flex items-center gap-2 text-sm">
                 <input
                   type="checkbox"
                   checked={!!input.stampArea}
@@ -676,7 +676,7 @@ export function LetterEditor({
                 />
                 Siapkan area stempel opsional
               </label>}
-              {count > 0 && input.stampArea && (
+              {count > 0 && input.signatureMode==='IN_APP' && input.stampArea && (
                 <AreaEditor
                   label="Area stempel"
                   value={input.stampArea}

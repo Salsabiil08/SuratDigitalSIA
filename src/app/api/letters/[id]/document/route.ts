@@ -84,8 +84,8 @@ export async function GET(
       bytes = Buffer.from(await pdf.save());
     }
     const original = new URL(request.url).searchParams.get('original') === '1';
-    const internalOutput = original ? bytes : await correctLegacyInternalOutput(bytes, letter, doc.format);
-    const {bytes:output,corrected} = original ? {bytes:internalOutput,corrected:false} : await correctLegacyBillingOutput(internalOutput,letter,doc.format);
+    const internalOutput = original || letter.source==='UPLOAD' ? bytes : await correctLegacyInternalOutput(bytes, letter, doc.format);
+    const {bytes:output,corrected} = original || letter.source==='UPLOAD' ? {bytes:internalOutput,corrected:false} : await correctLegacyBillingOutput(internalOutput,letter,doc.format);
     return new NextResponse(new Uint8Array(output), {
       headers: {
         "Content-Type": DOCUMENT_MIME[doc.format],
