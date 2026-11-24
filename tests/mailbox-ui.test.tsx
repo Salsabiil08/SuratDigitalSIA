@@ -28,7 +28,7 @@ it('outbox mempertahankan status tiap penerima; agregat tidak menyatakan semua d
 it('error query ditampilkan sebagai error, bukan keadaan sukses kosong',async()=>{
  m.read.mockRejectedValue(new Error('DB tidak tersedia'));const view=await PreparedMailbox({folder:'INBOX',searchParams:{}});const html=renderToStaticMarkup(view);expect(html).toContain('role="alert"');expect(html).toContain('Coba Kembali');expect(html).not.toContain('Belum ada surat resmi');
 });
-it('daftar kosong dan pagination sah ditampilkan dengan filter/pencarian yang terjaga',()=>{
- const html=renderToStaticMarkup(<MailboxClient folder="INBOX" data={{items:[],total:0,page:1,pageSize:10,pages:1}} query={query}/>);expect(html).toContain('Belum ada surat resmi');expect(html).toContain('Halaman 1 dari 1');
- const paged=renderToStaticMarkup(<MailboxClient folder="OUTBOX" data={{...data,page:2,pages:3,total:25}} query={{...query,q:'Rapat & Unit',filter:'UNREAD'}}/>);expect(paged).toContain('Halaman 2 dari 3');expect(paged).toContain('q=Rapat+%26+Unit');expect(paged).toContain('filter=UNREAD');
+it('daftar tanpa pergantian halaman tetap menjaga filter dan pencarian',()=>{
+ const html=renderToStaticMarkup(<MailboxClient folder="INBOX" data={{items:[],total:0,page:1,pageSize:10,pages:1}} query={query}/>);expect(html).toContain('Belum ada surat resmi');expect(html).not.toContain('Halaman kotak surat');expect(html).not.toContain('Jumlah per halaman');
+ const paged=renderToStaticMarkup(<MailboxClient folder="OUTBOX" data={{...data,page:2,pages:3,total:25}} query={{...query,q:'Rapat & Unit',filter:'UNREAD'}}/>);expect(paged).not.toContain('Halaman 2 dari 3');expect(paged).toContain('q=Rapat+%26+Unit');expect(paged).toContain('filter=UNREAD');
 });

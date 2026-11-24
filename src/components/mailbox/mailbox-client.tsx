@@ -19,7 +19,6 @@ export function MailboxClient({folder,data,query}:{folder:MailboxFolder;data:Mai
   <form action={base} method="get" className="flex flex-col sm:flex-row gap-3 sm:items-end">
    <input type="hidden" name="filter" value={query.filter}/>
    <label className="text-sm flex-1">Cari perihal, nomor atau pengirim<input name="q" defaultValue={query.q} maxLength={100} className="block w-full border rounded-xl px-3 py-2 mt-1"/></label>
-   <label className="text-sm">Jumlah per halaman<select name="size" defaultValue={data.pageSize} className="block border rounded-xl px-3 py-2 mt-1">{[10,20,50].map(n=><option key={n} value={n}>{n}</option>)}</select></label>
    <Button type="submit">Cari</Button>
   </form>
   <nav aria-label="Filter kotak surat" className="flex gap-2 flex-wrap">{Object.entries(MAILBOX_FILTERS).map(([key,label])=><Link key={key} prefetch={false} aria-current={query.filter===key?'page':undefined} href={mailboxHref(folder,{...current,filter:key as MailboxFilter,page:1})} className={`rounded-full border px-3 py-2 text-sm ${query.filter===key?'bg-red-50 border-red-300 text-brand-red':'bg-white text-neutral-700'}`}>{label}</Link>)}</nav>
@@ -33,10 +32,6 @@ export function MailboxClient({folder,data,query}:{folder:MailboxFolder;data:Mai
     <div className="grid gap-3 md:grid-cols-2">{item.recipients.map(r=><div key={r.profile_id} className="border rounded-xl p-3 text-sm space-y-1"><p className="font-semibold break-words">{r.name} — {r.role==='PRIMARY'?'Penerima utama':'Tembusan (CC)'}</p><p>Dibaca: {mailboxDate(r.read_at)||'Belum dibaca'}</p><p>Diterima: {r.role==='CC'?'Salinan; tanpa konfirmasi penerimaan utama':mailboxDate(r.received_at)||'Belum dikonfirmasi'}</p>{r.role==='PRIMARY'&&<p>Balasan: {r.commented_at?'Sudah ditanggapi melalui komentar — '+mailboxDate(r.commented_at):r.replied_at?'Sudah Dibalas — '+mailboxDate(r.replied_at):'Dapat ditanggapi melalui komentar atau surat; sesuai kebutuhan.'}</p>}{r.role==='CC'&&<p className="text-xs text-neutral-600">Tidak otomatis wajib membalas.</p>}{folder==='INBOX'&&r.role==='PRIMARY'&&!r.received_at&&<Button variant="secondary" isLoading={busy===item.dispatch_id} disabled={busy!==null} onClick={()=>receive(item.dispatch_id)}>Konfirmasi Terima Surat</Button>}</div>)}</div>
    </Card>;
   })}</div>}
-  <nav aria-label="Halaman kotak surat" className="flex flex-wrap items-center justify-between gap-3 text-sm">
-   {data.page>1?<Link prefetch={false} href={mailboxHref(folder,{...current,page:data.page-1})} className="text-brand-red underline">Sebelumnya</Link>:<span className="text-neutral-400">Sebelumnya</span>}
-   <span>Halaman {data.page} dari {data.pages}</span>
-   {data.page<data.pages?<Link prefetch={false} href={mailboxHref(folder,{...current,page:data.page+1})} className="text-brand-red underline">Berikutnya</Link>:<span className="text-neutral-400">Berikutnya</span>}
-  </nav>
+
  </div>;
 }
