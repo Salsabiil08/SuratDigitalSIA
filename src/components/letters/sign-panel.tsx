@@ -71,12 +71,8 @@ export function SignPanel({
   return (
     <section className="space-y-4">
       <h2 className="font-bold">Tanda Tangani — tahap {request.sign_order}</h2>
-      <p className="text-sm">
-        Gambar TTD diterapkan hanya setelah tindakan Anda dikonfirmasi. Ini
-        merupakan tanda tangan gambar, bukan tanda tangan elektronik
-        tersertifikasi.
-      </p>
-      <Field label="Mekanisme TTD" htmlFor="sign-method">
+      <details className="text-sm text-neutral-600"><summary className="cursor-pointer">Tentang tanda tangan</summary><p>Gambar tanda tangan diterapkan setelah Anda mengonfirmasi. Bukan tanda tangan elektronik tersertifikasi.</p></details>
+      <Field label="Cara menandatangani" htmlFor="sign-method">
         <Select
           id="sign-method"
           value={method}
@@ -85,7 +81,7 @@ export function SignPanel({
             setMethod(e.target.value);
           }}
         >
-          <option value="IMAGE">Gambar TTD PNG pada area tervalidasi</option>
+          <option value="IMAGE">Gunakan gambar tanda tangan (PNG)</option>
           <option value="WET_UPLOAD">Unggah hasil tanda tangan basah</option>
         </Select>
       </Field>

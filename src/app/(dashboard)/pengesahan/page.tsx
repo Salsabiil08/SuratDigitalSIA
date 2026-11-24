@@ -8,13 +8,9 @@ export default async function Page() {
   return (
     <div className="space-y-5">
       <PageHeader title="Menunggu Tanda Tangan" />
-      <p className="text-sm text-neutral-600">
-        Hanya tugas TTD aktif milik akun Anda. Pengesahan tagihan berjalan
-        berurutan.
-      </p>
       {pending.length === 0 ? (
         <Card className="p-6">
-          Belum ada tugas TTD. Surat muncul setelah disetujui, diberi nomor, dan menunjuk Anda sebagai penandatangan.
+          Tidak ada surat yang menunggu tanda tangan Anda.
         </Card>
       ) : (
         pending.map((s: any) => (

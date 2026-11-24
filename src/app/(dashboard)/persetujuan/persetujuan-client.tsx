@@ -138,12 +138,9 @@ export function PersetujuanClient({
         <Card className="p-12 text-center text-neutral-500 space-y-3">
           <div className="text-3xl">✓</div>
           <div className="text-sm font-semibold text-neutral-800">
-            Semua Persetujuan Sudah Selesai
+            Tidak ada surat yang menunggu persetujuan Anda.
           </div>
-          <p className="text-xs text-neutral-500 max-w-sm mx-auto">
-            Tidak ada naskah surat yang sedang menunggu persetujuan Anda saat
-            ini.
-          </p>
+
         </Card>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
