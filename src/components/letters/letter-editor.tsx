@@ -144,6 +144,7 @@ export function LetterEditor({
     setInput((x) => ({
       ...x,
       letterTypeCode: type,
+      billing: type==='Tag' ? (x.billing || {bankId:'',bankName:'',accountNumber:'',accountHolder:'',items:[{description:'',amount:0,documentNumber:'',payeeName:'',bankName:'',accountNumber:''}]}) : undefined,
       signerIds: [],
       reviewerId: "",
       mandatoryApproverIds: [],
@@ -158,6 +159,7 @@ export function LetterEditor({
   }
   const internal = input.letterTypeCode === "IN";
   const isBill = input.letterTypeCode === "Tag";
+  const canImportBilling=input.source==='UPLOAD' && !!options.financeUnitId && options.user.unit?.id===options.financeUnitId;
   const recipient=options.people.find(p=>p.id===input.recipientUserId);
   const peer=peerInternal(input.letterTypeCode,options.user.position?.level||0,recipient?.level||0);
   const count = internal ? (peer ? 0 : formal ? 1 : 0) : isBill ? 2 : 1;
@@ -251,12 +253,12 @@ export function LetterEditor({
               <Select
                 id="letter-type"
                 value={input.letterTypeCode}
-                disabled={!!id || isBill}
+                disabled={!!id || billing}
                 onChange={(e) => setType(e.target.value as any)}
               >
                 <option value="IN">Internal</option>
                 <option value="KRE">Eksternal</option>
-                {isBill && <option value="Tag">Surat Pengantar Tagihan</option>}
+                {(isBill || canImportBilling) && <option value="Tag">Surat Penagihan</option>}
               </Select>
             </Field>
             <Field label="Unit Pengirim">
