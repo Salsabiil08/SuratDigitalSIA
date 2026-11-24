@@ -207,7 +207,7 @@ export function LetterEditor({
     options?.user.position?.code || "",
   );
   return (
-    <div className={id || billing ? "max-w-4xl space-y-5" : "max-w-6xl w-full space-y-5"}>
+    <div className="max-w-6xl w-full space-y-5">
       <PageHeader
         title={
           id
@@ -574,21 +574,24 @@ export function LetterEditor({
             </p>
           </Card>
         )}
-        <Card className="p-5 space-y-4">
-          {peer?<p className="text-sm font-semibold text-emerald-800">Surat internal sesama jabatan: tanpa persetujuan dan tanpa TTD. Nomor resmi dan pengiriman tetap dicatat.</p>:<>
+        {internal && !recipient && <Card className="p-5"><p className="text-sm text-neutral-600">Pilih penerima untuk melihat kebutuhan persetujuan dan tanda tangan.</p></Card>}
+        {peer && <Card className="p-5"><p className="text-sm">Surat ini tidak memerlukan persetujuan atau tanda tangan.</p></Card>}
+        {(!internal || !!recipient) && !peer && <>
+        {(count > 0 || additionalApprovers.length > 0) && <Card className="p-5 space-y-4">
+
           <h2 className="font-bold">Persetujuan Surat</h2>
-          <p className="text-sm">Penyetuju memutuskan kelayakan surat. Penandatangan dipilih terpisah di bawah. Orang yang sama hanya mempunyai satu langkah persetujuan per pengajuan.</p>
+          <p className="text-sm text-neutral-600">Pilih pejabat yang menyetujui surat.</p>
           {Array.from({length:count},(_,index)=><Field key={`approval-${index}`} label={isBill?(index===0?'Penyetuju SM Finance':'Penyetuju Direktur'):'Penyetuju Formal (SM/Direktur)'} required>
             <Select value={input.mandatoryApproverIds?.[index] || input.signerIds[index] || ''} onChange={e=>{const ids=[...(input.mandatoryApproverIds?.length?input.mandatoryApproverIds:input.signerIds)];ids[index]=e.target.value;change('mandatoryApproverIds',ids);}} required>
               <option value="">Pilih pejabat penyetuju</option>{signers.filter(p=>!isBill||(index===0?p.position==='SM':p.position==='DIR')).map(p=><option key={p.id} value={p.id}>{p.name} — {p.title}</option>)}
             </Select>
           </Field>)}
-          <Field label="Penyetuju Tambahan (opsional)" hint="Hanya pegawai yang telah diberi kewenangan perusahaan untuk jenis dan unit ini. Pilihan berulang tidak membuat persetujuan ganda.">
+          {additionalApprovers.length > 0 && <Field label="Penyetuju tambahan (opsional)">
             {additionalApprovers.map(p=><label key={p.id} className="flex gap-2 text-sm"><input type="checkbox" checked={input.additionalApproverIds?.includes(p.id)||false} onChange={e=>change('additionalApproverIds',e.target.checked?[...(input.additionalApproverIds||[]),p.id]:(input.additionalApproverIds||[]).filter(id=>id!==p.id))}/>{p.name} — {p.title}</label>)}
-            {additionalApprovers.length===0&&<p className="text-xs text-neutral-500">Belum ada penugasan penyetuju tambahan. Super Admin tidak otomatis berwenang.</p>}
-          </Field>
-          </>}
-          {!peer&&<h2 className="font-bold">Tanda Tangan Dokumen</h2>}
+          </Field>}
+        </Card>}
+        <Card className="p-5 space-y-4">
+          <h2 className="font-bold">Tanda Tangan Dokumen</h2>
 
           {internal && !peer && (
             <label className="flex items-center gap-2 text-sm">
@@ -600,15 +603,14 @@ export function LetterEditor({
                   change("signerIds", []);
                 }}
               />
-              Perlu pengesahan formal (1 TTD). Komunikasi sesama level dapat
-              tanpa TTD.
+              Surat ini memerlukan satu tanda tangan.
             </label>
           )}
           {!internal && (
             <p className="text-sm">
               {isBill
-                ? "Dua persetujuan dan TTD berurutan: Senior Manager lalu Direktur."
-                : "Satu persetujuan dan TTD wajib oleh SM atau Direktur."}
+                ? "Dua tanda tangan berurutan: SM pengaju, lalu Direktur."
+                : "Surat eksternal memerlukan satu tanda tangan SM atau Direktur."}
             </p>
           )}
           {Array.from({ length: count }, (_, index) => (
@@ -648,7 +650,7 @@ export function LetterEditor({
             </Field>
           ))}
           {count > 0 && (
-            <Field label="Jalur TTD" htmlFor="signature-mode">
+            <Field label="Cara penandatanganan" htmlFor="signature-mode">
               <Select
                 id="signature-mode"
                 value={input.signatureMode}
@@ -663,12 +665,14 @@ export function LetterEditor({
               </Select>
             </Field>
           )}
+
+        </Card>
+        </>}
+        {currentFormat === "PDF" && input.source === "UPLOAD" && <Card className="p-5 space-y-4">
           {currentFormat === "PDF" && input.source === "UPLOAD" && (
             <div className="space-y-4">
               <p className="text-sm">
-                Tentukan area TTD pada PDF. Koordinat memakai satuan point (1/72
-                inci), dihitung dari kiri atas halaman. Preview menampilkan
-                kotak area sebelum diajukan.
+                Tentukan posisi nomor pada dokumen. Jika tanda tangan diperlukan, tentukan juga areanya. Periksa hasilnya pada pratinjau.
               </p>
               <AreaEditor
                 label="Area nomor resmi"
@@ -695,7 +699,7 @@ export function LetterEditor({
                   }}
                 />
               ))}
-              <label className="flex items-center gap-2 text-sm">
+              {count > 0 && <label className="flex items-center gap-2 text-sm">
                 <input
                   type="checkbox"
                   checked={!!input.stampArea}
@@ -707,8 +711,8 @@ export function LetterEditor({
                   }
                 />
                 Siapkan area stempel opsional
-              </label>
-              {input.stampArea && (
+              </label>}
+              {count > 0 && input.stampArea && (
                 <AreaEditor
                   label="Area stempel"
                   value={input.stampArea}
@@ -717,12 +721,7 @@ export function LetterEditor({
               )}
             </div>
           )}
-          <p className="text-xs text-neutral-500">
-            Gambar TTD dan stempel hanya diterapkan oleh pejabat aktif setelah
-            preview dan konfirmasi. Bukan TTE tersertifikasi. Nomor diterbitkan
-            setelah persetujuan, tanpa mengubah tanggal surat.
-          </p>
-        </Card>
+        </Card>}
         <div className="flex flex-wrap gap-3">
           <Button type="submit" isLoading={busy}>
             Simpan Draft
@@ -733,7 +732,7 @@ export function LetterEditor({
             isLoading={busy}
             onClick={() => save(true)}
           >
-            Simpan dan Preview
+            Simpan dan Pratinjau
           </Button>
           <Link
             href={id ? `/surat/${id}` : "/surat"}
