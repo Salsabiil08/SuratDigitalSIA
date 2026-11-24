@@ -164,7 +164,18 @@ export function SuratSayaClient({
             </div>
           </div>
         ) : (
-          <div className="overflow-x-auto max-h-[calc(100vh-270px)] overflow-y-auto">
+          <>
+          <div className="lg:hidden divide-y divide-neutral-200">
+            {filteredLetters.map(letter=><article key={letter.id} className="p-4 space-y-2 min-w-0">
+              <h2 className="font-semibold break-words">{letter.subject}</h2>
+              <p className="font-mono text-xs break-all">{letter.officialNumber||"Belum terbit"}</p>
+              <p className="text-sm break-words">Penerima: {letter.recipientText}</p>
+              <p className="text-xs text-neutral-500">{letter.typeName} · {new Date(letter.createdAt).toLocaleDateString("id-ID",{timeZone:"Asia/Jakarta",day:"numeric",month:"short",year:"numeric"})}</p>
+              <div className="flex flex-wrap gap-2"><Chip variant={getStatusChipVariant(letter.status)}>{letter.workflowStatus||STATUS_LABEL[letter.status as LetterStatus]||"Belum diketahui"}</Chip><Chip variant={letter.signatureStatus==="WAITING"?"amber":letter.signatureStatus==="UPLOADED"?"green":"gray"}>{SIGNATURE_STATUS_LABEL[letter.signatureStatus as SignatureStatus]||"Belum diketahui"}</Chip></div>
+              <Link className="inline-flex text-sm text-brand-red underline py-2" href={`/surat/${letter.id}`}>Buka Surat →</Link>
+            </article>)}
+          </div>
+          <div className="hidden lg:block overflow-x-auto max-h-[calc(100vh-270px)] overflow-y-auto">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -243,6 +254,7 @@ export function SuratSayaClient({
               </TableBody>
             </Table>
           </div>
+          </>
         )}
       </Card>
     </div>

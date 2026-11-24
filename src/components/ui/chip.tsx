@@ -19,7 +19,7 @@ export function Chip({ className, variant = 'gray', children, ...props }: ChipPr
   return (
     <span
       className={cn(
-        'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold whitespace-nowrap leading-tight',
+        'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold max-w-full whitespace-normal sm:whitespace-nowrap leading-tight',
         variantStyles[variant],
         className
       )}
