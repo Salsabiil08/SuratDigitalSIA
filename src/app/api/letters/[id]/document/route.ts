@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 import { readLetter, downloadVersion } from "@/server/letter-workflow";
 import { fillOfficialNumber, DOCUMENT_MIME } from "@/lib/letter-document";
+import {correctLegacyBillingOutput} from '@/lib/legacy-billing-output';
 import { correctLegacyInternalOutput } from '@/lib/legacy-internal-output';
 export async function GET(
   request: Request,
@@ -78,13 +79,16 @@ export async function GET(
       }
       bytes = Buffer.from(await pdf.save());
     }
-    const output = await correctLegacyInternalOutput(bytes, letter, doc.format);
+    const original = new URL(request.url).searchParams.get('original') === '1';
+    const internalOutput = original ? bytes : await correctLegacyInternalOutput(bytes, letter, doc.format);
+    const {bytes:output,corrected} = original ? {bytes:internalOutput,corrected:false} : await correctLegacyBillingOutput(internalOutput,letter,doc.format);
     return new NextResponse(new Uint8Array(output), {
       headers: {
         "Content-Type": DOCUMENT_MIME[doc.format],
-        "Content-Disposition": `${new URL(request.url).searchParams.has("download") ? "attachment" : "inline"}; filename="Surat${blank ? "-tanpa-TTD" : ""}.${doc.format.toLowerCase()}"`,
+        "Content-Disposition": `${new URL(request.url).searchParams.has("download") ? "attachment" : "inline"}; filename="Surat${corrected ? "-salinan-format" : ""}${blank ? "-tanpa-TTD" : ""}.${doc.format.toLowerCase()}"`,
         "Cache-Control": "private, no-store",
         "X-Content-Type-Options": "nosniff",
+        ...(corrected ? {"X-SIADocs-Layout-Copy":"1"} : {}),
       },
     });
   } catch (e) {
