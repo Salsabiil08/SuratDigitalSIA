@@ -21,7 +21,7 @@ export async function cancellationAction(
       },
     );
     if (error) throw new Error(error.message);
-    ["/surat", "/", `/surat/${id}`].forEach((p) => revalidatePath(p));
+    ["/notifikasi", "/surat", "/", `/surat/${id}`].forEach((p) => revalidatePath(p));
     return { success: true, status: data };
   } catch (e) {
     return {

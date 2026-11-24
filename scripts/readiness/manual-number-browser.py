@@ -17,8 +17,12 @@ async def main():
    requests=await page.evaluate('window.requests');assert len(requests)==2 and requests[0]['key']==requests[1]['key'];assert requests[0]['type']=='IN'
    assert await page.get_by_role('link',name='Unggah Surat',exact=True).get_attribute('href')=='/surat/ambil-nomor?nomor=reserved-fixture'
    assert await page.locator('input[type=file]').count()==0
+   await page.get_by_role('button',name='Perbarui status',exact=True).click()
+   await page.locator('[data-action-popup]').filter(has_text='Permohonan pembatalan menunggu persetujuan Anda.').wait_for()
+   await page.get_by_role('button',name='Perbarui status',exact=True).click()
+   await page.locator('[data-action-popup]').filter(has_text='Surat telah dibatalkan.').wait_for()
    assert await page.evaluate('document.documentElement.scrollWidth<=innerWidth')
-   await page.screenshot(path=str(out/('manual-number-'+name+'.png')),full_page=True);results.append({'viewport':name,'reserve_retry_same_key':'PASS','number_upload_link':'PASS','no_overflow':'PASS','scope':'synthetic UI fixture; no real account writes'})
+   await page.screenshot(path=str(out/('manual-number-'+name+'.png')),full_page=True);results.append({'viewport':name,'reserve_retry_same_key':'PASS','number_upload_link':'PASS','no_overflow':'PASS','cancellation_refresh_feedback':'PASS','scope':'synthetic UI fixture; no real account writes'})
    await context.close()
   await browser.close()
  print(json.dumps(results));(out/'manual-number-result.json').write_text(json.dumps(results,indent=2))

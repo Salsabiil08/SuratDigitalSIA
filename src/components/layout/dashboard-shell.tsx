@@ -1,6 +1,7 @@
 "use client";
 import {ActionNotice} from "@/components/ui/action-notice";
 
+import {startLiveUpdates} from "@/domain/live-updates";
 import {notificationHref} from "@/domain/notification-links";
 import * as React from "react";
 import Link from "next/link";
@@ -42,26 +43,14 @@ export function DashboardShell({
     setIsNotifOpen(false);
   }, [pathname]);
 
-  // Muat notifikasi riil saat popover dibuka
-  React.useEffect(() => {
-    if (isNotifOpen) {
-      import("@/server/actions/notifications")
-        .then(({ getNotificationsAction }) => getNotificationsAction())
-        .then((res) => {
-          if (res.success && res.data) {
-            setQuickNotifs(res.data);
-            setUnread(res.unreadCount);
-            setNotificationError("");
-          } else
-            setNotificationError(
-              res.error || "Pemberitahuan belum dapat diperbarui.",
-            );
-        })
-        .catch(() =>
-          setNotificationError("Pemberitahuan belum dapat diperbarui."),
-        );
-    }
-  }, [isNotifOpen]);
+  React.useEffect(()=>{
+    let active=true,inFlight=false;
+    const refresh=async()=>{if(inFlight)return;inFlight=true;try{const {getNotificationsAction}=await import("@/server/actions/notifications");const res=await getNotificationsAction();if(active){if(res.success){setQuickNotifs(res.data);setUnread(res.unreadCount);setNotificationError("");}else setNotificationError(res.error||"Pemberitahuan belum dapat diperbarui.");}}catch{if(active)setNotificationError("Pemberitahuan belum dapat diperbarui.");}finally{inFlight=false;}};
+    const stop=startLiveUpdates({poll:true,blocked:()=>inFlight,onError:()=>{},refresh},{window,document,navigator});
+    const requested=()=>{void refresh();};window.addEventListener("siadocs:notifications-refresh",requested);
+    if(isNotifOpen)void refresh();
+    return()=>{active=false;stop();window.removeEventListener("siadocs:notifications-refresh",requested);};
+  },[isNotifOpen]);
 
   return (
     <div className="flex h-screen h-[100dvh] w-screen w-full overflow-hidden bg-page-gradient">

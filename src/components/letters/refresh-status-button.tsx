@@ -3,12 +3,12 @@ import {ActionNotice} from "@/components/ui/action-notice";
 import {useState} from 'react';
 import {Button} from '@/components/ui/button';
 
-export function RefreshStatusButton({refresh,disabled=false}: {refresh:()=>Promise<void>;disabled?:boolean}) {
+export function RefreshStatusButton({refresh,disabled=false}: {refresh:()=>Promise<void|string>;disabled?:boolean}) {
   const [busy,setBusy]=useState(false),[feedback,setFeedback]=useState(''),[failed,setFailed]=useState(false);
   async function run(){
     if(busy||disabled)return;
     setBusy(true);setFeedback('');setFailed(false);
-    try{await refresh();setFeedback('Status surat sudah diperbarui.');}
+    try{const message=await refresh();setFeedback(message||'Status surat sudah diperbarui.');}
     catch(e){setFailed(true);setFeedback(e instanceof Error?e.message:'Status belum dapat diperbarui. Coba lagi.');}
     finally{setBusy(false);}
   }

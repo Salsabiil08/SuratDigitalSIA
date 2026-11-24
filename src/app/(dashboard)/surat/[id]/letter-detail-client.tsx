@@ -1,4 +1,5 @@
 "use client";
+import {cancellationFeedback} from "@/domain/cancellation-feedback";
 import {LetterCommentsPanel} from "@/components/letters/letter-comments-panel";
 import {responseLabel} from "@/domain/letter-comments";
 import {ActionNotice} from "@/components/ui/action-notice";
@@ -53,6 +54,8 @@ export function LetterDetailClient({
   const reload = useCallback(async () => {
     const result = await getWorkflowLetter(id);
     setData(previous=>JSON.stringify(previous)===JSON.stringify(result)?previous:result);
+    window.dispatchEvent(new Event("siadocs:notifications-refresh"));
+    return cancellationFeedback(result);
   }, [id]);
   async function act(
     fn: () => Promise<{ success: boolean; error?: string }>,
@@ -114,6 +117,7 @@ export function LetterDetailClient({
         Kembali ke {origin==='kotak-masuk'?'Kotak Masuk':origin==='kotak-keluar'?'Kotak Keluar':'Surat Saya'}
       </Link>
       <PageHeader title={l.subject} actions={<RefreshStatusButton refresh={reload} disabled={busy}/>}/>
+      {cancellationFeedback(data)&&<Card className="p-4 flex flex-wrap gap-3 items-center justify-between" role="status"><p className="font-semibold">{cancellationFeedback(data)}</p>{data.cancellations.length>0&&<a className="text-brand-red underline" href="#cancellation" onClick={()=>{const panel=document.getElementById("cancellation");if(panel instanceof HTMLDetailsElement)panel.open=true;}}>Lihat Pembatalan</a>}</Card>}
       {next.target && !(data.delivery?.dispatch && (!data.delivery?.recipientRole || data.delivery?.recipientRole==='CC' || data.delivery?.recipients.find((r:any)=>r.profile_id===data.userId)?.received_at)) && <a href={`#${next.target}`} className="inline-flex rounded-full bg-brand-red text-white px-4 py-2 text-sm font-semibold">{next.title}</a>}
       {syncError&&<p role="status" className="text-sm text-amber-800">{syncError}</p>}
       {error && (
@@ -365,8 +369,8 @@ export function LetterDetailClient({
           </Button>
         </Card>
       )}
-      {(editable || l.status === "NUMBERED") && (
-        <details><summary className="cursor-pointer text-sm text-neutral-600">Opsi pembatalan surat</summary><Card className="p-5 space-y-3">
+      {(editable || l.status === "NUMBERED" || data.cancellations.length>0) && (
+        <details id="cancellation" className="scroll-mt-24" open={data.cancellations.some((r:any)=>r.status==="PENDING"&&r.cancellation_authorizations?.some((a:any)=>a.authorizer_id===data.userId&&!a.decision))||params.get("bagian")==="pembatalan"}><summary className="cursor-pointer text-sm text-neutral-600">Opsi pembatalan surat</summary><Card className="p-5 space-y-3">
           <h2 className="font-bold">Pembatalan Surat</h2>
           <p className="text-sm">
             Nomor resmi tetap disimpan dan tidak dipakai ulang. Surat bernomor
@@ -382,7 +386,7 @@ export function LetterDetailClient({
             value={note}
             onChange={(e) => setNote(e.target.value)}
           />
-          {data.isCreator && (
+          {data.isCreator && (editable || l.status==="NUMBERED") && (
             <Button
               variant="secondary"
               disabledReason={!note.trim()?"Isi alasan pembatalan terlebih dahulu.":undefined}

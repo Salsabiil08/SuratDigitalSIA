@@ -20,6 +20,10 @@ const EVENTS: Record<string, { label: string; title: string; variant: 'gray' | '
   REJECTED: { label: 'Ditolak', title: 'Pengajuan surat ditolak.', variant: 'red' },
   NUMBER_ISSUED: { label: 'Nomor terbit', title: 'Nomor resmi surat telah diterbitkan.', variant: 'green' },
   SIGNATURE_APPLIED: { label: 'Pengesahan', title: 'Pengesahan dokumen telah dicatat.', variant: 'green' },
+  CANCELLATION_REQUESTED: {label:'Pembatalan',title:'Permohonan pembatalan surat menunggu persetujuan Anda.',variant:'amber'},
+  CANCELLATION_APPROVED: {label:'Pembatalan',title:'Pembatalan disetujui sebagian; menunggu otorisasi berikutnya.',variant:'amber'},
+  CANCELLATION_DECLINED: {label:'Pembatalan',title:'Permohonan pembatalan ditolak. Surat tetap berlaku.',variant:'red'},
+  CANCELLATION_EXECUTED: {label:'Pembatalan',title:'Surat telah dibatalkan.',variant:'red'},
   CANCELLED: { label: 'Dibatalkan', title: 'Surat telah dibatalkan.', variant: 'red' },
   DISPOSITION: { label: 'Disposisi', title: 'Disposisi telah diperbarui.', variant: 'blue' },
 };
