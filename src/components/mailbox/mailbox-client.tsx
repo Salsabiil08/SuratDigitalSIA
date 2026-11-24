@@ -15,8 +15,8 @@ export function MailboxClient({folder,data,query}:{folder:MailboxFolder;data:Mai
  async function receive(id:string){setBusy(id);setError('');setMessage('');try{const r=await receiveInternalLetterAction(id);if(!r.success)throw new Error(r.error);setMessage('Penerimaan Anda telah dicatat.');router.refresh();}catch(e){setError(e instanceof Error?e.message:'Penerimaan belum dapat dicatat.');}finally{setBusy(null);}}
  return <div className="max-w-6xl w-full space-y-4">
   <PageHeader title={title} actions={<Button variant="secondary" onClick={()=>router.refresh()}>Perbarui</Button>}/>
-  <p className="text-sm text-neutral-600">{folder==='INBOX'?'Hanya surat yang telah dikirim resmi kepada Anda. Membuka atau mengunduh tidak otomatis mengonfirmasi penerimaan.':'Pengiriman resmi sesuai kewenangan Anda. Status setiap penerima dicatat terpisah; terkirim bukan berarti diterima.'}</p>
-  <div className="flex gap-2 flex-wrap"><Link prefetch={false} href={folder==='INBOX'?'/kotak-keluar':'/kotak-masuk'} className="text-sm text-brand-red underline">{folder==='INBOX'?'Buka Kotak Keluar':'Buka Kotak Masuk'}</Link><Link href="/surat" className="text-sm text-brand-red underline">Surat Saya — draf dan proses surat</Link></div>
+  {folder==='OUTBOX'&&<p className="text-sm text-neutral-600">Pengiriman resmi sesuai kewenangan Anda. Status setiap penerima dicatat terpisah; terkirim bukan berarti diterima.</p>}
+  {folder==='OUTBOX'&&<div className="flex gap-2 flex-wrap"><Link prefetch={false} href="/kotak-masuk" className="text-sm text-brand-red underline">Buka Kotak Masuk</Link><Link href="/surat" className="text-sm text-brand-red underline">Surat Saya — draf dan proses surat</Link></div>}
   {error&&<ActionNotice>{error}</ActionNotice>}{message&&<ActionNotice kind="success">{message}</ActionNotice>}
   <form action={base} method="get" className="flex flex-col sm:flex-row gap-3 sm:items-end">
    <input type="hidden" name="filter" value={query.filter}/>
