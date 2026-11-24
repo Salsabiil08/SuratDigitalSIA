@@ -29,9 +29,9 @@ async def main():
    await page.goto('http://127.0.0.1:3121')
    await page.get_by_label('Kategori Surat',exact=False).select_option('PEMBERITAHUAN')
    await page.get_by_label('Penerima Internal',exact=False).select_option('receiver')
-   assert await page.get_by_text('Surat internal sesama jabatan: tanpa persetujuan dan tanpa TTD.',exact=False).is_visible()
-   assert await page.get_by_text('Penyetuju Tambahan (opsional)',exact=False).count()==0
-   assert await page.get_by_text('Perlu pengesahan formal (1 TTD).',exact=False).count()==0
+   assert await page.get_by_text('Surat ini tidak memerlukan persetujuan atau tanda tangan.',exact=True).is_visible()
+   assert await page.get_by_role('heading',name='Persetujuan Surat',exact=True).count()==0
+   assert await page.get_by_role('heading',name='Tanda Tangan Dokumen',exact=True).count()==0
    await page.get_by_label('Perihal',exact=False).fill('Uji editor lokal')
    editor=page.get_by_role('textbox',name='Isi surat',exact=True)
    await editor.click();await page.keyboard.type('Paragraf pertama.',delay=12);await page.keyboard.press('Enter');await page.keyboard.type('Paragraf kedua.',delay=12)
