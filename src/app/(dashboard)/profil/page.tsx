@@ -1,3 +1,4 @@
+import {PasswordForm} from './password-form';
 import { requireUser } from '@/server/auth';
 import { PageHeader } from '@/components/ui/page-header';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
@@ -88,6 +89,7 @@ export default async function ProfilePage() {
               </div>
             </CardContent>
           </Card>
+          <PasswordForm/>
         </div>
       </div>
     </div>

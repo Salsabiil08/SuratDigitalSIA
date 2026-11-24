@@ -1,0 +1,13 @@
+import {beforeEach,expect,it,vi} from 'vitest';
+const m=vi.hoisted(()=>({user:vi.fn(),signIn:vi.fn(),update:vi.fn(),clear:vi.fn()}));
+vi.mock('@/server/auth',()=>({requireUser:m.user,clearLocalSession:m.clear}));
+vi.mock('@/lib/supabase/server',()=>({createClient:async()=>({auth:{signInWithPassword:m.signIn,updateUser:m.update}})}));
+import {changePasswordAction} from '../src/server/actions/password';
+function form(values:Record<string,string|undefined>={}){const f=new FormData();for(const [k,v] of Object.entries({currentPassword:'old-fixture',newPassword:'new-fixture-123',confirmPassword:'new-fixture-123',...values}))if(v!==undefined)f.set(k,v);return f;}
+beforeEach(()=>{vi.resetAllMocks();m.user.mockResolvedValue({id:'self',email:'self@example.test'});m.signIn.mockResolvedValue({data:{user:{id:'self'}},error:null});m.update.mockResolvedValue({data:{user:{id:'self'}},error:null});});
+it('requires active session before checking credentials',async()=>{m.user.mockRejectedValue(new Error());expect((await changePasswordAction(form())).error).toBeTruthy();expect(m.signIn).not.toHaveBeenCalled();expect(m.update).not.toHaveBeenCalled();});
+it.each([{newPassword:'short'},{confirmPassword:'different'},{newPassword:'old-fixture',confirmPassword:'old-fixture'},{currentPassword:''}])('rejects invalid input before authentication',async input=>{expect((await changePasswordAction(form(input))).error).toBeTruthy();expect(m.signIn).not.toHaveBeenCalled();expect(m.update).not.toHaveBeenCalled();});
+it('uses session email and refuses incorrect current password',async()=>{m.signIn.mockResolvedValue({data:{user:null},error:{code:'invalid_credentials'}});expect((await changePasswordAction(form({email:'other@example.test'}))).error).toBeTruthy();expect(m.signIn).toHaveBeenCalledWith({email:'self@example.test',password:'old-fixture'});expect(m.update).not.toHaveBeenCalled();});
+it('never updates a different identity',async()=>{m.signIn.mockResolvedValue({data:{user:{id:'other'}},error:null});expect((await changePasswordAction(form())).error).toBeTruthy();expect(m.update).not.toHaveBeenCalled();});
+it('only updates password after successful reauthentication',async()=>{expect(await changePasswordAction(form())).toEqual({success:true});expect(m.update).toHaveBeenCalledWith({password:'new-fixture-123'});expect(m.clear).toHaveBeenCalledOnce();});
+it('does not expose service errors or return success on update failure',async()=>{m.update.mockResolvedValue({data:{user:null},error:{message:'sensitive detail'}});const result=await changePasswordAction(form());expect(result.error).toBeTruthy();expect(JSON.stringify(result)).not.toContain('sensitive');expect(m.clear).not.toHaveBeenCalled();});

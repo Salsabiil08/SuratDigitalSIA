@@ -272,14 +272,14 @@ export function LetterEditor({
               {options.categories.map(c => <option key={c.id} value={c.code}>{c.name}</option>)}
             </Select>
           </Field>
-          <Field label={`Pemeriksa Surat${reviewRule?.requires_review ? ' (wajib sebelum pengajuan)' : ' (opsional)'}`} htmlFor="letter-reviewer"
-            hint="Pilih pejabat di atas jabatan Anda yang memiliki mandat pemeriksaan. Isi tetap diedit oleh pembuat surat.">
+          {!!input.categoryCode && (reviewRule?.requires_review || reviewers.length > 0 || !!input.reviewerId) && <Field label={`Pemeriksa Surat${reviewRule?.requires_review ? ' (wajib sebelum pengajuan)' : ' (opsional)'}`} htmlFor="letter-reviewer"
+            >
             <Select id="letter-reviewer" disabled={reviewers.length===0} value={input.reviewerId || ""} onChange={e => change('reviewerId', e.target.value)}>
               <option value="">{reviewRule?.requires_review ? 'Pilih pemeriksa berwenang' : 'Tanpa pemeriksa'}</option>
               {reviewers.map(p => <option key={p.id} value={p.id}>{p.name} — {p.title}</option>)}
             </Select>
-            {reviewers.length === 0 && <p className="text-xs text-amber-800">Belum ada pemeriksa yang tersedia untuk surat ini. Hubungi pengelola agar pemeriksa ditetapkan. Draf tetap dapat disimpan.</p>}
-          </Field>
+            {reviewRule?.requires_review && reviewers.length === 0 && <p className="text-xs text-amber-800">Pemeriksa belum tersedia. Hubungi Super Admin. Draf tetap dapat disimpan.</p>}
+          </Field>}
           <Field
             label="Tanggal Surat"
             htmlFor="letter-date"
