@@ -157,7 +157,7 @@ export function PersetujuanClient({
                   setNote("");
                   setMsg(null);
                 }}
-                className={`p-4 rounded-xl border transition-all cursor-pointer ${
+                className={`min-w-0 max-w-full break-words p-4 rounded-xl border transition-all cursor-pointer ${
                   selectedIndex === idx
                     ? "border-brand-red bg-[#FFF4EC] shadow-sm"
                     : "border-[#EEEEEA] bg-white hover:bg-neutral-50"
@@ -169,10 +169,10 @@ export function PersetujuanClient({
                     Tahap {item.stepOrder} / {item.totalSteps}
                   </span>
                 </div>
-                <div className="font-bold text-sm text-neutral-900 leading-snug">
+                <div className="break-all font-bold text-sm text-neutral-900 leading-snug">
                   {item.subject}
                 </div>
-                <div className="text-xs text-neutral-500 mt-1">
+                <div className="break-all text-xs text-neutral-500 mt-1">
                   Pengaju: {item.creatorName}
                 </div>
               </div>

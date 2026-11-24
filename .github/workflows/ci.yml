@@ -38,6 +38,12 @@ jobs:
       - run: npm ci
       - run: pip install -r scripts/readiness/requirements.txt
       - run: python -m playwright install --with-deps chromium
+      - run: |
+          mkdir -p test-results
+          ./node_modules/.bin/vite --config tests/browser/responsive/vite.config.ts > test-results/responsive-server.log 2>&1 &
+          responsive_server_pid=$!
+          trap 'kill "$responsive_server_pid" 2>/dev/null || true' EXIT
+          python scripts/readiness/responsive-browser.py
       - run: npm run build
       - run: |
           mkdir -p test-results
@@ -78,11 +84,6 @@ jobs:
           manual_server_pid=$!
           trap 'kill "$manual_server_pid" 2>/dev/null || true' EXIT
           python scripts/readiness/manual-number-browser.py
-      - run: |
-          ./node_modules/.bin/vite --config tests/browser/responsive/vite.config.ts > test-results/responsive-server.log 2>&1 &
-          responsive_server_pid=$!
-          trap 'kill "$responsive_server_pid" 2>/dev/null || true' EXIT
-          python scripts/readiness/responsive-browser.py
       - uses: actions/upload-artifact@v4
         if: always()
         with:
