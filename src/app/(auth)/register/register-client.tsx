@@ -3,6 +3,7 @@ import {ActionNotice} from "@/components/ui/action-notice";
 
 import * as React from 'react';
 import Link from 'next/link';
+import { ArrowLeft } from 'lucide-react';
 import { useFormState, useFormStatus } from 'react-dom';
 import { registerAction } from '@/server/actions/auth';
 import { Button } from '@/components/ui/button';
@@ -32,7 +33,6 @@ export function RegisterClient({options}:{options:Awaited<ReturnType<typeof regi
     <main data-auth-scroll className="h-screen h-[100dvh] w-full overflow-y-auto overflow-x-hidden login-animated-bg font-sans">
       <div className="min-h-full flex flex-col items-center justify-center px-4 py-6 sm:py-8">
         <div className="w-full max-w-[440px] shrink-0">
-          <Link href="/login" className="inline-flex items-center gap-2 mb-4 rounded-lg border border-white/30 px-3 py-2 text-sm font-semibold text-white hover:bg-white/10 focus-visible:outline-white"><span aria-hidden="true">←</span> Kembali ke Login</Link>
           <div className="flex flex-col items-center mb-4 text-center">
             <Link href="/login" aria-label="SIADocs — halaman masuk" className="flex items-center gap-2.5">
               <img src="/images/logo.png" alt="SIADocs Logo" className="h-10 sm:h-11 w-auto"/>
@@ -41,6 +41,7 @@ export function RegisterClient({options}:{options:Awaited<ReturnType<typeof regi
             <p className="text-[11px] text-neutral-300 mt-2">Sistem Persuratan Digital &amp; Penomoran Resmi</p>
           </div>
           <div className="w-full login-card-glass p-5 sm:p-6 rounded-2xl border border-neutral-200/80 shadow-2xl text-neutral-900">
+          <Link href="/login" aria-label="Kembali ke halaman masuk" title="Kembali" className="mb-2 inline-flex h-11 w-11 items-center justify-center rounded-full text-neutral-700 hover:bg-neutral-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-red"><ArrowLeft aria-hidden="true" size={22}/></Link>
           <div className="mb-4 text-center">
             <h1 className="text-xl font-bold tracking-tight text-neutral-900 m-0">Daftar Akun Baru</h1>
             <p className="text-xs text-neutral-500 mt-1 m-0">
