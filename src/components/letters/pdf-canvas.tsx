@@ -8,16 +8,18 @@ export type PdfArea={key:string;label:string;area?:SignatureArea;defaultSize:{wi
 let pdfModule:Promise<typeof import('pdfjs-dist')>|undefined;
 function pdfJs(){return pdfModule??=import('pdfjs-dist').then(pdf=>{pdf.GlobalWorkerOptions.workerSrc=new URL('pdfjs-dist/build/pdf.worker.min.mjs',import.meta.url).toString();return pdf;});}
 export function PdfCanvas({blob,areas=[],activeKey,onPlace,onLoaded}:{blob:Blob;areas?:PdfArea[];activeKey?:string;onPlace?:(key:string,area:SignatureArea)=>void;onLoaded?:()=>void}){
- const [pdf,setPdf]=useState<PDFDocumentProxy|null>(null),[error,setError]=useState(''),[attempt,setAttempt]=useState(0);
+ const [pdf,setPdf]=useState<PDFDocumentProxy|null>(null),[error,setError]=useState(''),[attempt,setAttempt]=useState(0),[zoom,setZoom]=useState(1);
  const loaded=useRef(false),onLoadedRef=useRef(onLoaded);onLoadedRef.current=onLoaded;
- useEffect(()=>{let alive=true;let task:ReturnType<typeof import('pdfjs-dist').getDocument>|undefined;setPdf(null);setError('');loaded.current=false;
+ useEffect(()=>{let alive=true;let task:ReturnType<typeof import('pdfjs-dist').getDocument>|undefined;setPdf(null);setError('');setZoom(1);loaded.current=false;
   void (async()=>{try{const module=await pdfJs();if(!alive)return;const data=new Uint8Array(await blob.arrayBuffer());if(!alive)return;task=module.getDocument({data,useSystemFonts:true,enableXfa:false});const document=await task.promise;if(!alive)return;if(document.numPages>200)throw new Error('Dokumen terlalu panjang untuk pratinjau. Gunakan berkas dengan maksimal 200 halaman.');setPdf(document);}catch(e){if(alive)setError(e instanceof Error&&e.message.includes('200 halaman')?e.message:'Pratinjau PDF belum dapat ditampilkan. Coba muat ulang atau periksa berkas PDF.');}})();
   return()=>{alive=false;void task?.destroy().catch(()=>{});};
  },[blob,attempt]);
  const reportLoaded=()=>{if(!loaded.current){loaded.current=true;onLoadedRef.current?.();}};
  return <div className="space-y-3">
+ {pdf&&!error&&<div className="sticky top-0 z-10 bg-neutral-100/95 rounded-lg p-1 flex items-center gap-2 text-xs"><button type="button" aria-label="Perkecil PDF" disabled={zoom<=1} onClick={()=>setZoom(z=>Math.max(1,z-.25))} className="w-10 h-10 rounded hover:bg-white disabled:opacity-40 text-lg">−</button><span>{Math.round(zoom*100)}%</span><button type="button" aria-label="Perbesar PDF" disabled={zoom>=3} onClick={()=>setZoom(z=>Math.min(3,z+.25))} className="w-10 h-10 rounded hover:bg-white disabled:opacity-40 text-lg">+</button><span className="ml-auto">{pdf.numPages} halaman</span></div>}
+ <div className="space-y-3" style={{width:`${zoom*100}%`,minWidth:'100%'}}>
   {error?<div role="alert" className="rounded-xl border border-red-200 bg-white p-4 space-y-3"><p>{error}</p><Button type="button" variant="secondary" onClick={()=>setAttempt(n=>n+1)}>Muat Ulang PDF</Button></div>:!pdf?<p role="status" className="p-4 text-sm text-neutral-600">Menyiapkan halaman PDF…</p>:Array.from({length:pdf.numPages},(_,i)=><PdfPage key={i} pdf={pdf} pageNumber={i+1} areas={areas} active={areas.find(a=>a.key===activeKey)} onPlace={onPlace} onLoaded={reportLoaded} onError={()=>setError('Halaman PDF gagal ditampilkan. Coba muat ulang pratinjau.')}/>)}
- </div>;
+ </div></div>;
 }
 function PdfPage({pdf,pageNumber,areas,active,onPlace,onLoaded,onError}:{pdf:PDFDocumentProxy;pageNumber:number;areas:PdfArea[];active?:PdfArea;onPlace?:(key:string,area:SignatureArea)=>void;onLoaded:()=>void;onError:()=>void}){
  const root=useRef<HTMLDivElement>(null),canvas=useRef<HTMLCanvasElement>(null),drag=useRef<{x:number;y:number}|null>(null);
@@ -26,13 +28,13 @@ function PdfPage({pdf,pageNumber,areas,active,onPlace,onLoaded,onError}:{pdf:PDF
  useEffect(()=>{if(!root.current)return;if(!('IntersectionObserver' in window)){setNear(true);return;}const observer=new IntersectionObserver(entries=>setNear(entries.some(e=>e.isIntersecting)),{rootMargin:'300px'});observer.observe(root.current);return()=>observer.disconnect();},[]);
  useEffect(()=>{if(!root.current)return;const update=()=>setDisplayWidth(Math.round(root.current!.clientWidth));update();if(!('ResizeObserver' in window))return;const observer=new ResizeObserver(update);observer.observe(root.current);return()=>observer.disconnect();},[]);
  useEffect(()=>{if(!near||!displayWidth){if(canvas.current){canvas.current.width=0;canvas.current.height=0;}setReady(false);return;}let alive=true;let render:ReturnType<Awaited<ReturnType<PDFDocumentProxy['getPage']>>['render']>|undefined;
-  void (async()=>{try{const page=await pdf.getPage(pageNumber);if(!alive||!canvas.current)return;const pointView=page.getViewport({scale:1,rotation:0});setSize({width:pointView.width,height:pointView.height});const scale=Math.min(2,1600/pointView.width,displayWidth*(window.devicePixelRatio||1)/pointView.width);const viewport=page.getViewport({scale,rotation:0});canvas.current.width=Math.ceil(viewport.width);canvas.current.height=Math.ceil(viewport.height);render=page.render({canvas:canvas.current,viewport});await render.promise;if(alive){setReady(true);callbacks.current.onLoaded();}}catch(e){if(alive&&(e as Error)?.name!=='RenderingCancelledException')callbacks.current.onError();}})();
+  void (async()=>{try{const page=await pdf.getPage(pageNumber);if(!alive||!canvas.current)return;const pointView=page.getViewport({scale:1,rotation:0});setSize({width:pointView.width,height:pointView.height});const scale=Math.min(2,1600/pointView.width,displayWidth*Math.max(1.5,window.devicePixelRatio||1)/pointView.width);const viewport=page.getViewport({scale,rotation:0});canvas.current.width=Math.ceil(viewport.width);canvas.current.height=Math.ceil(viewport.height);render=page.render({canvas:canvas.current,viewport});await render.promise;if(alive){setReady(true);callbacks.current.onLoaded();}}catch(e){if(alive&&(e as Error)?.name!=='RenderingCancelledException')callbacks.current.onError();}})();
   return()=>{alive=false;render?.cancel();};
  },[pdf,pageNumber,near,displayWidth]);
  function point(event:React.PointerEvent<HTMLDivElement>){const bounds=event.currentTarget.getBoundingClientRect();return{x:(event.clientX-bounds.left)/bounds.width*size.width,y:(event.clientY-bounds.top)/bounds.height*size.height};}
  function place(start:{x:number;y:number},end:{x:number;y:number}){if(active)onPlace?.(active.key,placementFromDrag(pageNumber,size,start,end,active.defaultSize));}
  return <div className="space-y-1"><p className="text-xs text-neutral-500">Halaman {pageNumber}</p><div ref={root} className="relative bg-white shadow-sm w-full" style={{aspectRatio:`${size.width}/${size.height}`}}>
- <canvas ref={canvas} className="block w-full h-full" aria-label={`Pratinjau PDF halaman ${pageNumber}`}/>
+ <canvas ref={canvas} data-pdf-ready={ready?'true':'false'} className="block w-full h-full" aria-label={`Pratinjau PDF halaman ${pageNumber}`}/>
  {!ready&&<span role="status" className="absolute inset-0 flex items-center justify-center text-xs text-neutral-500 bg-white">Memuat halaman…</span>}
  <div className={`absolute inset-0 ${active&&ready?'cursor-crosshair touch-none':''}`} role={active?'button':undefined} tabIndex={active?0:undefined} aria-label={active?`Tempatkan ${active.label} pada halaman ${pageNumber}`:undefined}
  onPointerDown={event=>{if(!active||!ready)return;event.preventDefault();event.currentTarget.setPointerCapture(event.pointerId);drag.current=point(event);}}

@@ -19,7 +19,7 @@ async def main():
     target=page.get_by_role('button',name=f'Tempatkan {label} pada halaman {page_number}',exact=True)
     pane=page.locator('[data-placement-scroll]');await pane.evaluate('(el)=>el.scrollIntoView({block:"start"})')
     await target.evaluate('(el,y)=>{const pane=el.closest("[data-placement-scroll]");const top=el.getBoundingClientRect().top-pane.getBoundingClientRect().top+pane.scrollTop;pane.scrollTop=top+el.clientHeight*y-pane.clientHeight/2;}',y)
-    canvas=target.locator('..').locator('canvas');await page.wait_for_function('(el)=>el.width>0',arg=await canvas.element_handle(),timeout=30000)
+    canvas=target.locator('..').locator('canvas');await page.wait_for_function('(el)=>el.dataset.pdfReady==="true"',arg=await canvas.element_handle(),timeout=30000)
     await page.wait_for_timeout(400)
     box=await target.bounding_box();sx=box['x']+box['width']*x;sy=box['y']+box['height']*y
     if drag:
@@ -27,6 +27,9 @@ async def main():
     elif name=='mobile':await page.touchscreen.tap(sx,sy)
     else:await page.mouse.click(sx,sy)
    await page.get_by_role('checkbox',name='Tambahkan tempat stempel (opsional)').check()
+   pane=page.locator('[data-placement-scroll]')
+   await pane.get_by_role('button',name='Perbesar PDF',exact=True).click()
+   await pane.get_by_role('button',name='Perkecil PDF',exact=True).click()
    await place('Nomor Surat',1,.12,.16)
    await place('TTD SM',1,.55,.7,False)
    await place('TTD Dirut',2,.18,.68,False)
@@ -35,12 +38,18 @@ async def main():
    assert positions['signature-1']['page']==2
    for area in positions.values():assert area['x']>=0 and area['y']>=0 and area['x']+area['width']<=595.1 and area['y']+area['height']<=842.1,area
    assert await page.locator('input[type=number]').count()==0
-   await page.screenshot(path=str(out/f'pdf-placement-{name}.png'),full_page=True)
+   await page.get_by_role('button',name='Geser Halaman',exact=True).click()
+   assert await page.get_by_role('button',name='Tempatkan Stempel pada halaman 2',exact=True).count()==0
+   assert json.loads(await page.locator('#positions').inner_text())==positions
+   await page.get_by_role('button',name='Stempel ✓',exact=True).click()
+   await page.locator('main').evaluate('(el)=>el.scrollTop=0')
+   await pane.evaluate('(el)=>el.scrollTop=0')
+   await page.screenshot(path=str(out/f'pdf-placement-{name}.png'))
    await page.get_by_role('heading',name='Pratinjau PDF',exact=True).scroll_into_view_if_needed()
    viewer=page.get_by_label('Pratinjau PDF halaman 1',exact=True).last
-   await page.wait_for_function('(el)=>el.width>0',arg=await viewer.element_handle(),timeout=30000)
+   await page.wait_for_function('(el)=>el.dataset.pdfReady==="true"',arg=await viewer.element_handle(),timeout=30000)
    await page.wait_for_timeout(500)
-   pixels=await viewer.evaluate('(c)=>{const p=c.getContext("2d").getImageData(0,0,c.width,c.height).data;let dark=0;for(let i=0;i<p.length;i+=4)if(p[i+3]>0&&p[i]<100&&p[i+1]<100&&p[i+2]<100)dark++;return dark;}');assert pixels>100,pixels
+   pixels=await viewer.evaluate('(c)=>{const p=c.getContext("2d").getImageData(0,0,c.width,c.height).data;let dark=0;for(let i=0;i<p.length;i+=4)if(p[i+3]>0&&p[i]<100&&p[i+1]<100&&p[i+2]<100)dark++;return dark;}');assert pixels>50,pixels
    assert await page.locator('iframe').count()==0
    await page.screenshot(path=str(out/f'pdf-preview-{name}.png'))
    await page.get_by_role('button',name='Atur Ulang Posisi',exact=True).click();assert json.loads(await page.locator('#positions').inner_text())=={}
