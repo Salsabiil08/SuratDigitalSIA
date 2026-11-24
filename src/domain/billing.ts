@@ -15,3 +15,9 @@ export function validateBillingItems(items: BillingItem[]) {
       throw new Error(`Lengkapi nomor dokumen, keterangan, penerima, bank, rekening, dan nominal pada rincian ${index + 1}.`);
   }
 }
+
+/** Complete new three-field rows using the single payment destination; preserve existing row-specific data. */
+export function billingItemsWithSharedPayment(billing:{items:BillingItem[];accountHolder:string;accountNumber:string;bankName?:string},registeredBankName=''):BillingItem[]{
+ if(!Array.isArray(billing.items))throw new Error('Lengkapi rincian pembayaran.');
+ return billing.items.map(item=>({...item,payeeName:item.payeeName||billing.accountHolder,bankName:item.bankName||registeredBankName||billing.bankName||'',accountNumber:item.accountNumber||billing.accountNumber}));
+}

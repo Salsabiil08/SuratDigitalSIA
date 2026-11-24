@@ -1,4 +1,4 @@
-import {validateBillingItems} from '@/domain/billing';
+import {validateBillingItems,billingItemsWithSharedPayment} from '@/domain/billing';
 import {assertPeerInternalAuthorization} from "@/domain/peer-internal";
 import {assertReviewerHierarchy} from "@/server/reviewer-hierarchy";
 import {sanitizeLetterHtml,plainTextHtml,letterText,escapeText} from '@/domain/rich-text';
@@ -208,6 +208,7 @@ export async function saveDraft(
     throw new Error("Pilih pejabat penandatangan aktif.");
   if (input.letterTypeCode === 'Tag') {
     if (!input.billing) throw new Error('Lengkapi rincian pembayaran.');
+    input.billing={...input.billing,items:billingItemsWithSharedPayment(input.billing,banks.find(bank=>bank.id===input.billing!.bankId)?.name)};
     validateBillingItems(input.billing.items);
     input.billing = {...input.billing, layout: 'PAYMENT_REQUEST', accountNumber: input.billing.items[0]!.accountNumber!, accountHolder: input.billing.items[0]!.payeeName!};
     input.recipientName = signers[1]?.name || '';

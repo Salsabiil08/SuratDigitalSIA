@@ -474,6 +474,7 @@ export function LetterEditor({
                   change("billing", {
                     ...input.billing!,
                     bankId: e.target.value,
+                    items:input.billing!.items.map(item=>({...item,bankName:options.banks.find(bank=>bank.id===e.target.value)?.name||input.billing!.bankName||''})),
                   })
                 }
               >
@@ -494,20 +495,23 @@ export function LetterEditor({
                     change("billing", {
                       ...input.billing!,
                       bankName: e.target.value,
+                      items:input.billing!.items.map(item=>({...item,bankName:e.target.value})),
                     })
                   }
                   required
                 />
               </Field>
             )}
+            <div className="grid sm:grid-cols-2 gap-3">
+              <Field label="Penerima Pembayaran" htmlFor="payment-payee" required><Input id="payment-payee" value={input.billing.accountHolder} required maxLength={500} onChange={e=>change('billing',{...input.billing!,accountHolder:e.target.value,items:input.billing!.items.map(item=>({...item,payeeName:e.target.value}))})}/></Field>
+              <Field label="No. Rekening Penerima" htmlFor="payment-account" required><Input id="payment-account" value={input.billing.accountNumber} required maxLength={500} onChange={e=>change('billing',{...input.billing!,accountNumber:e.target.value,items:input.billing!.items.map(item=>({...item,accountNumber:e.target.value}))})}/></Field>
+            </div>
             {input.billing.items.map((item, index) => (
-              <div className="grid sm:grid-cols-2 gap-3" key={index}>
-                <div className="sm:col-span-2 flex items-center justify-between gap-3"><h3 className="font-semibold">Rincian {index + 1}</h3>{input.billing!.items.length>1 && <Button type="button" variant="ghost" size="sm" aria-label={`Hapus rincian ${index+1}`} onClick={()=>change('billing',{...input.billing!,items:input.billing!.items.filter((_,i)=>i!==index)})}>Hapus</Button>}</div>
-                {([{key:'documentNumber',label:'No Dokumen'},{key:'payeeName',label:'Penerima Pembayaran'},{key:'bankName',label:'Bank Penerima'},{key:'accountNumber',label:'No Rekening Penerima'}] as const).map(({key,label})=>(
-                  <Field key={key} label={label} htmlFor={`${key}-${index}`} required>
-                    <Input id={`${key}-${index}`} value={item[key] || ''} required maxLength={key==='documentNumber'?120:500} onChange={e=>{const items=[...input.billing!.items];items[index]={...item,[key]:e.target.value};change('billing',{...input.billing!,items});}}/>
-                  </Field>
-                ))}
+              <div className="grid sm:grid-cols-3 gap-3" key={index}>
+                <div className="sm:col-span-3 flex items-center justify-between gap-3"><h3 className="font-semibold">Rincian {index + 1}</h3>{input.billing!.items.length>1 && <Button type="button" variant="ghost" size="sm" aria-label={`Hapus rincian ${index+1}`} onClick={()=>change('billing',{...input.billing!,items:input.billing!.items.filter((_,i)=>i!==index)})}>Hapus</Button>}</div>
+                <Field label="No. Dokumen" htmlFor={`documentNumber-${index}`} required>
+                  <Input id={`documentNumber-${index}`} value={item.documentNumber||''} required maxLength={120} onChange={e=>{const items=[...input.billing!.items];items[index]={...item,documentNumber:e.target.value};change('billing',{...input.billing!,items});}}/>
+                </Field>
                 <Field label={`Keterangan ${index + 1}`} htmlFor={`item-${index}`} required>
                   <Input
                     id={`item-${index}`}
