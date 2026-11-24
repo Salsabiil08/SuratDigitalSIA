@@ -1,12 +1,12 @@
 import JSZip from 'jszip';
 import {parseDocument} from 'htmlparser2';
-import {Element,type AnyNode} from 'domhandler';
+import {isTag,type Element,type AnyNode} from 'domhandler';
 
 const escape=(value:string)=>value.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 const p=(value:string,bold=false,center=false)=>`<w:p><w:pPr>${center?'<w:jc w:val="center"/>':''}<w:spacing w:after="120"/></w:pPr><w:r><w:rPr><w:rFonts w:ascii="SIG Text" w:hAnsi="SIG Text"/><w:sz w:val="22"/>${bold?'<w:b/>':''}${bold&&center?'<w:u w:val="single"/>':''}</w:rPr><w:t xml:space="preserve">${escape(value)}</w:t></w:r></w:p>`;
-const elements=(node:AnyNode):Element[]=>'children' in node?node.children.filter((n):n is Element=>n instanceof Element):[];
+const elements=(node:AnyNode):Element[]=>'children' in node?node.children.filter((n):n is Element=>isTag(n)):[];
 function find(node:AnyNode,name:string):Element|undefined{for(const child of elements(node)){if(child.name===name)return child;const found=find(child,name);if(found)return found;}}
-function text(node:AnyNode|undefined):string {if(!node)return '';if(node instanceof Element&&node.name==='w:t')return node.children.map(c=>'data' in c?c.data:'').join('');return elements(node).map(text).join('');}
+function text(node:AnyNode|undefined):string {if(!node)return '';if(isTag(node)&&node.name==='w:t')return node.children.map(c=>'data' in c?c.data:'').join('');return elements(node).map(text).join('');}
 const widths=[400,1200,2400,1200,1200,1600,1497];
 function table(rows:string[][],columns:number[]=widths,borders=true){return `<w:tbl><w:tblPr><w:tblW w:w="9497" w:type="dxa"/><w:tblLayout w:type="fixed"/><w:tblBorders>${['top','bottom','left','right','insideH','insideV'].map(e=>`<w:${e} w:val="${borders?'single':'nil'}" w:sz="4"/>`).join('')}</w:tblBorders></w:tblPr><w:tblGrid>${columns.map(w=>`<w:gridCol w:w="${w}"/>`).join('')}</w:tblGrid>${rows.map((row,i)=>`<w:tr>${row.map((value,j)=>`<w:tc><w:tcPr><w:tcW w:w="${columns[j]}" w:type="dxa"/><w:tcMar><w:top w:w="40" w:type="dxa"/><w:left w:w="40" w:type="dxa"/><w:bottom w:w="40" w:type="dxa"/><w:right w:w="40" w:type="dxa"/></w:tcMar></w:tcPr>${borders?p(value,i===0).replace('w:val="22"','w:val="18"').replace('w:after="120"','w:after="50"'):p(value)}</w:tc>`).join('')}</w:tr>`).join('')}</w:tbl>`;}
 function cents(value:string){if(!/^\d[\d.]*(?:,\d{1,2})?$/.test(value))return null;const [whole,fraction='']=value.replaceAll('.','').split(',');return BigInt(whole!)*100n+BigInt(fraction.padEnd(2,'0'));}
