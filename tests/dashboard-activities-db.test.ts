@@ -1,0 +1,4 @@
+import {it,expect} from 'vitest';
+import {PGlite} from '@electric-sql/pglite';
+import {readFileSync,readdirSync} from 'node:fs';
+it('limits activity summaries to authorized letters, preserves private history and admin audit RLS',async()=>{const db=new PGlite();try{await db.exec(readFileSync('supabase/tests/00_stub_supabase.sql','utf8'));for(const f of readdirSync('supabase/migrations').filter(f=>f.endsWith('.sql')).sort())await db.exec(readFileSync('supabase/migrations/'+f,'utf8'));await db.exec(readFileSync('supabase/seed.sql','utf8'));await db.exec(readFileSync('supabase/tests/00_workflow_fixtures.sql','utf8'));await db.exec(readFileSync('supabase/tests/12_dashboard_activity_test.sql','utf8'));expect((await db.query('select get_dashboard_letter_activity() result')).rows[0]).toEqual({result:[]});}finally{await db.close();}},30000);

@@ -1,5 +1,8 @@
 /** Kode tetap dipakai di database; hanya label ini yang ditampilkan. */
 const labels: Record<string, string> = {
+  REVIEW_REQUESTED: "Pemeriksaan surat diajukan",
+  REVIEW_PASSED: "Surat lolos pemeriksaan",
+  REVIEW_REVISION_REQUESTED: "Perbaikan surat diminta",
   CREATOR_APPROVAL_EFFECTIVE: "Persetujuan pembuat berlaku sesuai urutan",
   APPROVER_AUTHORIZATION_SET: "Kewenangan penyetuju diperbarui",
   RESTART_APPROVAL: "Pengajuan ditarik untuk koreksi",

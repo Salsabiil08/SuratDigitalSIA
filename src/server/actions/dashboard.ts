@@ -1,6 +1,6 @@
 'use server';
 
-import { displayLabel } from '@/domain/display-labels';
+import {readDashboardActivities} from '@/server/dashboard-activities';
 import { createClient } from '@/lib/supabase/server';
 import { getCurrentUser } from '@/server/auth';
 
@@ -21,6 +21,7 @@ export interface DashboardMetrics {
   waitingSignatureCount: number;
   activeDispositionsCount: number;
   pendingActions: ActionItem[];
+  recentActivitiesError?: string;
   recentActivities: Array<{
     id: string;
     action: string;
@@ -148,24 +149,10 @@ export async function getDashboardDataAction(): Promise<DashboardMetrics> {
       });
     });
 
-    // 3. Ambil aktivitas terbaru dari audit_logs
-    const { data: auditLogs } = await supabase
-      .from('audit_logs')
-      .select('id, action, official_number, reason, occurred_at')
-      .order('occurred_at', { ascending: false })
-      .limit(5);
-
-    const recentActivities = (auditLogs || []).map((log: any) => ({
-      id: log.id,
-      action: displayLabel(log.action),
-      description: log.official_number
-        ? `Nomor ${log.official_number} diproses (${log.reason || displayLabel(log.action)})`
-        : log.reason || displayLabel(log.action),
-      time: new Date(log.occurred_at).toLocaleTimeString('id-ID', {
-        hour: '2-digit',
-        minute: '2-digit',
-      }) + ' WIB',
-    }));
+    let recentActivities: DashboardMetrics['recentActivities'] = [];
+    let recentActivitiesError: string | undefined;
+    try { recentActivities = await readDashboardActivities(); }
+    catch { recentActivitiesError = 'Aktivitas surat belum dapat dimuat. Silakan muat ulang halaman.'; }
 
     return {
       draftCount: draftCount || 0,
@@ -174,6 +161,7 @@ export async function getDashboardDataAction(): Promise<DashboardMetrics> {
       activeDispositionsCount: activeDispositionsCount || 0,
       pendingActions,
       recentActivities,
+      recentActivitiesError,
     };
   } catch (err) {
     return {
@@ -183,6 +171,7 @@ export async function getDashboardDataAction(): Promise<DashboardMetrics> {
       activeDispositionsCount: 0,
       pendingActions: [],
       recentActivities: [],
+      recentActivitiesError: 'Aktivitas surat belum dapat dimuat. Silakan muat ulang halaman.',
     };
   }
 }

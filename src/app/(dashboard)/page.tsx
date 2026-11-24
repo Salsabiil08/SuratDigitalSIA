@@ -117,9 +117,9 @@ export default async function DashboardPage() {
         <section>
           <Card className="overflow-hidden border border-[#EEEEEA]">
             <CardHeader className="py-2.5 px-4 border-b border-[#EEEEEA]">
-              <CardTitle className="text-xs sm:text-sm font-bold text-neutral-900">Riwayat Transaksi Terbaru</CardTitle>
+              <CardTitle className="text-xs sm:text-sm font-bold text-neutral-900">Aktivitas Surat Terbaru</CardTitle>
             </CardHeader>
-            {data.recentActivities.length === 0 ? (
+            {data.recentActivitiesError ? (<div role="alert" className="py-7 px-4 text-xs text-red-700">{data.recentActivitiesError}</div>) : data.recentActivities.length === 0 ? (
               <div className="py-7 px-4 text-center text-xs text-neutral-500">
                 Belum ada aktivitas persuratan yang tercatat.
               </div>

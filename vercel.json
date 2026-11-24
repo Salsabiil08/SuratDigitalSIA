@@ -23,7 +23,8 @@
       "fix/pr08-comment-replies": false,
       "fix/pr08-legacy-internal-output": false,
       "fix/pr08-dashboard-links": false,
-      "fix/pr08-remove-header-search": false
+      "fix/pr08-remove-header-search": false,
+      "fix/pr08-user-activities": false
     }
   }
 }
