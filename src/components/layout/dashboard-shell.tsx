@@ -7,7 +7,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Sidebar, SidebarProps } from "@/components/ui/sidebar";
 import { LiveClock } from "@/components/ui/live-clock";
-import { Menu, X, Search, Bell, LogOut } from "lucide-react";
+import { Menu, X, Bell, LogOut } from "lucide-react";
 import type { NotificationItem } from "@/server/actions/notifications";
 import { logoutAction } from "@/server/actions/auth";
 
@@ -110,7 +110,7 @@ export function DashboardShell({
       {/* Area Konten Utama */}
       <div className="flex-1 min-w-0 flex flex-col h-full min-h-0 overflow-hidden">
         {/* ========================================================================= */}
-        {/* HEADER BAR MERAH SESUAI GAMBAR 1 (DENGAN SEARCH, CLOCK, NOTIFIKASI & PROFIL) */}
+        {/* HEADER BAR MERAH SESUAI GAMBAR 1 (JAM, NOTIFIKASI & PROFIL) */}
         {/* ========================================================================= */}
         <header className="h-14 sm:h-15 px-3 sm:px-5 bg-gradient-to-r from-[#D31818] via-[#E62314] to-[#B30B0B] text-white shadow-md flex items-center justify-between gap-2 sm:gap-4 shrink-0 z-30">
           {/* Sisi Kiri: Menu Hamburger (Mobile) & Identitas Sistem (Tanpa Logo Ganda dengan Sidebar) */}
@@ -142,27 +142,6 @@ export function DashboardShell({
                 </span>
               </div>
             </Link>
-          </div>
-
-          {/* Bagian Tengah: Kotak Pencarian yang Proporsional & Elegan (Tidak Nabrak) */}
-          <div className="hidden md:flex flex-1 max-w-sm lg:max-w-md mx-3">
-            <form action="/surat" method="GET" className="w-full">
-              <div className="relative flex items-center w-full bg-white rounded-full h-9 pl-3.5 pr-1.5 shadow-xs border border-white/20 transition-all focus-within:ring-2 focus-within:ring-white/40">
-                <Search className="w-4 h-4 text-neutral-400 shrink-0 mr-2 pointer-events-none" />
-                <input
-                  name="q"
-                  type="text"
-                  placeholder="Cari surat, nomor, atau perihal..."
-                  className="w-full min-w-0 text-xs text-neutral-800 placeholder:text-neutral-400 bg-transparent outline-none border-none focus:outline-none focus:ring-0 pr-2"
-                />
-                <button
-                  type="submit"
-                  className="bg-neutral-100 hover:bg-neutral-200 active:bg-neutral-300 text-neutral-700 text-xs font-semibold px-3.5 py-1 rounded-full transition-all shrink-0 ml-1 shadow-2xs"
-                >
-                  Cari
-                </button>
-              </div>
-            </form>
           </div>
 
           {/* Sisi Kanan: Jam Realtime, Notifikasi Bell, Profil Pengguna & Logout */}
