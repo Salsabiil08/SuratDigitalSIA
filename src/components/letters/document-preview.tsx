@@ -6,10 +6,12 @@ export function DocumentPreview({
   url,
   format,
   onLoaded,
+  onLayoutCopy,
 }: {
   url: string;
   format: string;
   onLoaded?: () => void;
+  onLayoutCopy?: (isCopy: boolean) => void;
 }) {
   const frame = useRef<HTMLIFrameElement>(null);
   const container = useRef<HTMLDivElement>(null);
@@ -25,7 +27,6 @@ export function DocumentPreview({
     return () => observer.disconnect();
   }, []);
   const [error, setError] = useState("");
-  const [layoutCopy,setLayoutCopy]=useState(false);
   const [attempt,setAttempt]=useState(0);
   const [loading,setLoading]=useState(false);
   useEffect(() => {
@@ -41,7 +42,7 @@ export function DocumentPreview({
         const res = await fetch(url, { cache: "no-store", signal: controller.signal });
         if (!res.ok)
           throw new Error((await res.json()).error || "Pratinjau gagal.");
-        setLayoutCopy(res.headers.get("X-SIADocs-Layout-Copy")==="1");
+        onLayoutCopy?.(res.headers.get("X-SIADocs-Layout-Copy")==="1");
         const blob = await res.blob();
         if (!alive || !frame.current) return;
         if (format === "PDF") {
@@ -63,12 +64,11 @@ export function DocumentPreview({
       controller.abort();
       if (blobUrl) URL.revokeObjectURL(blobUrl);
     };
-    // onLoaded is intentionally a notification, not a render dependency.
+    // Parent callbacks report load/copy state; they are notifications, not render dependencies.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [url, format, visible, attempt]);
   return (
     <div ref={container} className="space-y-2">
-      {layoutCopy&&<div className="flex flex-wrap gap-3 text-xs text-neutral-600"><span>Salinan format terbaru</span><a className="text-brand-red underline" href={`${url}${url.includes("?")?"&":"?"}original=1&download=1`}>Unduh dokumen asli</a></div>}
       {loading&&<p role="status" className="text-sm text-neutral-600">Pratinjau sedang disiapkan.</p>}
       {error && <><ActionNotice>{error}</ActionNotice><Button variant="secondary" onClick={()=>setAttempt(n=>n+1)}>Muat Ulang Pratinjau</Button></>}
         <iframe

@@ -32,7 +32,8 @@
       "fix/pr08-role-forms": false,
       "fix/pr08-mailbox-caption": false,
       "fix/pr08-concise-ux": false,
-      "fix/pr08-legacy-billing": false
+      "fix/pr08-legacy-billing": false,
+      "fix/pr08-billing-borders": false
     }
   }
 }

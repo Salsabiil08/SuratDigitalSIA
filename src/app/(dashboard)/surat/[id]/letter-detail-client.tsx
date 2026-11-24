@@ -97,6 +97,8 @@ export function LetterDetailClient({
   const signing = data.signatures.find(
     (s) => s.signer_id === data.userId && s.status === "PENDING",
   );
+  const [hasLayoutCopy,setHasLayoutCopy]=useState(false);
+  useEffect(()=>setHasLayoutCopy(false),[id]);
   const next=letterNextStep(l,{creator:data.isCreator,review:!!activeReview,approval:!!activeApproval,signing:!!signing,sent:!!data.delivery?.dispatch,recipient:!!data.delivery?.recipientRole,received:!!data.delivery?.recipients.find((r:any)=>r.profile_id===data.userId)?.received_at});
   const pendingSigner = data.signatures.find(s=>s.status==='PENDING')?.signer as unknown as {full_name?:string}|{full_name?:string}[]|undefined;
   const pendingSignerName = Array.isArray(pendingSigner)?pendingSigner[0]?.full_name:pendingSigner?.full_name;
@@ -205,6 +207,7 @@ export function LetterDetailClient({
             <DocumentPreview
               url={documentUrl}
               format={v.file_format}
+              onLayoutCopy={setHasLayoutCopy}
               onLoaded={() => {setPreviewed(true);void reload().catch(()=>setSyncError("Status pembacaan belum dapat diperbarui. Gunakan Perbarui status."));}}
             />
             <DocumentDownloads id={id} current={v}
@@ -441,7 +444,8 @@ export function LetterDetailClient({
       <LetterCommentsPanel letterId={id} context={data.commentContext} onChanged={()=>{void reload().catch(()=>setSyncError("Komentar terkirim. Status tanggapan belum dapat diperbarui."));}}/>
       <OfficialReplyPanel letterId={id} context={data.replyContext}/>
       <DispositionLetterPanel letterId={id} context={data.dispositionContext}/>
-      {(data.reviews.length>0 || data.approvals.length>0 || data.signatures.length>0) && <details id="history" className="rounded-xl border bg-white p-5 space-y-3"><summary className="cursor-pointer font-bold">Riwayat Surat</summary>
+      {(hasLayoutCopy || data.reviews.length>0 || data.approvals.length>0 || data.signatures.length>0) && <details id="history" className="rounded-xl border bg-white p-5 space-y-3"><summary className="cursor-pointer font-bold">Riwayat Surat</summary>
+        {hasLayoutCopy&&<a className="inline-block text-sm text-brand-red underline" href={`${documentUrl}&original=1&download=1`}>Unduh dokumen sebelum penyesuaian format</a>}
         {data.reviews.map(r => <div key={r.id} className="text-sm border-b pb-2">
           <p>{r.reviewer?.full_name} — {r.status === 'PASSED' ? 'Lolos pemeriksaan' : r.status === 'REVISION_REQUESTED' ? 'Perlu perbaikan' : 'Menunggu pemeriksaan'}{r.version_id !== l.current_version_id ? ' (pemeriksaan naskah sebelum perubahan dokumen)' : ''}</p>
           {r.decision_note && <p>Catatan: {r.decision_note}</p>}

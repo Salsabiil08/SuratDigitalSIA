@@ -45,9 +45,24 @@ async def main():
    await frame.get_by_text('SURAT PENGANTAR TAGIHAN',exact=True).wait_for(timeout=20000)
    assert await frame.get_by_text('No Dokumen',exact=True).is_visible()
    assert await frame.get_by_text('1900000110',exact=True).is_visible()
+   grid=frame.locator('table').filter(has=frame.get_by_text('No Dokumen',exact=True))
+   assert await grid.count()==1
+   assert await grid.locator('td,th').evaluate_all("els=>els.every(e=>{const s=getComputedStyle(e);return s.borderTopStyle==='solid'&&parseFloat(s.borderTopWidth)>0&&s.borderTopColor==='rgb(51, 51, 51)';})")
+
    assert await frame.get_by_text('{{SIGNATURE_1}}',exact=True).count()==0
    await frame.locator('img[alt="Kop resmi PT Semen Indonesia Aceh"]').wait_for()
    await page.screenshot(path=str(out/('billing-preview-'+name+'.png')))
+   await page.route('**/billing-legacy-example',lambda route:route.fulfill(path='test-results/legacy-billing/signed.docx',headers={'X-SIADocs-Layout-Copy':'1'}))
+   await page.goto(base+'/?preview=1&legacy=1')
+   frame=page.frame_locator('iframe')
+   await frame.get_by_text('No Dokumen',exact=True).wait_for(timeout=20000)
+   grid=frame.locator('table').filter(has=frame.get_by_text('No Dokumen',exact=True))
+   assert await grid.locator('td,th').evaluate_all("els=>els.length===21&&els.every(e=>{const s=getComputedStyle(e);return s.borderLeftStyle==='solid'&&parseFloat(s.borderLeftWidth)>0&&s.backgroundColor==='rgb(255, 255, 255)';})")
+   assert await page.get_by_text('Unduh dokumen asli',exact=True).count()==0
+   assert await frame.get_by_text('Disetujui oleh,',exact=True).is_visible()
+   assert await frame.get_by_text('Diajukan oleh,',exact=True).is_visible()
+   await page.screenshot(path=str(out/('billing-legacy-preview-'+name+'.png')))
+
    await page.close()
   await browser.close()
  print('PASS billing form, single row, add/remove rows, generated DOCX table/header, hidden signing markers: desktop/mobile')

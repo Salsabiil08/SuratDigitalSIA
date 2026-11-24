@@ -12,6 +12,7 @@ it('renders payment request metadata, a seven-column table and correctly mapped 
  await inspectDocument(bytes,'DOCX',2,[],true);
  const zip=await JSZip.loadAsync(bytes),xml=await zip.file('word/document.xml')!.async('string');
  for(const label of ['SURAT PENGANTAR TAGIHAN','Kepada Yth','Dari','Tanggal','No Dokumen','Keterangan','Penerima','Bank','No Rekening','Nominal (Rp)','1900000110','BSI','10.000.000','Sepuluh juta rupiah'])expect(xml).toContain(label);
+ expect(xml).toContain('<w:tcBorders>');expect(xml).toContain('w:color="333333"');expect(xml).toContain('w:fill="FFFFFF"');
  expect(xml).not.toContain('di Tempat');expect(xml).not.toContain('Rincian tagihan:');
  expect(xml.indexOf('Disetujui oleh,')).toBeLessThan(xml.indexOf('Diajukan oleh,'));
  expect(xml.indexOf('{{SIGNATURE_2}}')).toBeLessThan(xml.indexOf('{{SIGNATURE_1}}'));

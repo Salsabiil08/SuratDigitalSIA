@@ -6,7 +6,7 @@ const xml = (s: string) => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(
 function paragraph(text: string, opts: {bold?:boolean;italic?:boolean;center?:boolean;underline?:boolean;size?:number;after?:number} = {}) {
   return `<w:p><w:pPr>${opts.center?'<w:jc w:val="center"/>':''}<w:spacing w:after="${opts.after??120}"/></w:pPr><w:r><w:rPr><w:rFonts w:ascii="SIG Text" w:hAnsi="SIG Text"/><w:sz w:val="${opts.size??22}"/>${opts.bold?'<w:b/>':''}${opts.italic?'<w:i/>':''}${opts.underline?'<w:u w:val="single"/>':''}</w:rPr><w:t xml:space="preserve">${xml(text)}</w:t></w:r></w:p>`;
 }
-function cell(text: string,width:number,bold=false){return `<w:tc><w:tcPr><w:tcW w:w="${width}" w:type="dxa"/></w:tcPr>${paragraph(text,{size:18,bold,after:50})}</w:tc>`;}
+function cell(text: string,width:number,bold=false){return `<w:tc><w:tcPr><w:tcW w:w="${width}" w:type="dxa"/><w:tcBorders>${['top','bottom','left','right'].map(e=>`<w:${e} w:val="single" w:sz="4" w:color="333333"/>`).join('')}</w:tcBorders><w:shd w:fill="FFFFFF"/></w:tcPr>${paragraph(text,{size:18,bold,after:50})}</w:tc>`;}
 export function billingLetterBody(data: LetterDocxData, sectPr: string) {
   const b=data.billing!;
   const widths=[400,1100,2700,1300,900,1600,1497];

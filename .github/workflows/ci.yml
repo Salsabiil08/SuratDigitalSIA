@@ -52,7 +52,7 @@ jobs:
           trap 'kill "$editor_server_pid" 2>/dev/null || true' EXIT
           python scripts/readiness/editor-browser.py
       - run: |
-          ./node_modules/.bin/vitest run tests/billing-docx.test.ts
+          ./node_modules/.bin/vitest run tests/billing-docx.test.ts tests/legacy-billing-output.test.ts
           ./node_modules/.bin/vite --config tests/browser/billing/vite.config.ts > test-results/billing-server.log 2>&1 &
           billing_server_pid=$!
           trap 'kill "$billing_server_pid" 2>/dev/null || true' EXIT

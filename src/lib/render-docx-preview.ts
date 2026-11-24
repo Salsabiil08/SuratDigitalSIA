@@ -25,6 +25,14 @@ export async function renderDocxInFrame(blob:Blob,frame:HTMLIFrameElement){
         // Word grouped vector logos are unsupported by docx-preview. Only the exact existing SIA header gets this visual fallback.
         const {default:JSZip}=await import('jszip');
         const zip=await JSZip.loadAsync(await blob.arrayBuffer());
+        // Recognize only the seven-column billing detail grid; metadata/signature tables stay borderless.
+        const billingHeaders=['No','No Dokumen','Keterangan','Penerima','Bank','No Rekening','Nominal (Rp)'];
+        for(const table of Array.from(doc.querySelectorAll<HTMLTableElement>('table'))){
+          const cells=Array.from(table.rows[0]?.cells||[]);
+          if(cells.length!==billingHeaders.length || !cells.every((cell,i)=>cell.textContent?.replace(/\s+/g,' ').trim()===billingHeaders[i]))continue;
+          table.style.borderCollapse='collapse';
+          for(const cell of Array.from(table.querySelectorAll<HTMLTableCellElement>('td,th'))){cell.style.border='0.5pt solid #333333';cell.style.backgroundColor='#ffffff';}
+        }
         const header=await zip.file('word/header1.xml')?.async('uint8array');
         if(header){
           const digest=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new Uint8Array(header)))).map(b=>b.toString(16).padStart(2,'0')).join('');
