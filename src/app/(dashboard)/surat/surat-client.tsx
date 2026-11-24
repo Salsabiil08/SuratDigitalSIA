@@ -24,16 +24,19 @@ import { getLettersAction, LetterItemData } from "@/server/actions/letters";
 
 export function SuratSayaClient({
   initialData,
+  initialStatus,
 }: {
   initialData: LetterItemData[];
+  initialStatus?: string;
 }) {
-  const [activeTab, setActiveTab] = React.useState("ALL");
+  const [activeTab, setActiveTab] = React.useState(["DRAFT","NUMBERED","WAITING_SIGNATURE"].includes(initialStatus||"")?initialStatus!:"ALL");
   const [searchQuery, setSearchQuery] = React.useState("");
   const [selectedType, setSelectedType] = React.useState("ALL");
   const [letters, setLetters] = React.useState<LetterItemData[]>(initialData);
 
   const filteredLetters = React.useMemo(() => {
     return letters.filter((l) => {
+      if (activeTab === "WAITING_SIGNATURE" && l.signatureStatus !== "WAITING") return false;
       // Filter tab status
       if (activeTab === "DRAFT" && l.status !== "DRAFT") return false;
       if (
@@ -97,6 +100,7 @@ export function SuratSayaClient({
       <div className="flex flex-wrap gap-1.5 sm:gap-2">
         {[
           { id: "ALL", label: "Semua" },
+          ...(initialStatus === "WAITING_SIGNATURE" ? [{id:"WAITING_SIGNATURE",label:"Menunggu Tanda Tangan"}] : []),
           { id: "DRAFT", label: "Draft" },
           { id: "IN_REVIEW", label: "Menunggu Persetujuan" },
           { id: "READY_TO_ISSUE", label: "Siap Diberi Nomor" },

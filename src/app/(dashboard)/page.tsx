@@ -38,30 +38,30 @@ export default async function DashboardPage() {
 
       {/* Ringkasan Kartu Counter (Dipadatkan dengan Efek Hover Cantik) */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3.5">
-        <Card className="group p-3 sm:p-3.5 border border-[#EEEEEA] relative overflow-hidden transition-all duration-300 hover:border-amber-300/80 hover:shadow-lg hover:-translate-y-1 cursor-default">
+        <Link href="/surat?status=DRAFT" className="block rounded-xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-red"><Card className="h-full group p-3 sm:p-3.5 border border-[#EEEEEA] relative overflow-hidden transition-all duration-300 hover:border-amber-300/80 hover:shadow-lg hover:-translate-y-1 cursor-pointer">
           <div className="absolute top-0 left-0 right-0 h-1 bg-transparent group-hover:bg-gradient-to-r group-hover:from-amber-400 group-hover:to-orange-500 transition-all duration-300" />
           <div className="text-[11px] font-semibold text-neutral-500 uppercase tracking-wider group-hover:text-amber-700 transition-colors">Draft Surat</div>
           <div className="text-2xl sm:text-3xl font-extrabold text-neutral-900 mt-1 transition-transform duration-200 group-hover:scale-105 origin-left">{data.draftCount}</div>
           <div className="text-[11px] text-neutral-400 mt-0.5">Belum bernomor</div>
-        </Card>
-        <Card className="group p-3 sm:p-3.5 border border-[#EEEEEA] relative overflow-hidden transition-all duration-300 hover:border-emerald-300/80 hover:shadow-lg hover:-translate-y-1 cursor-default">
+        </Card></Link>
+        <Link href="/surat?status=NUMBERED" className="block rounded-xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-red"><Card className="h-full group p-3 sm:p-3.5 border border-[#EEEEEA] relative overflow-hidden transition-all duration-300 hover:border-emerald-300/80 hover:shadow-lg hover:-translate-y-1 cursor-pointer">
           <div className="absolute top-0 left-0 right-0 h-1 bg-transparent group-hover:bg-gradient-to-r group-hover:from-emerald-500 group-hover:to-teal-500 transition-all duration-300" />
           <div className="text-[11px] font-semibold text-neutral-500 uppercase tracking-wider group-hover:text-emerald-700 transition-colors">Surat Bernomor</div>
           <div className="text-2xl sm:text-3xl font-extrabold text-neutral-900 mt-1 transition-transform duration-200 group-hover:scale-105 origin-left">{data.numberedCount}</div>
           <div className="text-[11px] text-neutral-400 mt-0.5">Nomor resmi terbit</div>
-        </Card>
-        <Card className="group p-3 sm:p-3.5 border border-[#EEEEEA] relative overflow-hidden transition-all duration-300 hover:border-blue-300/80 hover:shadow-lg hover:-translate-y-1 cursor-default">
+        </Card></Link>
+        <Link href="/surat?status=WAITING_SIGNATURE" className="block rounded-xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-red"><Card className="h-full group p-3 sm:p-3.5 border border-[#EEEEEA] relative overflow-hidden transition-all duration-300 hover:border-blue-300/80 hover:shadow-lg hover:-translate-y-1 cursor-pointer">
           <div className="absolute top-0 left-0 right-0 h-1 bg-transparent group-hover:bg-gradient-to-r group-hover:from-blue-500 group-hover:to-indigo-500 transition-all duration-300" />
           <div className="text-[11px] font-semibold text-neutral-500 uppercase tracking-wider group-hover:text-blue-700 transition-colors">Pengesahan</div>
           <div className="text-2xl sm:text-3xl font-extrabold text-neutral-900 mt-1 transition-transform duration-200 group-hover:scale-105 origin-left">{data.waitingSignatureCount}</div>
           <div className="text-[11px] text-neutral-400 mt-0.5">Menunggu tanda tangan</div>
-        </Card>
-        <Card className="group p-3 sm:p-3.5 border border-[#EEEEEA] relative overflow-hidden transition-all duration-300 hover:border-purple-300/80 hover:shadow-lg hover:-translate-y-1 cursor-default">
+        </Card></Link>
+        <Link href="/disposisi" className="block rounded-xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-red"><Card className="h-full group p-3 sm:p-3.5 border border-[#EEEEEA] relative overflow-hidden transition-all duration-300 hover:border-purple-300/80 hover:shadow-lg hover:-translate-y-1 cursor-pointer">
           <div className="absolute top-0 left-0 right-0 h-1 bg-transparent group-hover:bg-gradient-to-r group-hover:from-purple-500 group-hover:to-pink-500 transition-all duration-300" />
           <div className="text-[11px] font-semibold text-neutral-500 uppercase tracking-wider group-hover:text-purple-700 transition-colors">Disposisi Aktif</div>
           <div className="text-2xl sm:text-3xl font-extrabold text-neutral-900 mt-1 transition-transform duration-200 group-hover:scale-105 origin-left">{data.activeDispositionsCount}</div>
           <div className="text-[11px] text-neutral-400 mt-0.5">Instruksi kedinasan berjalan</div>
-        </Card>
+        </Card></Link>
       </div>
 
       {/* Konten Utama: Perlu Tindakan & Aktivitas - Scroll Internal Pada Bagian Panjang */}

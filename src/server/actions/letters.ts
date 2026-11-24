@@ -14,15 +14,18 @@ export interface LetterItemData {
   createdAt: string;
   workflowStatus: string;
 }
-export async function getLettersAction(): Promise<LetterItemData[]> {
+export async function getLettersAction(dashboardStatus?: string): Promise<LetterItemData[]> {
   const user = await requireUser();
-  const { data, error } = await (await createClient())
+  let query = (await createClient())
     .from("letters")
     .select(
       "*,letter_types(name,category),recipient:profiles!letters_recipient_user_id_fkey(full_name)",
     )
-    .eq("creator_id", user.id)
     .order("created_at", { ascending: false });
+  if (dashboardStatus === "DRAFT" || dashboardStatus === "NUMBERED") query = query.eq("status", dashboardStatus);
+  else if (dashboardStatus === "WAITING_SIGNATURE") query = query.eq("signature_status", "WAITING");
+  else query = query.eq("creator_id", user.id);
+  const {data,error} = await query;
   if (error) throw new Error(error.message);
   return (data || []).map((l: any) => ({
     id: l.id,
