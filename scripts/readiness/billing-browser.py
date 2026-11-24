@@ -17,11 +17,13 @@ async def main():
     raw=route.request.post_data_buffer.decode();start=raw.index('{');end=raw.rindex('}')+1;saved.append(json.loads(raw[start:end]));await route.fulfill(status=200,json={'id':'local-fixture'})
    await page.route('**/api/letters/draft',draft)
    await page.goto(base)
-   await page.get_by_label('Kategori Surat',exact=False).select_option('PEMBERITAHUAN')
+   await page.get_by_label('Perlu pemeriksaan isi?',exact=True).select_option('no')
    assert await page.locator('#recipient-address').count()==0
    assert await page.locator('#item-0').count()==1 and await page.locator('#item-1').count()==0
    await page.locator('#bank').select_option('mandiri')
-   for field,value in [('documentNumber','1900000110'),('payeeName','Penerima Pengujian'),('bankName','BSI'),('accountNumber','000045')]:await page.locator('#'+field+'-0').fill(value)
+   await page.locator('#payment-payee').fill('Penerima Pengujian')
+   await page.locator('#payment-account').fill('000045')
+   await page.locator('#documentNumber-0').fill('1900000110')
    await page.locator('#item-0').fill('Biaya operasional pengurusan IUP OP')
    await page.locator('#amount-0').fill('10000000')
    selects=page.locator('select');all_ids=await selects.evaluate_all('(els)=>els.map(x=>x.id)')
@@ -36,7 +38,7 @@ async def main():
    assert len(saved[0]['billing']['items'])==1 and saved[0]['billing']['items'][0]['documentNumber']=='1900000110'
    await page.get_by_role('button',name='Tambah Rincian',exact=True).click()
    assert await page.locator('#item-1').count()==1
-   await page.get_by_role('button',name='Hapus Baris Terakhir',exact=True).click()
+   await page.get_by_role('button',name='Hapus rincian 2',exact=True).click()
    assert await page.locator('#item-1').count()==0
    await page.screenshot(path=str(out/('billing-form-'+name+'.png')),full_page=True)
    await page.route('**/billing-example',lambda route:route.fulfill(path='test-results/billing/payment-request.docx'))
