@@ -1,0 +1,8 @@
+export const notifications=Array.from({length:6},(_,i)=>({id:'n'+i,recipient_id:'actor',letter_id:'letter',event_type:'CANCELLATION_REQUESTED',title:'Permohonan pembatalan surat menunggu persetujuan Anda. '+('ContohPerihalTanpaSpasi'.repeat(4)),is_read:false,created_at:'2026-11-24T18:41:00Z'}));
+export async function getNotificationsAction(){return {success:true,data:notifications,unreadCount:6};}
+export async function markNotificationAsReadAction(){return {success:true};}export async function markAllNotificationsAsReadAction(){return {success:true};}
+export async function logoutAction(){};export async function changePasswordAction(){return {success:true};}
+export async function getLettersAction(){return [];}export async function getWorkflowOptions(){}export async function getWorkflowLetter(){}
+export async function approveStepAction(){return {success:true};}export async function requestRevisionAction(){return {success:true};}export async function rejectLetterAction(){return {success:true};}export async function getPendingApprovalsAction(){return [];}
+export async function createUnitAction(){return {success:false};}export async function updateUnitAction(){return {success:false};}export async function deleteUnitAction(){return {success:false};}export async function createPositionAction(){return {success:false};}export async function updatePositionAction(){return {success:false};}export async function deletePositionAction(){return {success:false};}
+export async function getDispositionsAction(){return {success:false};}export async function createDispositionAction(){return {success:false};}export async function updateDispositionStatusAction(){return {success:false};}export async function receiveInternalLetterAction(){return {success:true};}

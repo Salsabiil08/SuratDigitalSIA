@@ -28,7 +28,7 @@ export default async function AdminSeriPage() {
         title="Master Jenis & Seri Penomoran"
         className="pb-0"
         actions={
-          <div className="flex items-center gap-2">
+          <div className="min-w-0 flex flex-wrap items-center gap-2">
             <Button disabledReason="Penambahan jenis surat belum tersedia pada halaman ini." variant="secondary" size="sm" className="h-8 px-3 text-xs">
               + Tambah Jenis Surat
             </Button>

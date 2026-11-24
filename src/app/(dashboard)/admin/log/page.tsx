@@ -49,7 +49,7 @@ export default async function AdminLogPage() {
         <input
           type="search"
           placeholder="Cari aktivitas, pengguna, atau nomor surat..."
-          className="flex-1 min-w-[240px] min-h-[38px] px-3 py-1.5 text-xs sm:text-sm bg-white border border-[#C9C9C3] rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-brand-red/20 focus:border-brand-red"
+          className="flex-1 w-full min-w-0 sm:min-w-[240px] min-h-[38px] px-3 py-1.5 text-xs sm:text-sm bg-white border border-[#C9C9C3] rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-brand-red/20 focus:border-brand-red"
         />
         <select className="min-h-[38px] px-3 py-1.5 text-xs sm:text-sm bg-white border border-[#C9C9C3] rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-red/20">
           <option>Semua aksi</option>

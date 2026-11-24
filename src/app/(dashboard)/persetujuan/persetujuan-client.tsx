@@ -235,7 +235,7 @@ export function PersetujuanClient({
 
               {/* Tombol Keputusan (Sesuai Blueprint R.04: Setujui, Minta Revisi, Tolak) */}
               <div className="flex flex-wrap items-center justify-between gap-3 pt-4 border-t border-[#EEEEEA]">
-                <div className="flex items-center gap-2">
+                <div className="min-w-0 flex flex-wrap items-center gap-2">
                   <Button
                     type="button"
                     variant="outline"

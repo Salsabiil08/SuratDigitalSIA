@@ -92,18 +92,18 @@ export function NotifikasiClient({
       />
 
       {/* Info Privacy Box */}
-      <div className="p-3 bg-neutral-50/90 border border-[#EEEEEA] rounded-xl text-xs text-neutral-600 flex items-center gap-2">
+      <div className="p-3 bg-neutral-50/90 border border-[#EEEEEA] rounded-xl text-xs text-neutral-600 flex flex-col sm:flex-row items-start sm:items-center gap-2">
         <span className="font-semibold text-neutral-800 shrink-0">
           Privasi & Keamanan:
         </span>
-        <span className="truncate">
+        <span className="min-w-0 break-words">
           Notifikasi tidak memuat ringkasan atau isi dokumen surat. Informasi
           sensitif hanya diakses melalui dokumen resmi.
         </span>
       </div>
 
       {/* Filter Tabs */}
-      <div className="flex items-center gap-2 border-b border-[#EEEEEA] pb-2">
+      <div className="flex flex-wrap items-center gap-2 border-b border-[#EEEEEA] pb-2">
         <button
           onClick={() => setFilter("ALL")}
           className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors ${
@@ -148,12 +148,13 @@ export function NotifikasiClient({
                   : "bg-red-50/20 border-red-200 shadow-sm"
               }`}
             >
-              <div className="flex items-start justify-between gap-4">
-                <div className="flex-1 space-y-1.5">
-                  <div className="flex items-center gap-2">
+              <div className="min-w-0 flex flex-col sm:flex-row items-start justify-between gap-3">
+                <div className="min-w-0 w-full sm:flex-1 space-y-1.5">
+                  <div className="flex flex-wrap items-center gap-2">
                     {getEventBadge(item.event_type)}
                     <span className="text-xs text-neutral-400">
                       {new Date(item.created_at).toLocaleString("id-ID", {
+                        timeZone: "Asia/Jakarta",
                         dateStyle: "medium",
                         timeStyle: "short",
                       })}{" "}
@@ -172,7 +173,7 @@ export function NotifikasiClient({
                   </p>
                 </div>
 
-                <div className="flex items-center gap-2 shrink-0">
+                <div className="min-w-0 max-w-full flex flex-wrap items-center gap-2 sm:shrink-0">
                   {item.letter_id && (
                     <Link prefetch={false} href={notificationHref(item)}>
                       <Button variant="outline" size="sm">

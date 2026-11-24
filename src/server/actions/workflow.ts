@@ -23,6 +23,7 @@ export async function getWorkflowLetter(id: string) {
   const l = await readLetter(id);
   const db = await createClient();
   const [
+    { data: attachments, error: attError },
     { data: versions, error: ve },
     { data: approvals, error: ae },
     { data: signatures, error: se },
@@ -35,6 +36,7 @@ export async function getWorkflowLetter(id: string) {
     dispositionContext,
     commentContext,
   ] = await Promise.all([
+    db.from("letter_attachments").select("id,file_name,size_bytes").eq("letter_id",id).order("created_at"),
     db
       .from("letter_versions")
       .select(
@@ -74,6 +76,7 @@ export async function getWorkflowLetter(id: string) {
     readDispositionLetterContext(id),
     readCommentContext(id),
   ]);
+  if(attError)throw new Error("Lampiran belum dapat dimuat.");
   if (ve || ae || se || ce || re || be || ie) throw new Error((ve || ae || se || ce || re || be || ie)!.message);
   if(de)throw new Error('Informasi pengiriman belum dapat diambil.');
   let ccOptions: {id:string;full_name:string}[]=[];
@@ -81,6 +84,7 @@ export async function getWorkflowLetter(id: string) {
   let manualNumber:any=null;
   if(l.manual_number_reservation_id){const {data:r,error}=await createAdminClient().from("manual_number_reservations").select("id,official_number,subject,reserved_signer_id,letter_id,status").eq("id",l.manual_number_reservation_id).eq("letter_id",id).single();if(error||!r)throw new Error("Nomor yang dicadangkan belum dapat dimuat.");manualNumber=r;}
   return {
+    attachments:attachments||[],
     manualNumber,
     commentContext,
     dispositionContext,
@@ -120,8 +124,8 @@ export async function reviewLetterAction(
       await inspectDocument(
         doc.bytes,
         doc.format,
-        l.signature_mode==='EXTERNAL'?0:l.required_signature_count,
-        l.signature_mode==='EXTERNAL'?[]:l.signature_areas,
+        l.signature_mode==='EXTERNAL'||l.source==='UPLOAD'?0:l.required_signature_count,
+        l.signature_mode==='EXTERNAL'||l.source==='UPLOAD'?[]:l.signature_areas,
         true,
         ...(l.manual_number_reservation_id ? [false] : []),
       );

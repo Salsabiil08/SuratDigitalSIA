@@ -1,0 +1,3 @@
+import {defineConfig} from 'vite';import path from 'node:path';
+const actions=['auth','notifications','password','letters','workflow','approvals','master-organisasi','dispositions','delivery'];
+export default defineConfig({root:path.resolve('tests/browser/responsive'),resolve:{alias:[...actions.map(name=>({find:'@/server/actions/'+name,replacement:path.resolve('tests/browser/responsive/actions.ts')})),{find:'next/navigation',replacement:path.resolve('tests/browser/responsive/router.ts')},{find:'next/link',replacement:path.resolve('tests/browser/editor/link.tsx')},{find:'@',replacement:path.resolve('src')}]},oxc:{jsx:{runtime:'automatic'}},server:{host:'127.0.0.1',port:3127}});

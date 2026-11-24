@@ -17,7 +17,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     const reason=disabledReason||(!ready?"Menyiapkan tindakan…":undefined);
     const reasonId=React.useId();
     const baseStyles =
-      'btn-beauty inline-flex items-center justify-center font-semibold focus-visible:outline-2 focus-visible:outline-offset-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none select-none cursor-pointer';
+      'btn-beauty max-w-full whitespace-normal break-words inline-flex items-center justify-center font-semibold focus-visible:outline-2 focus-visible:outline-offset-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none select-none cursor-pointer';
 
     const variants = {
       primary:
@@ -39,7 +39,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     };
 
     return (
-      <span className={cn("inline-flex flex-col items-start gap-1 align-top",className?.includes("w-full") && "w-full")} >
+      <span className={cn("min-w-0 max-w-full inline-flex flex-col items-start gap-1 align-top",className?.includes("w-full") && "w-full")} >
       <button
         ref={ref}
         disabled={!ready || disabled || !!reason || isLoading}

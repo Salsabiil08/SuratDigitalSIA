@@ -99,3 +99,5 @@ describe("Pengesahan dokumen nyata", () => {
     ).rejects.toThrow(/luar halaman/);
   });
 });
+
+it("manual import accepts a numbered DOCX without automatic TTD markers for signed-file upload",async()=>{const bytes=await generateLetterDocx({officialNumber:"001-Tag/FIN/SIA/11.2026",subject:"Impor manual",contentText:"Dokumen bernomor manual",signatureCount:0,signaturePlaceholders:false});await expect(inspectDocument(bytes,"DOCX",0,[],true,false)).resolves.toEqual([]);await expect(inspectDocument(bytes,"DOCX",2,[],true,false)).rejects.toThrow(/tanda tangan/);});

@@ -17,7 +17,7 @@ export default async function DashboardPage() {
         title="Dashboard"
         className="pb-0"
         actions={
-          <div className="flex items-center gap-2">
+          <div className="min-w-0 flex flex-wrap items-center gap-2">
             <Link href="/surat/ambil-nomor">
               <Button variant="secondary" size="sm" className="h-8 sm:h-9 px-3 text-xs font-semibold">
                 Ambil Nomor

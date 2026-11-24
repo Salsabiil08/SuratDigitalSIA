@@ -238,7 +238,7 @@ export function DisposisiClient({
           )}
           {d.integrated&&<div className="space-y-2 text-sm">
           {d.files.map(f=><p key={f.id}><a className="text-brand-red underline" href={`/api/dispositions/${d.id}/attachments/${f.id}`}>Unduh lampiran hasil — {f.file_name}</a></p>)}
-          {tab==='INBOX'&&['NEW','IN_PROGRESS','REVISION_REQUESTED'].includes(d.status)&&<label className="block">Tambah lampiran PDF/DOCX (maks. 1 MB)<input type="file" accept=".pdf,.docx" disabled={busy} onChange={async e=>{const f=e.target.files?.[0];if(!f)return;setMessage("");setBusy(true);try{const form=new FormData();form.set('file',f);form.set('key',intent(`upload-${d.id}`,{name:f.name,size:f.size,modified:f.lastModified}));const res=await fetch(`/api/dispositions/${d.id}/attachments`,{method:'POST',body:form});const j=await res.json();if(!res.ok)throw new Error(j.error);await refresh();setMessageKind('success');setMessage('Lampiran hasil tersimpan; belum diajukan untuk pemeriksaan.');}catch(err){setMessageKind('error');setMessage(err instanceof Error?err.message:'Unggah gagal.');}finally{setBusy(false);e.target.value='';}}}/></label>}
+          {tab==='INBOX'&&['NEW','IN_PROGRESS','REVISION_REQUESTED'].includes(d.status)&&<label className="block">Tambah lampiran (semua jenis file, maks. 1 MB)<input type="file" className="block w-full min-w-0 max-w-full" disabled={busy} onChange={async e=>{const f=e.target.files?.[0];if(!f)return;setMessage("");setBusy(true);try{const form=new FormData();form.set('file',f);form.set('key',intent(`upload-${d.id}`,{name:f.name,size:f.size,modified:f.lastModified}));const res=await fetch(`/api/dispositions/${d.id}/attachments`,{method:'POST',body:form});const j=await res.json();if(!res.ok)throw new Error(j.error);await refresh();setMessageKind('success');setMessage('Lampiran hasil tersimpan; belum diajukan untuk pemeriksaan.');}catch(err){setMessageKind('error');setMessage(err instanceof Error?err.message:'Unggah gagal.');}finally{setBusy(false);e.target.value='';}}}/></label>}
           {d.submissions.length>0&&<details><summary className="cursor-pointer font-semibold">Riwayat hasil dan pemeriksaan</summary>
           {d.submissions.map(s=><div key={s.id} className="border rounded-xl p-3"><p>Hasil diajukan: {new Date(s.created_at).toLocaleString('id-ID',{timeZone:'Asia/Jakarta'})} WIB — {s.note}</p>{s.decision&&<p>{s.decision.decision==='RETURN'?'Perbaikan diminta':'Diterima / Selesai'}: {s.decision.note||'Hasil diterima'} — {new Date(s.decision.created_at).toLocaleString('id-ID',{timeZone:'Asia/Jakarta'})} WIB</p>}</div>)}</details>}
           </div>}
@@ -446,7 +446,7 @@ export function DisposisiClient({
                 maxLength={5000}
               />
             </Field>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Field label="Prioritas">
                 <Select
                   value={priority}

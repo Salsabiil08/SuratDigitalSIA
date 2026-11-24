@@ -118,11 +118,11 @@ export function DashboardShell({
               className="flex items-center gap-2 hover:opacity-90 transition-opacity"
             >
               {/* Pada mobile: tampilkan judul SIADocs karena sidebar tersembunyi */}
-              <span className="md:hidden font-extrabold text-sm sm:text-base tracking-wide text-white">
+              <span className="lg:hidden font-extrabold text-sm sm:text-base tracking-wide text-white">
                 SIADocs
               </span>
               {/* Pada desktop: tampilkan nama PT Semen Indonesia Aceh tanpa logo ganda */}
-              <div className="hidden md:flex flex-col">
+              <div className="hidden lg:flex flex-col">
                 <span className="font-extrabold text-sm tracking-wide text-white leading-tight">
                   PT Semen Indonesia Aceh
                 </span>
@@ -136,7 +136,7 @@ export function DashboardShell({
           {/* Sisi Kanan: Jam Realtime, Notifikasi Bell, Profil Pengguna & Logout */}
           <div className="flex items-center gap-2 sm:gap-3 shrink-0">
             {/* Jam Realtime Topbar */}
-            <div className="hidden md:block">
+            <div className="hidden xl:block">
               <LiveClock variant="topbar" />
             </div>
 
@@ -245,7 +245,7 @@ export function DashboardShell({
                   <span className="text-xs font-bold text-white leading-tight truncate max-w-[130px]">
                     {sidebarUser?.name || "Pengguna SIA"}
                   </span>
-                  <span className="text-[9px] font-semibold text-white/80 uppercase tracking-wider">
+                  <span className="text-[9px] max-w-[130px] truncate font-semibold text-white/80 uppercase tracking-wider">
                     {sidebarUser?.isSuperAdmin
                       ? "SUPER ADMIN"
                       : sidebarUser?.position || "STAFF"}
@@ -271,7 +271,7 @@ export function DashboardShell({
         </header>
 
         {/* Konten Halaman Responsif & Rapi */}
-        <main className="flex-1 min-h-0 p-3 sm:p-4 md:p-5 top-gradient-border flex flex-col gap-3.5 sm:gap-4 overflow-y-auto">
+        <main className="dashboard-content flex-1 min-w-0 w-full min-h-0 p-3 sm:p-4 md:p-5 top-gradient-border flex flex-col gap-3.5 sm:gap-4 overflow-y-auto overflow-x-hidden">
           {children}
         </main>
       </div>

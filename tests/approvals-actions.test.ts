@@ -26,7 +26,7 @@ it('manual signing does not require digital signature placement but still valida
  m.read.mockResolvedValue({type:{code:'KRE'},source:'UPLOAD',signature_mode:'EXTERNAL',required_signature_count:1,signature_areas:[{page:1}],number_area:{page:1}});
  await reviewLetterAction('l','SUBMIT',7);expect(m.inspect).toHaveBeenCalledWith(expect.anything(),'DOCX',0,[],true);
 });
-it('in-app signing still requires every signature placement',async()=>{
+it('imported in-app signing permits the signed-document upload fallback without requiring image placement',async()=>{
  m.read.mockResolvedValue({type:{code:'KRE'},source:'UPLOAD',signature_mode:'IN_APP',required_signature_count:1,signature_areas:[{page:1}]});
- await reviewLetterAction('l','SUBMIT',7);expect(m.inspect).toHaveBeenCalledWith(expect.anything(),'DOCX',1,[{page:1}],true);
+ await reviewLetterAction('l','SUBMIT',7);expect(m.inspect).toHaveBeenCalledWith(expect.anything(),'DOCX',0,[],true);
 });

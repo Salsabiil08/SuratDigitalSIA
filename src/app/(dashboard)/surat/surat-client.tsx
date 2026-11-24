@@ -73,7 +73,7 @@ export function SuratSayaClient({
         title="Surat Saya"
         className="pb-0"
         actions={
-          <div className="flex items-center gap-2">
+          <div className="min-w-0 flex flex-wrap items-center gap-2">
             <Link href="/surat/ambil-nomor">
               <Button
                 variant="secondary"
@@ -129,7 +129,7 @@ export function SuratSayaClient({
           placeholder="Cari nomor surat, penerima, atau perihal..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="flex-1 min-w-[240px] min-h-[38px] px-3 py-1.5 text-xs sm:text-sm bg-white border border-[#C9C9C3] rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-brand-red/20 focus:border-brand-red"
+          className="flex-1 w-full min-w-0 sm:min-w-[240px] min-h-[38px] px-3 py-1.5 text-xs sm:text-sm bg-white border border-[#C9C9C3] rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-brand-red/20 focus:border-brand-red"
         />
         <select
           value={selectedType}

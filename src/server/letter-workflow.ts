@@ -1,3 +1,4 @@
+import {storeAttachment,removeAttachments} from "@/server/attachments";
 import {validateBillingItems,billingItemsWithSharedPayment} from '@/domain/billing';
 import {assertPeerInternalAuthorization} from "@/domain/peer-internal";
 import {assertReviewerHierarchy} from "@/server/reviewer-hierarchy";
@@ -292,26 +293,8 @@ export async function saveDraft(
     ...(input.numberArea ? [input.numberArea] : []),
   ]);
   const attachments: any[] = [];
-  if (attachment?.size) {
-    if (
-      attachment.size > 1024 * 1024 ||
-      !/\.(pdf|docx)$/i.test(attachment.name)
-    )
-      throw new Error("Lampiran PDF/DOCX maksimal 1 MB.");
-    const attBytes = new Uint8Array(await attachment.arrayBuffer());
-    const attFormat = attachment.name.toLowerCase().endsWith(".pdf")
-      ? "PDF"
-      : "DOCX";
-    await inspectDocument(attBytes, attFormat);
-    const att = await storeBytes(user.id, attBytes, attFormat);
-    attachments.push({
-      ...att,
-      name: attachment.name,
-      mime: DOCUMENT_MIME[attFormat],
-      size: attachment.size,
-    });
-  }
-  const document = await storeBytes(user.id, bytes, format);
+  if (attachment) attachments.push(await storeAttachment(user.id,attachment));
+  const document = await storeBytes(user.id, bytes, format).catch(async e=>{await removeAttachments(attachments);throw e;});
   const data = structuredClone(input) as DraftInput & { billing?: any };
   if (data.billing)
     data.billing.totalInWords = terbilangRupiah(
@@ -329,12 +312,13 @@ export async function saveDraft(
   if (error) {
     await createAdminClient()
       .storage.from(DOCUMENT_BUCKET)
-      .remove([document.path,...attachments.map(a=>a.path)]);
+      .remove([document.path]);
+    await removeAttachments(attachments);
     throw new Error(error.message);
   }
   if(input.replyToDispatchId||input.dispositionDraftKey){
     const {data:used,error:checkError}=await createAdminClient().from('letter_versions').select('id').eq('storage_path',document.path).limit(1);
-    if(!checkError&&used?.length===0)await createAdminClient().storage.from(DOCUMENT_BUCKET).remove([document.path,...attachments.map(a=>a.path)]);
+    if(!checkError&&used?.length===0){await createAdminClient().storage.from(DOCUMENT_BUCKET).remove([document.path]);await removeAttachments(attachments);}
   }
   return id as string;
 }

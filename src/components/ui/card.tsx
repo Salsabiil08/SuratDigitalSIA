@@ -7,7 +7,7 @@ export function Card({ className, ...props }: CardProps) {
   return (
     <div
       className={cn(
-        'card-hover-effect bg-white border border-[#E4E4E0] rounded-xl shadow-card',
+        'min-w-0 max-w-full break-words card-hover-effect bg-white border border-[#E4E4E0] rounded-xl shadow-card',
         className
       )}
       {...props}

@@ -455,15 +455,14 @@ export function LetterEditor({
           <Field
             label={
               isBill
-                ? "Lampiran bukti tagihan (wajib, PDF/DOCX, maks. 1 MB)"
-                : "Lampiran tambahan (opsional, PDF/DOCX, maks. 1 MB)"
+                ? "Lampiran bukti tagihan (wajib, semua jenis file, maks. 1 MB)"
+                : "Lampiran tambahan (opsional, semua jenis file, maks. 1 MB)"
             }
             htmlFor="attachment-file"
           >
             <Input
               id="attachment-file"
               type="file"
-              accept=".pdf,.docx"
               onChange={(e) => setAttachment(e.target.files?.[0] || null)}
             />
           </Field>
@@ -535,7 +534,7 @@ export function LetterEditor({
                 </Field>
               </div>
             ))}
-            <div className="flex gap-3">
+            <div className="min-w-0 flex flex-wrap gap-3">
               <Button
                 type="button"
                 variant="secondary"
@@ -627,7 +626,7 @@ export function LetterEditor({
                 onChange={(e) => change("signatureMode", e.target.value as any)}
               >
                 <option value="IN_APP">
-                  Melalui SIADocs
+                  {input.source==='UPLOAD'?"Melalui SIADocs — unggah hasil TTD / gambar TTD":"Melalui SIADocs"}
                 </option>
                 <option value="EXTERNAL">
                   Di luar SIADocs — unduh surat

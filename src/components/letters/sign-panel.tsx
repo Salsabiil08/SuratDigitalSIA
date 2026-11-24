@@ -13,7 +13,8 @@ export function SignPanel({
   request: any;
   onSaved: () => void;
 }) {
-  const [method, setMethod] = useState("IMAGE");
+  const imageAvailable=letter.source!=="UPLOAD" || !!letter.signature_areas?.[request.sign_order-1];
+  const [method, setMethod] = useState(imageAvailable?"IMAGE":"WET_UPLOAD");
   const [signature, setSignature] = useState<File | null>(null);
   const [stamp, setStamp] = useState<File | null>(null);
   const [document, setDocument] = useState<File | null>(null);
@@ -81,8 +82,8 @@ export function SignPanel({
             setMethod(e.target.value);
           }}
         >
-          <option value="IMAGE">Gunakan gambar tanda tangan (PNG)</option>
-          <option value="WET_UPLOAD">Unggah hasil tanda tangan basah</option>
+          {imageAvailable&&<option value="IMAGE">Gunakan gambar tanda tangan (PNG)</option>}
+          <option value="WET_UPLOAD">Unggah dokumen yang sudah ditandatangani</option>
         </Select>
       </Field>
       {method === "IMAGE" ? (

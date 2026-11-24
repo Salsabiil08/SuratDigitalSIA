@@ -36,7 +36,8 @@
       "fix/pr08-billing-borders": false,
       "fix/visual-pdf-placement": false,
       "feat/manual-number-first": false,
-      "fix/cancellation-status-notifications": false
+      "fix/cancellation-status-notifications": false,
+      "fix/mobile-attachments-clock": false
     }
   }
 }

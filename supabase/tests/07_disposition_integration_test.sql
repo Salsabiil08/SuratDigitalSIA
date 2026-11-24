@@ -47,7 +47,10 @@ begin
  -- Lampiran: pelaksana bisa menyiapkan, pemberi belum bisa membaca sebelum submit.
  select revision into rev from dispositions where id=task;
  perform disposition_workflow(staff,'ATTACH',task,rev,jsonb_build_object('operationKey',gen_random_uuid(),'path',staff::text||'/evidence.pdf','hash',repeat('a',64),'format','PDF','name','Hasil.pdf','size',100));
- select id into file from disposition_result_files where disposition_id=task;
+ select revision into rev from dispositions where id=task;
+ perform disposition_workflow(staff,'ATTACH',task,rev,jsonb_build_object('operationKey',gen_random_uuid(),'path',staff::text||'/evidence.bin','hash',repeat('b',64),'format','BINARY','name','Rincian.xlsx','size',100));
+ assert exists(select 1 from disposition_result_files where disposition_id=task and file_format='BINARY' and storage_bucket='letter-attachments');
+ select id into file from disposition_result_files where disposition_id=task and file_format='PDF';
  perform set_config('request.jwt.claim.sub',gm::text,true);set local role authenticated;assert(select count(*)=0 from disposition_result_files where id=file);reset role;
  select revision into rev from dispositions where id=task;
  submit_data:=jsonb_build_object('note','Surat hasil dan lampiran telah siap','operationKey',gen_random_uuid(),'attachmentIds',jsonb_build_array(file));

@@ -48,8 +48,10 @@ export function LiveClock({ variant = 'default', className = '' }: LiveClockProp
     };
 
     updateDateTime();
-    const interval = setInterval(updateDateTime, 30000);
-    return () => clearInterval(interval);
+    const interval = setInterval(updateDateTime, 1000);
+    window.addEventListener("focus",updateDateTime);
+    document.addEventListener("visibilitychange",updateDateTime);
+    return () => {clearInterval(interval);window.removeEventListener("focus",updateDateTime);document.removeEventListener("visibilitychange",updateDateTime);};
   }, []);
 
   if (!dateStr) {
@@ -68,7 +70,7 @@ export function LiveClock({ variant = 'default', className = '' }: LiveClockProp
   }
 
   return (
-    <div className={`flex items-center gap-2.5 px-3.5 py-1.5 bg-white/80 backdrop-blur-xs border border-[#E4E4E0] rounded-xl text-xs shadow-2xs ${className}`}>
+    <div className={`flex flex-wrap min-w-0 max-w-full items-center gap-2.5 px-3.5 py-1.5 bg-white/80 backdrop-blur-xs border border-[#E4E4E0] rounded-xl text-xs shadow-2xs ${className}`}>
       <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
       <span className="font-semibold text-neutral-800">{dateStr}</span>
       <span className="text-neutral-300">&bull;</span>

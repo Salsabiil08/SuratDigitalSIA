@@ -204,6 +204,7 @@ export function LetterDetailClient({
           <Button disabled={!sendConfirmed} disabledReason={!sendConfirmed?"Centang konfirmasi pengiriman terlebih dahulu.":undefined} loadingLabel="Mengirim…" isLoading={busy} onClick={()=>act(()=>sendInternalLetterAction(id,ccIds),'Surat resmi telah dikirim. Penerimaan menunggu konfirmasi penerima.')}>Kirim Surat Internal</Button>
         </>}
       </Card>}
+      {data.attachments?.length>0&&<Card className="p-5 space-y-2"><h2 className="font-bold">Lampiran</h2>{data.attachments.map(f=><p key={f.id}><a className="text-brand-red underline break-all" href={`/api/letters/${id}/attachments/${f.id}`}>{f.file_name}</a></p>)}</Card>}
       <Card id="preview" className="p-5 space-y-4 scroll-mt-24">
         <h2 className="font-bold">Pratinjau Dokumen</h2>
         {v ? (
@@ -415,7 +416,7 @@ export function LetterDetailClient({
                 r.cancellation_authorizations?.some(
                   (a: any) => a.authorizer_id === data.userId && !a.decision,
                 ) && (
-                  <div className="flex gap-3">
+                  <div className="min-w-0 flex flex-wrap gap-3">
                     <Button
                       isLoading={busy}
                       onClick={() =>
