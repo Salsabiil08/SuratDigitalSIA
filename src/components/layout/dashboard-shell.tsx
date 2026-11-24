@@ -58,7 +58,7 @@ export function DashboardShell({
       <aside className="hidden md:flex shrink-0 h-full overflow-hidden">
         <Sidebar
           user={sidebarUser}
-          unreadNotificationsCount={unreadNotificationsCount}
+          unreadNotificationsCount={unread}
           className="h-full min-h-0"
         />
       </aside>
@@ -89,7 +89,7 @@ export function DashboardShell({
 
             <Sidebar
               user={sidebarUser}
-              unreadNotificationsCount={unreadNotificationsCount}
+              unreadNotificationsCount={unread}
               className="w-full h-full border-r-0"
             />
           </div>
