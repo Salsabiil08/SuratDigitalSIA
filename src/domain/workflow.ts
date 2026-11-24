@@ -11,6 +11,7 @@ export interface DraftInput {
   additionalApproverIds?: string[];
   categoryCode?: string;
   reviewerId?: string;
+  reviewRequested?: boolean;
   dispositionId?: string;
   dispositionDraftKey?: string;
   replyToDispatchId?: string;

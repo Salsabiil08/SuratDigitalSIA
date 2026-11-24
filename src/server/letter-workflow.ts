@@ -191,6 +191,11 @@ export async function saveDraft(
   if (old && input.source !== old.source)
     throw new Error("Sumber dokumen tidak dapat diganti.");
   const { people, banks, categories, reviewerGrants } = await peopleOptions();
+  if(input.reviewRequested!==undefined){
+    if(typeof input.reviewRequested!=='boolean')throw new Error('Pilihan pemeriksaan tidak valid.');
+    if(!input.reviewRequested&&input.reviewerId)throw new Error('Pilih Ya untuk menggunakan pemeriksa.');
+    input.categoryCode=input.categoryCode || old?.document_category?.code || 'PEMBERITAHUAN';
+  }
   assertPeerInternalAuthorization(input.letterTypeCode,user.position?.level||0,people.find(p=>p.id===input.recipientUserId)?.level||0,input);
   if(input.reviewerId)await assertReviewerHierarchy(user.id,input.reviewerId);
   if (!categories.some(c => c.code === input.categoryCode)) throw new Error('Pilih kategori surat yang aktif.');

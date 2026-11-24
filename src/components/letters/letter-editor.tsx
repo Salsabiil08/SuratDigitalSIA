@@ -27,6 +27,7 @@ function draftFromData(
     id: l.id,
     categoryCode: l.document_category?.code || "",
     reviewerId: l.reviewer_id || "",
+    reviewRequested: l.review_requested ?? !!l.reviewer_id,
     revision: l.revision,
     source: l.source,
     letterTypeCode: l.type.code,
@@ -92,6 +93,7 @@ export function LetterEditor({
           source,
           categoryCode: "",
           reviewerId: "",
+          reviewRequested: false,
           dispositionId,
           letterTypeCode: billing ? "Tag" : "IN",
           subject: dispositionSeed?.subject||(billing ? "Permintaan Pembayaran" : ""),
@@ -159,8 +161,6 @@ export function LetterEditor({
   const recipient=options.people.find(p=>p.id===input.recipientUserId);
   const peer=peerInternal(input.letterTypeCode,options.user.position?.level||0,recipient?.level||0);
   const count = internal ? (peer ? 0 : formal ? 1 : 0) : isBill ? 2 : 1;
-  const reviewRule = options.reviewRules.find(r => r.category_code === input.categoryCode && r.typeCode === input.letterTypeCode)
-    || options.reviewRules.find(r => r.category_code === input.categoryCode && !r.typeCode);
   const reviewers = options.people.filter(p => p.id !== options.user.id && higherReviewer(options.user.position?.level || 0,p.level) && options.reviewerGrants.some(g => g.reviewerId === p.id && (!g.typeCode || g.typeCode === input.letterTypeCode)));
   const signers = options?.people.filter((p) => p.signer) || [];
   function updateSigner(index: number, value: string) {
@@ -266,19 +266,17 @@ export function LetterEditor({
               </p>
             </Field>
           </div>
-          <Field label="Kategori Surat" htmlFor="letter-category" required>
-            <Select id="letter-category" value={input.categoryCode || ""} onChange={e => change('categoryCode', e.target.value)} required>
-              <option value="">Pilih kategori surat</option>
-              {options.categories.map(c => <option key={c.id} value={c.code}>{c.name}</option>)}
+          <Field label="Perlu pemeriksaan isi?" htmlFor="letter-review-needed">
+            <Select id="letter-review-needed" value={input.reviewRequested ? 'yes' : 'no'} onChange={e=>setInput(old=>({...old,reviewRequested:e.target.value==='yes',reviewerId:e.target.value==='yes'?old.reviewerId:''}))}>
+              <option value="no">Tidak</option><option value="yes">Ya</option>
             </Select>
           </Field>
-          {!!input.categoryCode && (reviewRule?.requires_review || reviewers.length > 0 || !!input.reviewerId) && <Field label={`Pemeriksa Surat${reviewRule?.requires_review ? ' (wajib sebelum pengajuan)' : ' (opsional)'}`} htmlFor="letter-reviewer"
-            >
-            <Select id="letter-reviewer" disabled={reviewers.length===0} value={input.reviewerId || ""} onChange={e => change('reviewerId', e.target.value)}>
-              <option value="">{reviewRule?.requires_review ? 'Pilih pemeriksa berwenang' : 'Tanpa pemeriksa'}</option>
-              {reviewers.map(p => <option key={p.id} value={p.id}>{p.name} — {p.title}</option>)}
+          {input.reviewRequested && <Field label="Pemeriksa Surat" htmlFor="letter-reviewer">
+            <Select id="letter-reviewer" disabled={reviewers.length===0} value={input.reviewerId || ''} onChange={e=>change('reviewerId',e.target.value)}>
+              <option value="">Pilih pemeriksa</option>
+              {reviewers.map(p=><option key={p.id} value={p.id}>{p.name} — {p.title}</option>)}
             </Select>
-            {reviewRule?.requires_review && reviewers.length === 0 && <p className="text-xs text-amber-800">Pemeriksa belum tersedia. Hubungi Super Admin. Draf tetap dapat disimpan.</p>}
+            <p className="text-xs text-neutral-600">{reviewers.length===0?'Pemeriksa belum tersedia. Hubungi Super Admin. Draf tetap dapat disimpan.':'Pilih pemeriksa sebelum mengajukan surat.'}</p>
           </Field>}
           <Field
             label="Tanggal Surat"

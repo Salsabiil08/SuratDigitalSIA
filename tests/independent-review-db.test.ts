@@ -41,6 +41,21 @@ beforeAll(async()=>{
 },30000);
 afterAll(()=>db.close());
 describe('PR-02 kategori/reviewer independen', { concurrent: false }, () =>{
+ it('pilihan Tidak melewati pemeriksaan kategori lama tanpa mengubah nomor otomatis',async()=>{
+  const id=await draft({categoryCode:'LAPORAN',reviewRequested:false,reviewerId:''});await submit(id);
+  expect((await get(id)).review_requested).toBe(false);expect((await get(id)).review_status).toBe('NOT_REQUIRED');expect((await get(id)).status).toBe('READY_TO_ISSUE');expect((await get(id)).official_number).toBeNull();expect(await steps(id)).toHaveLength(0);
+  await rows("select issue_letter_number($1,$2,'optional-no-review')",[id,actor(5)]);expect((await get(id)).official_number).toBeTruthy();
+ });
+ it('pilihan Ya menyimpan draf tanpa pemeriksa tetapi menolak pengajuan',async()=>{
+  const id=await draft({categoryCode:'',reviewRequested:true,reviewerId:''});expect((await get(id)).review_requested).toBe(true);await expect(submit(id)).rejects.toThrow(/Pemeriksa/);expect((await get(id)).official_number).toBeNull();
+ });
+ it('pilihan Ya menunggu pemeriksaan versi terkini sebelum persetujuan',async()=>{
+  const id=await draft({categoryCode:'',reviewRequested:true});await submit(id);expect((await get(id)).review_status).toBe('WAITING');await decide(id);await submit(id);expect((await get(id)).status).toBe('READY_TO_ISSUE');
+ });
+ it('pilihan Tidak tidak boleh menyelundupkan pemeriksa atau mengubah flag langsung',async()=>{
+  await expect(draft({reviewRequested:false})).rejects.toThrow(/Pilih Ya/);
+  const id=await draft({reviewRequested:true});expect(await asUser(5,'update letters set review_requested=false where id=$1 returning id',[id])).toEqual([]);expect((await get(id)).review_requested).toBe(true);
+ });
  it.each(['PERMOHONAN','LAPORAN'])('%s wajib reviewer, kategori kosong tidak bisa melewati gate',async categoryCode=>{
   const id=await draft({categoryCode,reviewerId:''});await expect(submit(id)).rejects.toThrow(/Pemeriksa/);
   expect((await get(id)).official_number).toBeNull();
