@@ -78,7 +78,8 @@ export async function getWorkflowLetter(id: string) {
   if(de)throw new Error('Informasi pengiriman belum dapat diambil.');
   let ccOptions: {id:string;full_name:string}[]=[];
   if(delivery?.ccEnabled&&delivery?.canDispatch){const {data:ccPeople,error:cce}=await db.from('profiles').select('id,full_name').eq('is_active',true);if(cce)throw new Error('Penerima tembusan belum dapat diambil.');ccOptions=ccPeople||[];}
-  const manualNumber=l.manual_number_reservation_id ? (await createAdminClient().from("manual_number_reservations").select("id,official_number,subject,reserved_signer_id,letter_id,status").eq("id",l.manual_number_reservation_id).eq("letter_id",id).single()).data : null;
+  let manualNumber:any=null;
+  if(l.manual_number_reservation_id){const {data:r,error}=await createAdminClient().from("manual_number_reservations").select("id,official_number,subject,reserved_signer_id,letter_id,status").eq("id",l.manual_number_reservation_id).eq("letter_id",id).single();if(error||!r)throw new Error("Nomor yang dicadangkan belum dapat dimuat.");manualNumber=r;}
   return {
     manualNumber,
     commentContext,

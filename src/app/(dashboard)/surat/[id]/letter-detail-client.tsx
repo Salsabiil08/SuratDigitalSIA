@@ -210,7 +210,7 @@ export function LetterDetailClient({
               onLayoutCopy={setHasLayoutCopy}
               onLoaded={() => {setPreviewed(true);void reload().catch(()=>setSyncError("Status pembacaan belum dapat diperbarui. Gunakan Perbarui status."));}}
             />
-            <DocumentDownloads id={id} current={v}
+            <DocumentDownloads manualUpload={!!l.manual_number_reservation_id} id={id} current={v}
               unsigned={data.versions.find(version => version.version_kind === 'NUMBERED')}
               signatureCount={l.required_signature_count}
               fullVersionAccess={!!data.delivery?.fullVersionAccess} />
