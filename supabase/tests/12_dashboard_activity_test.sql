@@ -3,7 +3,7 @@ do $$
 declare sender uuid:='a0000000-0000-0000-0000-000000000005';recipient uuid:='a0000000-0000-0000-0000-000000000006';l uuid;d uuid;a uuid; j jsonb;
 begin
  l:=test_support.draft(sender);
- insert into audit_logs(actor_id,letter_id,action,entity_type,entity_id,reason,metadata,occurred_at) values(sender,l,'DRAFT_SAVED','letters',l::text,'RAHASIA',jsonb_build_object('private','RAHASIA'),clock_timestamp()+interval '1 second') returning id into a;
+ insert into audit_logs(actor_id,letter_id,action,entity_type,entity_id,reason,metadata,occurred_at) values(sender,l,'REVIEW_PASS','letters',l::text,'RAHASIA',jsonb_build_object('private','RAHASIA'),clock_timestamp()+interval '1 second') returning id into a;
  perform set_config('request.jwt.claim.sub',sender::text,true);
  j:=get_dashboard_letter_activity();assert jsonb_array_length(j)>0 and j::text like '%'||a::text||'%';assert j::text not like '%RAHASIA%';assert jsonb_array_length(j)<=5;
  perform set_config('request.jwt.claim.sub',recipient::text,true);
