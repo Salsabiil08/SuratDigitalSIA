@@ -207,7 +207,7 @@ export function LetterEditor({
     options?.user.position?.code || "",
   );
   return (
-    <div className="max-w-4xl space-y-5">
+    <div className={id || billing ? "max-w-4xl space-y-5" : "max-w-6xl w-full space-y-5"}>
       <PageHeader
         title={
           id
