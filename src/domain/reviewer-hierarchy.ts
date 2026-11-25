@@ -4,7 +4,8 @@ export function higherReviewer(creatorLevel: number, reviewerLevel: number) {
 }
 
 /** The SIA role order is explicit; technical administrators are not business reviewers. */
+export const REVIEWER_ROLE_ORDER:Readonly<Record<string,number>>={STF:1,GM:2,SM:3,DIR:4};
 export function roleReviewer(creatorCode:string,reviewerCode:string){
- const rank:Record<string,number>={STF:1,GM:2,SM:3,DIR:4};
- return !!rank[creatorCode] && !!rank[reviewerCode] && rank[reviewerCode]!>rank[creatorCode]!;
+ const creator=REVIEWER_ROLE_ORDER[creatorCode]||0,reviewer=REVIEWER_ROLE_ORDER[reviewerCode]||0;
+ return creator>0 && reviewer>creator;
 }
