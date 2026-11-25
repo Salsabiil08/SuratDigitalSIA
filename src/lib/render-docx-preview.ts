@@ -1,6 +1,6 @@
 import {CANONICAL_HEADER_SHA256,LETTERHEAD_SVG} from "./letterhead-preview";
 
-export async function renderDocxInFrame(blob:Blob,frame:HTMLIFrameElement){
+export async function renderDocxInFrame(blob:Blob,frame:HTMLIFrameElement):Promise<()=>void>{
         const doc = frame.contentDocument;
         if (!doc) throw new Error("Pratinjau tidak dapat dimuat.");
         doc.open();
@@ -55,4 +55,18 @@ export async function renderDocxInFrame(blob:Blob,frame:HTMLIFrameElement){
             anchor.style.display='inline-block';anchor.style.verticalAlign='top';anchor.style.zIndex='2';
           }
         }
+        const pages=Array.from(doc.querySelectorAll<HTMLElement>('.docx-wrapper>section'));
+        const pageWidth=Math.max(0,...pages.map(page=>page.offsetWidth));
+        const fitMobile=()=>{
+          const scale=frame.clientWidth<640&&pageWidth>0?Math.min(1,Math.max(1,frame.clientWidth-24)/pageWidth):1;
+          doc.body.style.setProperty('zoom',String(scale));
+        };
+        fitMobile();
+        if(typeof ResizeObserver==='undefined'){
+          window.addEventListener('resize',fitMobile);
+          return ()=>window.removeEventListener('resize',fitMobile);
+        }
+        const observer=new ResizeObserver(fitMobile);
+        observer.observe(frame);
+        return ()=>observer.disconnect();
 }

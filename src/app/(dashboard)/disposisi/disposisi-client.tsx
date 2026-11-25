@@ -12,6 +12,7 @@ import { Field, Input, Textarea, Select } from "@/components/ui/field";
 import {
   getDispositionsAction,
   createDispositionAction,
+  updateDispositionAction,
   updateDispositionStatusAction,
   DispositionItem,
   DispositionsData,
@@ -41,6 +42,7 @@ export function DisposisiClient({
     );
   const source=initialData.availableLetters.find(l=>l.id===sourceLetterId);
   const [show, setShow] = useState(!!source),
+    [editing, setEditing] = useState<DispositionItem | null>(null),
     [selected, setSelected] = useState<DispositionItem | null>(null),
     [note, setNote] = useState(""),
     [busy, setBusy] = useState(false),
@@ -115,34 +117,65 @@ export function DisposisiClient({
     setMessage("");
     try {
       const payload={recipientId,subject,instruction,priority,dueDate:dueDate||undefined,requiresLetter,letterId:letterId||undefined};
-      const r = await createDispositionAction({
-        operationKey:intent('create',payload),
-        recipientId,
-        subject,
-        instruction,
-        priority,
-        dueDate: dueDate || undefined,
-        requiresLetter,
-        letterId: letterId || undefined,
-      });
+      const r = editing
+        ? await updateDispositionAction({
+            dispositionId: editing.id,
+            revision: editing.revision,
+            operationKey: intent(`edit-${editing.id}`, {revision:editing.revision,...payload}),
+            recipientId,
+            subject,
+            instruction,
+            priority,
+            dueDate: dueDate || undefined,
+            requiresLetter,
+          })
+        : await createDispositionAction({
+            operationKey:intent('create',payload),
+            recipientId,
+            subject,
+            instruction,
+            priority,
+            dueDate: dueDate || undefined,
+            requiresLetter,
+            letterId: letterId || undefined,
+          });
       if (!r.success) throw new Error(r.error);
       setShow(false);
-      setSubject("");
-      setInstruction("");
-      setLetter("");
-      setRequires(false);sessionStorage.removeItem('siadocs-disp-create');
+      setEditing(null);
+      if(!editing){setSubject("");setInstruction("");setLetter("");setRequires(false);sessionStorage.removeItem('siadocs-disp-create');}
       setTab("OUTBOX");
       await refresh();
       setMessageKind("success");
-      setMessage(
-        "Disposisi dikirim. Penerima dapat membuat surat tindak lanjut dari tugas ini.",
-      );
+      setMessage(editing?"Perubahan disposisi tersimpan.":"Disposisi dikirim. Penerima dapat membuat surat tindak lanjut dari tugas ini.");
     } catch (e) {
       setMessageKind("error");
-      setMessage(e instanceof Error ? e.message : "Gagal mengirim disposisi.");
+      setMessage(e instanceof Error ? e.message : editing?"Gagal memperbarui disposisi.":"Gagal mengirim disposisi.");
     } finally {
       setBusy(false);
     }
+  }
+  function openCreate() {
+    setEditing(null);
+    setSubject(source?`Tindak lanjut: ${source.subject}`:"");
+    setInstruction("");
+    setRecipient("");
+    setUnit("");
+    setPriority("NORMAL");
+    setDue("");
+    setRequires(false);
+    setLetter(source?.id||"");
+    setShow(true);
+  }
+  function openEdit(d:DispositionItem) {
+    setEditing(d);
+    setSubject(d.subject);
+    setInstruction(d.instruction);
+    setRecipient(d.recipientId);
+    setUnit(data.availableProfiles.find(p=>p.id===d.recipientId)?.unitCode||"");
+    setPriority(d.priority);
+    setDue(d.dueDate||"");
+    setRequires(d.requiresLetter);
+    setShow(true);
   }
   const list = tab === "INBOX" ? data.inbox : data.outbox;
   const units = Array.from(
@@ -156,7 +189,7 @@ export function DisposisiClient({
         title="Disposisi"
         actions={
           data.canCreateDisposition ? (
-            <Button size="sm" onClick={() => setShow(true)}>
+            <Button size="sm" onClick={openCreate}>
               + Buat Disposisi
             </Button>
           ) : undefined
@@ -302,6 +335,11 @@ export function DisposisiClient({
                 Periksa Hasil
               </Button>
             )}
+            {tab === "OUTBOX" && d.editable && (
+              <Button size="sm" variant="secondary" onClick={() => openEdit(d)}>
+                Edit Disposisi
+              </Button>
+            )}
           </div>
         </Card>
       ))}
@@ -394,10 +432,10 @@ export function DisposisiClient({
             onSubmit={create}
             role="dialog"
             aria-modal="true"
-            aria-label="Buat disposisi"
+            aria-label={editing?"Edit disposisi":"Buat disposisi"}
             className="max-h-[90vh] w-full max-w-lg space-y-4 overflow-y-auto rounded-2xl bg-white p-6"
           >
-            <h2 className="font-bold">Buat Disposisi</h2>
+            <h2 className="font-bold">{editing?"Edit Disposisi":"Buat Disposisi"}</h2>
             <Field label="Perihal" required>
               <Input
                 value={subject}
@@ -429,6 +467,7 @@ export function DisposisiClient({
                 required
               >
                 <option value="">Pilih penerima</option>
+                {editing && !data.availableProfiles.some(p=>p.id===editing.recipientId) && <option value={editing.recipientId}>{editing.recipientName} — Penerima saat ini</option>}
                 {data.availableProfiles
                   .filter((p) => !unit || p.unitCode === unit)
                   .map((p) => (
@@ -477,7 +516,7 @@ export function DisposisiClient({
               />
               Wajib membuat surat tindak lanjut
             </label>
-            <Field label="Surat acuan (opsional)">
+            {!editing&&<Field label="Surat acuan (opsional)">
               <Select
                 value={letterId}
                 onChange={(e) => setLetter(e.target.value)}
@@ -489,7 +528,7 @@ export function DisposisiClient({
                   </option>
                 ))}
               </Select>
-            </Field>
+            </Field>}
             <div className="flex justify-end gap-2">
               <Button
                 type="button"
@@ -500,7 +539,7 @@ export function DisposisiClient({
                 Batal
               </Button>
               <Button type="submit" isLoading={busy}>
-                Kirim Disposisi
+                {editing?"Simpan Perubahan":"Kirim Disposisi"}
               </Button>
             </div>
           </form>

@@ -10,6 +10,7 @@ function pdfJs(){return pdfModule??=import('pdfjs-dist').then(pdf=>{pdf.GlobalWo
 export function PdfCanvas({blob,areas=[],activeKey,onPlace,onLoaded}:{blob:Blob;areas?:PdfArea[];activeKey?:string;onPlace?:(key:string,area:SignatureArea)=>void;onLoaded?:()=>void}){
  const [pdf,setPdf]=useState<PDFDocumentProxy|null>(null),[error,setError]=useState(''),[attempt,setAttempt]=useState(0),[zoom,setZoom]=useState(1);
  const loaded=useRef(false),onLoadedRef=useRef(onLoaded);onLoadedRef.current=onLoaded;
+ useEffect(()=>{const mobile=window.matchMedia('(max-width: 639px)');const fitMobile=()=>{if(mobile.matches)setZoom(1);};fitMobile();mobile.addEventListener('change',fitMobile);return()=>mobile.removeEventListener('change',fitMobile);},[]);
  useEffect(()=>{let alive=true;let task:ReturnType<typeof import('pdfjs-dist').getDocument>|undefined;setPdf(null);setError('');setZoom(1);loaded.current=false;
   void (async()=>{try{const module=await pdfJs();if(!alive)return;const data=new Uint8Array(await blob.arrayBuffer());if(!alive)return;task=module.getDocument({data,useSystemFonts:true,enableXfa:false});const document=await task.promise;if(!alive)return;if(document.numPages>200)throw new Error('Dokumen terlalu panjang untuk pratinjau. Gunakan berkas dengan maksimal 200 halaman.');setPdf(document);}catch(e){if(alive)setError(e instanceof Error&&e.message.includes('200 halaman')?e.message:'Pratinjau PDF belum dapat ditampilkan. Coba muat ulang atau periksa berkas PDF.');}})();
   return()=>{alive=false;void task?.destroy().catch(()=>{});};

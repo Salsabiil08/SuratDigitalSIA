@@ -2,6 +2,12 @@
 
 Lihat [readiness ringkas](plans/PR08_READINESS.md) dan [runbook](plans/PR08_PRODUCTION_RUNBOOK.md). Production tidak diubah. Blocker nyata: Supabase staging belum ada (branching memerlukan Pro), UAT Auth/Storage lintas akun, keputusan wajib perusahaan dan backup/restore staging.
 
+## Penyesuaian permintaan pengguna — 25 November 2026
+
+Perubahan lokal PR-08 pada 25 November menambahkan pilihan pemeriksa satu orang dari GM/SM/Direktur yang tingkat jabatannya di atas pembuat, tetap dibatasi grant pemeriksaan aktif. Pemeriksaan berlaku pada draft/pengajuan dan tidak memberi hak edit isi kepada pemeriksa. Tampilan preview PDF kembali ke lebar layar saat viewport memasuki ukuran ponsel; preview DOCX juga mengecil proporsional mengikuti lebar iframe di ponsel. Zoom manual PDF desktop tetap tersedia.
+
+Disposisi keluar dapat dikoreksi pembuat selama status masih Baru dan penerima belum memulai tugas. Perubahan memakai RPC server, revision optimistis, kunci idempotensi, notifikasi dan audit append-only. Setelah tugas dimulai, surat hasil ditautkan, atau pengajuan hasil dibuat, perubahan ditolak agar penugasan/riwayat yang sedang berjalan tidak diubah. Perubahan ini baru diuji lokal; tidak diterapkan ke production, dan belum menggantikan kebutuhan UAT staging.
+
 Perbaikan final: Next 15.5.29/PostCSS 8.5.33 (audit production 0), async request APIs, staging menolak URL production, role UI tanpa persona/mandat admin otomatis, error login jaringan dan cleanup profil nonaktif, serta migrasi aditif grant workflow/TRUNCATE dan validasi unit/jabatan aktif dengan tanggal WIB. Delapan migrasi forward diuji pada PostgreSQL 17 dengan 13 surat sintetis, grant mirip production, rollback/fault/replay dan integritas counter/audit.
 
 [Draft PR-08 #9](https://github.com/Salsabiil08/SuratDigitalSIA/pull/9); CI integrasi #45 lulus check/db/browser-public. Bukti dan keterbatasan staging tetap dalam readiness; CI hijau tidak membatalkan NO-GO.

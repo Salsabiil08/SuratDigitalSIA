@@ -16,6 +16,10 @@ export interface CreateDispositionInput {
   dueDate?: string;
   requiresLetter: boolean;
 }
+export interface UpdateDispositionInput extends Omit<CreateDispositionInput, "letterId"> {
+  dispositionId: string;
+  revision: number;
+}
 export interface DispositionItem {
   id: string;
   revision: number;
@@ -25,6 +29,8 @@ export interface DispositionItem {
   status: "NEW" | "IN_PROGRESS" | "IN_REVIEW" | "REVISION_REQUESTED" | "DONE";
   requiresLetter: boolean;
   letterId?: string;
+  recipientId: string;
+  editable: boolean;
   letterNumber?: string;
   responseLetterId?: string;
   responseLabel?: string;
@@ -104,6 +110,8 @@ export async function getDispositionsAction(sourceLetterId?:string): Promise<{
       (d: any): DispositionItem => ({
         id: d.id,
         revision: d.revision,
+        recipientId: d.recipient_id,
+        editable: d.giver_id === user.id && d.status === "NEW" && !d.read_at && !d.response_letter_id && !d.submitted_at && !(submissions||[]).some(s=>s.disposition_id===d.id),
         subject: d.subject,
         instruction: d.instruction,
         priority: d.priority,
@@ -181,6 +189,34 @@ export async function createDispositionAction(input: CreateDispositionInput) {
     return {
       success: false,
       error: e instanceof Error ? e.message : "Gagal mengirim disposisi.",
+    };
+  }
+}
+export async function updateDispositionAction(input: UpdateDispositionInput) {
+  try {
+    const user = await requireUser();
+    const { error } = await createAdminClient().rpc("disposition_workflow", {
+      p_actor: user.id,
+      p_action: "EDIT",
+      p_id: input.dispositionId,
+      p_revision: input.revision,
+      p_data: {
+        operationKey: input.operationKey,
+        recipientId: input.recipientId,
+        subject: input.subject,
+        instruction: input.instruction,
+        priority: input.priority,
+        dueDate: input.dueDate || null,
+        requiresLetter: input.requiresLetter,
+      },
+    });
+    if (error) throw new Error(error.message);
+    revalidatePath("/disposisi");revalidatePath("/surat/[id]","page");
+    return { success: true };
+  } catch (e) {
+    return {
+      success: false,
+      error: e instanceof Error ? e.message : "Gagal memperbarui disposisi.",
     };
   }
 }

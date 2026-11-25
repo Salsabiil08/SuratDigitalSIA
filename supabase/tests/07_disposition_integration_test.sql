@@ -21,6 +21,14 @@ begin
  end loop;
  task:=disposition_workflow(gm,'CREATE',null,null,payload);assert disposition_workflow(gm,'CREATE',null,null,payload)=task;
  assert(select count(*)=1 from audit_logs where action='DISPOSITION_CREATE' and entity_id=task::text);
+ select revision into rev from dispositions where id=task;
+ submit_data:=jsonb_build_object('operationKey',gen_random_uuid(),'recipientId',staff,'subject','Arahan diperbaiki','instruction','Gunakan format laporan terbaru','priority','IMPORTANT','dueDate','2026-12-01','requiresLetter',true);
+ perform disposition_workflow(gm,'EDIT',task,rev,submit_data);
+ perform disposition_workflow(gm,'EDIT',task,rev,submit_data);
+ assert(select subject='Arahan diperbaiki' and instruction='Gunakan format laporan terbaru' and priority='IMPORTANT' and due_date='2026-12-01'::date and revision=rev+1 from dispositions where id=task);
+ assert(select count(*)=1 from audit_logs where action='DISPOSITION_EDIT' and entity_id=task::text);
+ select revision into rev from dispositions where id=task;
+ failed:=false;begin perform disposition_workflow(staff,'EDIT',task,rev,submit_data||jsonb_build_object('operationKey',gen_random_uuid()));exception when others then failed:=true;end;assert failed,'Pelaksana tidak dapat mengubah arahan keluar';
  failed:=false;begin perform disposition_workflow(gm,'CREATE',null,null,payload||jsonb_build_object('instruction','Diubah'));exception when others then failed:=true;end;assert failed;
  perform set_config('request.jwt.claim.sub',gm::text,true);set local role authenticated;
  j:=get_disposition_letter_context(src);assert(j->>'canCreate')::boolean;assert jsonb_array_length(j->'tasks')=1;

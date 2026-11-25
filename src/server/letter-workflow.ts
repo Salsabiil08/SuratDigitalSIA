@@ -202,7 +202,7 @@ export async function saveDraft(
   assertPeerInternalAuthorization(input.letterTypeCode,user.position?.level||0,people.find(p=>p.id===input.recipientUserId)?.level||0,input);
   if(input.reviewerId)await assertReviewerHierarchy(user.id,input.reviewerId);
   if (!categories.some(c => c.code === input.categoryCode)) throw new Error('Pilih kategori surat yang aktif.');
-  if (input.reviewerId && (input.reviewerId === user.id || !people.some(p => p.id === input.reviewerId) || !reviewerGrants.some(g => g.reviewerId === input.reviewerId && (!g.typeCode || g.typeCode === input.letterTypeCode))))
+  if (input.reviewerId && (input.reviewerId === user.id || !people.some(p => p.id === input.reviewerId && ['GM','SM','DIR'].includes(p.position)) || !reviewerGrants.some(g => g.reviewerId === input.reviewerId && (!g.typeCode || g.typeCode === input.letterTypeCode))))
     throw new Error('Pilih pemeriksa berbeda yang berwenang untuk jenis dan unit surat.');
   const signers = input.signerIds.map((id) =>
     people.find((p) => p.id === id && p.signer),

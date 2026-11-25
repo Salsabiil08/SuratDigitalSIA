@@ -83,6 +83,11 @@ Status: PR-00–07 selesai dalam draft; PR-08 FINAL disetujui pada 18 November 2
 - [ ] UAT Auth/Storage lintas akun dan sign-off kebijakan wajib perusahaan.
 - [x] [Draft PR-08 #9](https://github.com/Salsabiil08/SuratDigitalSIA/pull/9), CI integrasi #45 hijau, laporan NO-GO dan runbook; wajib verifikasi ulang Checks pada head release.
 
+### Penyesuaian pengguna — 25 November 2026
+- [x] Pemeriksa isi surat menampilkan satu pilihan berwenang dari GM/SM/Direktur yang lebih tinggi; server memvalidasi hierarki, jabatan dan grant.
+- [x] Pratinjau PDF/DOCX menyesuaikan zoom ke lebar layar ponsel; kontrol zoom PDF desktop tetap ada.
+- [x] Pembuat dapat mengoreksi disposisi keluar hanya sebelum penerima mulai mengerjakan, dengan cek revision, idempotensi dan audit aditif.
+
 Tidak membuat fase PR-09. Production/merge/deploy menunggu persetujuan baru.
 
 Rincian: [spesifikasi target](../docs/spec/08-alur-ndo-r04.md), [rencana migrasi](../docs/plans/R04_NDO_MIGRATION_PLAN.md), [validasi PR-00](../docs/plans/PR00_VALIDATION.md), [validasi PR-01](../docs/plans/PR01_VALIDATION.md), [validasi PR-02](../docs/plans/PR02_VALIDATION.md), [validasi PR-03](../docs/plans/PR03_VALIDATION.md), [validasi PR-04](../docs/plans/PR04_VALIDATION.md), [validasi PR-05](../docs/plans/PR05_VALIDATION.md), [validasi PR-06](../docs/plans/PR06_VALIDATION.md), [validasi PR-07](../docs/plans/PR07_VALIDATION.md).

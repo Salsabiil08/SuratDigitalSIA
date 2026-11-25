@@ -467,6 +467,52 @@ describe("Disposisi: surat kembali untuk diperiksa pemberi", { concurrent: false
     id = (await create(4, 5))[0].disposition_workflow;
     expect((await disp()).status).toBe("NEW");
     expect((await disp()).letter_id).toBeNull();
+    const revision = (await disp()).revision;
+    const edit = {
+      operationKey: "00000000-0000-4000-8000-000000000001",
+      recipientId: actor(5),
+      subject: "Arahan yang dikoreksi",
+      instruction: "Gunakan format laporan terbaru",
+      priority: "IMPORTANT",
+      dueDate: "2026-12-01",
+      requiresLetter: true,
+    };
+    await expect(
+      run("select disposition_workflow($1,'EDIT',$2,$3,$4::jsonb)", [
+        actor(5), id, revision, JSON.stringify(edit),
+      ]),
+    ).rejects.toThrow(/pembuat/);
+    const updated = await rows(
+      "select disposition_workflow($1,'EDIT',$2,$3,$4::jsonb) id",
+      [actor(4), id, revision, JSON.stringify(edit)],
+    );
+    expect(updated[0].id).toBe(id);
+    expect(await disp()).toMatchObject({
+      subject: "Arahan yang dikoreksi",
+      instruction: "Gunakan format laporan terbaru",
+      priority: "IMPORTANT",
+      due_date: new Date("2026-12-01T00:00:00.000Z"),
+      revision: revision + 1,
+    });
+    await rows("select disposition_workflow($1,'EDIT',$2,$3,$4::jsonb)", [
+      actor(4), id, revision, JSON.stringify(edit),
+    ]);
+    expect((await disp()).revision).toBe(revision + 1);
+    await expect(
+      run("select disposition_workflow($1,'EDIT',$2,$3,$4::jsonb)", [
+        actor(4), id, revision, JSON.stringify({...edit,operationKey:"00000000-0000-4000-8000-000000000002"}),
+      ]),
+    ).rejects.toThrow(/berubah/);
+    expect(
+      (await rows("select action from audit_logs where entity_id=$1 and action='DISPOSITION_EDIT'", [id])),
+    ).toHaveLength(1);
+    await move(5, "START");
+    const startedRevision = (await disp()).revision;
+    await expect(
+      run("select disposition_workflow($1,'EDIT',$2,$3,$4::jsonb)", [
+        actor(4), id, startedRevision, JSON.stringify({...edit,operationKey:"00000000-0000-4000-8000-000000000003"}),
+      ]),
+    ).rejects.toThrow(/sebelum penerima mulai/);
   });
   it("penerima tidak dapat menutup sendiri atau mengirim sebelum surat selesai", async () => {
     await expect(move(5, "ACCEPT")).rejects.toThrow(/kewenangan/);

@@ -34,6 +34,7 @@ export function DocumentPreview({
     if (!visible) return;
     let alive = true;
     const controller = new AbortController();
+    let stopDocxFit:(()=>void)|undefined;
     setPdfBlob(null);
 
     setError("");
@@ -49,8 +50,9 @@ export function DocumentPreview({
         if (format === 'PDF') {setPdfBlob(blob);return;}
         if (!frame.current) return;
         const {renderDocxInFrame}=await import('@/lib/render-docx-preview');
-        await renderDocxInFrame(blob,frame.current);
-        if (alive) onLoaded?.();
+        const stopFit=await renderDocxInFrame(blob,frame.current);
+        if (alive) {stopDocxFit=stopFit;onLoaded?.();}
+        else stopFit();
       } catch (e) {
         if (alive) setError(e instanceof Error ? e.message : "Pratinjau gagal.");
       } finally {if(alive)setLoading(false);}
@@ -59,6 +61,7 @@ export function DocumentPreview({
     return () => {
       alive = false;
       controller.abort();
+      stopDocxFit?.();
 
     };
     // Parent callbacks report load/copy state; they are notifications, not render dependencies.
