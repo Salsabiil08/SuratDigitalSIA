@@ -37,7 +37,8 @@
       "fix/visual-pdf-placement": false,
       "feat/manual-number-first": false,
       "fix/cancellation-status-notifications": false,
-      "fix/mobile-attachments-clock": false
+      "fix/mobile-attachments-clock": false,
+      "fix/reviewer-role-hierarchy": false
     }
   }
 }

@@ -9,12 +9,12 @@ beforeEach(()=>{
 });
 it('memeriksa penugasan akun sendiri dengan masa berlaku dan unit Finance terkonfigurasi',async()=>{
  m.results.review_authorizations.data=[{id:'grant'}];const x=await readNavigationAccess(user);
- expect(x.access.review).toBe(true);expect(x.access.billing).toBe(false);
- expect(m.filters).toContainEqual(['review_authorizations','eq','reviewer_id','actor']);expect(m.filters).toContainEqual(['approver_authorizations','eq','approver_id','actor']);
+ expect(x.access.review).toBe(false);expect(x.access.billing).toBe(false);
+ expect((await readNavigationAccess({...user,position:{code:'GM'}})).access.review).toBe(true);expect(m.filters.some(f=>f[0]==='review_authorizations')).toBe(false);expect(m.filters).toContainEqual(['approver_authorizations','eq','approver_id','actor']);
  expect(m.filters.some(f=>f[1]==='lte'&&f[2]==='starts_on')).toBe(true);
  expect((await readNavigationAccess({...user,unit:{id:'finance'}})).access.billing).toBe(true);
 });
 it('kegagalan pemeriksaan grant ditampilkan dan tidak memberikan menu kewenangan',async()=>{
- m.results.review_authorizations={data:[{id:'untrusted'}],error:{message:'Query gagal'}};
+ m.results.approver_authorizations={data:[{id:'untrusted'}],error:{message:'Query gagal'}};
  const x=await readNavigationAccess(user);expect(x.access.review).toBe(false);expect(x.error).toBeTruthy();
 });

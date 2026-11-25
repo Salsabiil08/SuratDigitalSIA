@@ -15,7 +15,7 @@ export function navigationAccess(input: {
   return {
     correspondence: input.hasAssignment,
     billing: input.hasAssignment && input.isFinance,
-    review: input.hasAssignment && input.reviewerAssigned,
+    review: input.hasAssignment && ['GM','SM','DIR'].includes(input.positionCode || ''),
     approvals: input.hasAssignment && (official || input.approverAssigned),
     signatures: input.hasAssignment && official && input.isOfficialSigner,
     administration: input.isSuperAdmin,
