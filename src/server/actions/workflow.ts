@@ -10,6 +10,7 @@ import {
   readLetter,
   downloadVersion,
   peopleOptions,
+  storeBytes,
 } from "@/server/letter-workflow";
 import { inspectDocument } from "@/lib/letter-document";
 import { revalidatePath } from "next/cache";
@@ -161,13 +162,40 @@ export async function finalizeLetterAction(
 ) {
   try {
     const user = await requireUser();
-    await readLetter(id);
-    const { error } = await createAdminClient().rpc("finalize_letter", {
-      p_actor: user.id,
-      p_letter: id,
-      p_revision: revision,
-      p_external_confirmed: externalConfirmed,
-    });
+    let letter=await readLetter(id);
+    if(letter.creator_id!==user.id) throw new Error("Hanya pembuat yang dapat memfinalisasi surat.");
+    if(letter.finalized_at) return {success:true};
+    const db=createAdminClient();
+    let error;
+    if(letter.official_sender_id&&letter.required_signature_count===0&&
+        (letter.status==='READY_TO_ISSUE'||letter.status==='NUMBERED')) {
+      if(letter.revision!==revision) throw new Error("Versi surat berubah. Pratinjau ulang sebelum finalisasi.");
+      const {issueLetterNumberAction}=await import('./approvals');
+      const numbered=await issueLetterNumberAction(id);
+      if(!numbered.success) throw new Error(numbered.error);
+      letter=await readLetter(id);
+      revision=letter.revision;
+    }
+    if(letter.official_sender_id) {
+      if(letter.status!=="NUMBERED" || letter.revision!==revision) throw new Error("Nomor belum terbit atau versi surat berubah.");
+      if(letter.required_signature_count>0&&letter.signature_status!=="UPLOADED") throw new Error("Seluruh TTD wajib harus selesai.");
+      const source=await downloadVersion(letter);
+      let pdf=null;
+      if(source.format==="DOCX") {
+        const {renderFinalPdf}=await import("@/server/render-final-pdf");
+        let bytes;
+        try { bytes=await renderFinalPdf(source.bytes); }
+        catch { throw new Error("PDF resmi belum dapat dibuat dari versi ini. Periksa pratinjau dan coba lagi."); }
+        pdf=await storeBytes(user.id,bytes,"PDF");
+      }
+      ({error}=await db.rpc("finalize_letter_with_pdf", {
+        p_actor:user.id,p_letter:id,p_revision:revision,p_source:source.version.id,p_pdf:pdf,
+      }));
+    } else {
+      ({error}=await db.rpc("finalize_letter", {
+        p_actor:user.id,p_letter:id,p_revision:revision,p_external_confirmed:externalConfirmed,
+      }));
+    }
     if (error) throw new Error(error.message);
     revalidatePath("/surat");
     revalidatePath(`/surat/${id}`);

@@ -212,7 +212,7 @@ export function LetterDetailClient({
               onLayoutCopy={setHasLayoutCopy}
               onLoaded={() => {setPreviewed(true);void reload().catch(()=>setSyncError("Status pembacaan belum dapat diperbarui. Gunakan Perbarui status."));}}
             />
-            <DocumentDownloads manualUpload={!!l.manual_number_reservation_id} id={id} current={v}
+            <DocumentDownloads officialFinal={!!l.official_sender_id&&!!l.finalized_at} manualUpload={!!l.manual_number_reservation_id} id={id} current={v}
               unsigned={data.versions.find(version => version.version_kind === 'NUMBERED')}
               signatureCount={l.required_signature_count}
               fullVersionAccess={!!data.delivery?.fullVersionAccess} />
@@ -249,7 +249,7 @@ export function LetterDetailClient({
             </Button>
           </>
         )}
-        {data.isCreator && l.status === "READY_TO_ISSUE" && (
+        {data.isCreator && l.status === "READY_TO_ISSUE" && !(l.official_sender_id&&l.required_signature_count===0) && (
           <Button id="number"
             isLoading={busy}
             onClick={() =>
@@ -317,7 +317,7 @@ export function LetterDetailClient({
           />
         </Card>
       )}
-      {data.isCreator && l.status === "NUMBERED" && !l.finalized_at && (
+      {data.isCreator && (l.status === "NUMBERED" || (l.status==="READY_TO_ISSUE"&&l.official_sender_id&&l.required_signature_count===0)) && !l.finalized_at && (
         <Card id="finalize" className="p-5 space-y-4 scroll-mt-24">
           <h2 className="font-bold">Finalisasi</h2>
           <p className="text-sm">

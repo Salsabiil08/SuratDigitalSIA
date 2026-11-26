@@ -19,6 +19,7 @@ export async function GET(
     if(contextError||!context)throw new Error('Anda tidak berwenang melihat dokumen ini.');
     const variant = new URL(request.url).searchParams.get("variant");
     const blank = new URL(request.url).searchParams.get("blank") === "1" || (variant === "unsigned" && !!letter.official_number && letter.required_signature_count > 0);
+    if(blank&&letter.official_sender_id&&letter.finalized_at)throw new Error('Unduhan surat final hanya tersedia sebagai PDF resmi.');
     if(blank&&!context.fullVersionAccess)throw new Error('Salinan sebelum pengesahan tidak tersedia melalui hak penerima/pengiriman.');
     let sourceLetter = {...letter,current_version_id:context.documentVersionId};
     if (blank) {
@@ -84,8 +85,8 @@ export async function GET(
       bytes = Buffer.from(await pdf.save());
     }
     const original = new URL(request.url).searchParams.get('original') === '1';
-    const internalOutput = original || letter.source==='UPLOAD' ? bytes : await correctLegacyInternalOutput(bytes, letter, doc.format);
-    const {bytes:output,corrected} = original || letter.source==='UPLOAD' ? {bytes:internalOutput,corrected:false} : await correctLegacyBillingOutput(internalOutput,letter,doc.format);
+    const internalOutput = original || letter.official_sender_id || letter.source==='UPLOAD' ? bytes : await correctLegacyInternalOutput(bytes, letter, doc.format);
+    const {bytes:output,corrected} = original || letter.official_sender_id || letter.source==='UPLOAD' ? {bytes:internalOutput,corrected:false} : await correctLegacyBillingOutput(internalOutput,letter,doc.format);
     return new NextResponse(new Uint8Array(output), {
       headers: {
         "Content-Type": DOCUMENT_MIME[doc.format],
