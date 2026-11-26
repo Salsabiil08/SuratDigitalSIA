@@ -11,6 +11,12 @@ export interface SignerInfo {
 }
 
 export interface LetterDocxData {
+  r05?: {
+    kind: 'INTERNAL' | 'EXTERNAL' | 'BILLING';
+    city?: string;
+    senderName: string;
+    senderTitle: string;
+  };
   billing?: {
     bankName: string;
     accountNumber: string;
@@ -88,7 +94,10 @@ export async function generateLetterDocx(data: LetterDocxData): Promise<Buffer> 
 
   // Data variabel surat
   const officialNumber = data.officialNumber || '[Akan terbit melalui sistem SIADocs setelah disetujui]';
-  const letterDate = data.letterDate || 'Aceh Besar, ' + new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+  const legacyDate = data.letterDate || 'Aceh Besar, ' + new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+  const letterDate = data.r05?.kind === 'EXTERNAL'
+    ? [data.r05.city?.trim(), data.letterDate].filter(Boolean).join(', ')
+    : data.r05 ? data.letterDate || '' : legacyDate;
   const subject = data.subject || '[Tuliskan Perihal Surat Resmi di Sini]';
   const recipientName = data.recipientName || '[Nama Penerima / Jabatan]';
   const recipientOrg = data.recipientOrg || '[Instansi / Unit Kerja Perusahaan]';
@@ -226,25 +235,29 @@ export async function generateLetterDocx(data: LetterDocxData): Promise<Buffer> 
         <w:r><w:rPr><w:rFonts w:ascii="${fontName}" w:hAnsi="${fontName}"/><w:sz w:val="22"/></w:rPr><w:t>di Tempat</w:t></w:r>
       </w:p>
 
+      ${data.r05 ? '' : `
       <!-- Salam Pembuka -->
       <w:p>
         <w:pPr><w:spacing w:after="160"/></w:pPr>
         <w:r><w:rPr><w:rFonts w:ascii="${fontName}" w:hAnsi="${fontName}"/><w:sz w:val="22"/></w:rPr><w:t>Dengan hormat,</w:t></w:r>
       </w:p>
 
+` }
       <!-- Naskah Isi Surat -->
       ${contentBodyXml}
 
+      ${data.r05 ? '' : `
       <!-- Penutup -->
       <w:p>
         <w:pPr><w:spacing w:before="140" w:after="260"/></w:pPr>
         <w:r><w:rPr><w:rFonts w:ascii="${fontName}" w:hAnsi="${fontName}"/><w:sz w:val="22"/></w:rPr><w:t>Demikian surat ini kami sampaikan, atas perhatian dan kerja samanya kami ucapkan terima kasih.</w:t></w:r>
       </w:p>
 
+` }
       <!-- Ruang Tanda Tangan Sesuai Jumlah Penandatangan (0, 1, atau 2) -->
       ${
         data.signatureCount === 0
-          ? ''
+          ? (data.r05?.kind === 'INTERNAL' ? `<w:p><w:pPr><w:jc w:val="right"/><w:spacing w:before="260"/></w:pPr><w:r><w:t>${escapeXml(data.r05.senderName)}</w:t></w:r></w:p><w:p><w:pPr><w:jc w:val="right"/></w:pPr><w:r><w:t>${escapeXml(data.r05.senderTitle)}</w:t></w:r></w:p>` : '')
           : data.signatureCount === 2
           ? `
       <!-- 2 Tanda Tangan: Surat Penagihan / 2 Pejabat Berdampingan -->
