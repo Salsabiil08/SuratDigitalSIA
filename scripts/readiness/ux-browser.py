@@ -1,7 +1,7 @@
 """Actual React controls with local server-action fixtures. No production requests or mutations."""
 import asyncio,json,os,urllib.request,urllib.error
 from pathlib import Path
-from playwright.async_api import async_playwright
+from playwright.async_api import async_playwright,expect
 async def main():
  base='http://127.0.0.1:3123';out=Path('test-results/readiness-browser');out.mkdir(parents=True,exist_ok=True)
  for _ in range(100):
@@ -63,7 +63,7 @@ async def main():
    await page.get_by_role('button',name='Kirim Hasil untuk Diperiksa',exact=True).click()
    dialog=page.get_by_role('dialog');send=dialog.get_by_role('button',name='Kirim kepada Pemberi',exact=True)
    assert await send.is_disabled();await dialog.get_by_role('textbox').fill('Hasil pertama')
-   assert await send.is_enabled()
+   await expect(send).to_be_enabled()
    await send.evaluate('(el)=>{el.click();el.click();}')
    await page.get_by_text('Tahap: Menunggu Pemeriksaan',exact=True).wait_for()
    assert actions.count('SUBMIT')==1

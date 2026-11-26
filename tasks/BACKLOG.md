@@ -164,3 +164,9 @@ Kerjakan berurutan. Tugas selesai bila kriteria terpenuhi dan `npm run check` lu
 - [x] Sambungkan editor format dan pertahankan format dalam DOCX serta penyimpanan draft; HTML aman dan kompatibilitas teks lama.
 - [x] Hapus login demo tanpa sandi; aktifkan enam akun bernama; nonaktifkan akun QA dan cabut sesi lama.
 - [x] 69 uji otomatis dan login keenam akun melalui Auth nyata.
+
+## Perbaikan terfokus — 26 November 2026
+- [x] Pratinjau Word mobile memakai skala satu halaman mengikuti lebar iframe, termasuk perubahan orientasi; ekspor tetap ukuran aslinya.
+- [x] Pembuat dapat mengedit disposisi keluar berstatus NEW meskipun telah dibaca, sebelum pekerjaan/surat hasil/pengajuan dimulai. Revisi, aktor sesi, idempotensi, batas penerima dan audit tetap diperiksa.
+- [x] Arahan yang dikoreksi ditandai belum dibaca dan penerima mendapat notifikasi; waktu baca sebelumnya dicatat dalam audit.
+- [x] 404 tes lokal lulus; suite PostgreSQL dan build CI lulus. Pengujian browser memakai fixture lokal, bukan UAT akun production.
