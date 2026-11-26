@@ -312,7 +312,7 @@ export function LetterDetailClient({
           </div>
         </Card>
       )}
-      {combinedSigning && l.status==="NUMBERED" && !l.finalized_at && (data.isCreator||l.signer_ids?.includes(data.userId))&&<Card className="p-5">
+      {combinedSigning && l.status==="NUMBERED" && !l.finalized_at && (data.isCreator||l.signer_ids?.includes(data.userId))&&<Card id="signing" className="p-5">
         <Button isLoading={busy} onClick={()=>act(()=>retryR05OutputAction(id),"PDF final siap.")}>Lanjutkan pembuatan PDF final</Button>
       </Card>}
       {signing && !combinedSigning && (

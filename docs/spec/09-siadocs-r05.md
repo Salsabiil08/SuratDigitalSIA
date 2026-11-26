@@ -20,4 +20,4 @@ Master kop, tanda tangan, stempel, bank, dan rekening memakai infrastruktur exis
 - R05-04: Register terhubung ke nomor terbit dan nomor batal, dengan pencarian, filter, dan ekspor XLSX. Surat internal memperoleh nomor melalui konfirmasi finalisasi atau otomatis saat persetujuan terakhir. Persetujuan terakhir eksternal/tagihan mencatat nomor dan memulai pembuatan PDF dari otorisasi TTD yang sudah tercatat.
 - R05-05: jangan promosikan cabang ini ke produksi sebelum seluruh tahap dan pengujian alur selesai.
 
-Surat yang sudah diajukan sebelum perubahan tetap mengikuti snapshot persetujuan dan dokumen pada saat diajukan. Draf yang diperbaiki melalui form R.05 memakai aturan baru. Dokumen yang telah dikunci tidak dikonversi ulang.
+Surat yang sudah diajukan sebelum perubahan tetap mengikuti snapshot persetujuan dan dokumen pada saat diajukan. Draf yang diperbaiki melalui form R.05 memakai aturan baru. Untuk impor baru, unggah dan pratinjau sebelum nomor terbit. Cadangan nomor lama tetap bisa dilanjutkan dari daftar nomor yang sudah diambil. Dokumen yang telah dikunci tidak dikonversi ulang.
