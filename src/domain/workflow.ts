@@ -12,6 +12,7 @@ export interface DraftInput {
   mandatoryApproverIds?: string[];
   additionalApproverIds?: string[];
   categoryCode?: string;
+  approvalRequired?: boolean;
   reviewerId?: string;
   reviewRequested?: boolean;
   dispositionId?: string;
@@ -96,7 +97,6 @@ export function workflowLabel(letter: {
 }) {
   if (letter.status === "CANCELLED") return "Dibatalkan";
   if (documentFinality(letter.finalized_at) === "FINAL") return DOCUMENT_FINALITY_LABEL.FINAL;
-  if (letter.review_status === "WAITING") return "Menunggu Pemeriksaan";
   if (letter.status === "READY_TO_ISSUE") return "Disetujui";
   if (letter.status === "NUMBERED" && letter.signature_status === "WAITING")
     return "Menunggu TTD";

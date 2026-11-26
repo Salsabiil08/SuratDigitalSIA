@@ -170,3 +170,10 @@ Kerjakan berurutan. Tugas selesai bila kriteria terpenuhi dan `npm run check` lu
 - [x] Pembuat dapat mengedit disposisi keluar berstatus NEW meskipun telah dibaca, sebelum pekerjaan/surat hasil/pengajuan dimulai. Revisi, aktor sesi, idempotensi, batas penerima dan audit tetap diperiksa.
 - [x] Arahan yang dikoreksi ditandai belum dibaca dan penerima mendapat notifikasi; waktu baca sebelumnya dicatat dalam audit.
 - [x] 404 tes lokal lulus; suite PostgreSQL dan build CI lulus. Pengujian browser memakai fixture lokal, bukan UAT akun production.
+
+## Revisi 26 November 2026 — pemeriksaan isi digabung ke persetujuan
+- [x] Field dan tahapan pemeriksa terpisah dihapus dari alur aktif; kategori tidak lagi menjadi gate review.
+- [x] Penyetuju yang sama memeriksa, memberi catatan, meminta versi revisi baru, menyetujui atau menolak. Hierarki dan GM unit terkait ditegakkan di database.
+- [x] Riwayat review/komentar/versi lama disimpan; surat tertahan review perlu diajukan ke persetujuan, tanpa keputusan palsu atau melewati persetujuan. Surat tanpa versi dan dokumen bernomor/final tidak direkonstruksi.
+- [x] Internal sesama level tetap tanpa persetujuan/TTD; eksternal dan dua pengesahan tagihan tetap melalui gate masing-masing.
+- [ ] Deploy hanya setelah tes aplikasi, PostgreSQL, browser dan build lulus.

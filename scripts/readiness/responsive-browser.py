@@ -19,20 +19,15 @@ async def main():
      errors.clear();await page.goto(f'{base}/?role={role}&page={name}');await page.locator(f'[data-fixture-page="{name}"]').wait_for();await page.locator('main.dashboard-content').wait_for();await page.wait_for_timeout(150)
      check(not errors,(role,name,width,errors))
      if name in ['create','billing','import']:
-      expected={'STF':['gm','sm','dir'],'GM':['sm','dir'],'SM':['dir'],'DIR':[],'ADMIN':[]}[role]
-      needed=page.locator('#letter-review-needed')
-      if role=='DIR':check(await needed.locator('option[value=yes]').is_disabled(),(role,name,width,'top role must not select a reviewer'))
-      elif expected:
-       await needed.select_option('yes');reviewer=page.locator('#letter-reviewer');await reviewer.wait_for()
-       ids=await reviewer.locator('option').evaluate_all('(nodes)=>nodes.map(n=>n.value).filter(Boolean)')
-       check(ids==expected,(role,name,width,'reviewers',ids,expected))
-       if len(expected)==1:
-        await page.wait_for_function("document.querySelector('#letter-reviewer').value==='dir'")
-       else:await reviewer.select_option(expected[0])
-
-     sizes=await page.evaluate('''()=>{const m=document.querySelector('main.dashboard-content');return {page:document.documentElement.scrollWidth,viewport:innerWidth,main:m.scrollWidth,client:m.clientWidth};}''')
-     header=await page.locator('header').first.evaluate('(h)=>({scroll:h.scrollWidth,client:h.clientWidth})');check(header['scroll']<=header['client']+1,(role,name,width,header))
-     check(sizes['page']<=width+1 and sizes['main']<=sizes['client']+1,(role,name,width,sizes))
+      check(await page.locator('#letter-review-needed,#letter-reviewer').count()==0,(role,name,width,'separate review controls removed'))
+      if name in ['create','import'] and await page.locator('#recipient-user').count():
+       await page.locator('#recipient-user').select_option('dir' if role=='STF' else 'peer')
+       needed=page.get_by_text('Perlu persetujuan?',exact=True)
+       if role=='DIR':check(await needed.count()==0,(role,name,width,'Director has no superior approval'))
+       elif role in ['STF','GM','SM']:
+        await needed.click();approver=page.locator('#content-approver');await approver.wait_for()
+        ids=await approver.locator('option').evaluate_all('(nodes)=>nodes.map(n=>n.value).filter(Boolean)')
+        check(ids=={'STF':['gm','sm','dir'],'GM':['sm','dir'],'SM':['dir']}[role],(role,name,width,'approval hierarchy',ids))
      for selector in ['header button','[data-fixture-page] input:not([type=checkbox]):not([type=hidden])','[data-fixture-page] select','[data-fixture-page] button']:
       for item in await page.locator(selector).all():
        if await item.is_visible():

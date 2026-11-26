@@ -29,13 +29,8 @@ it.each(['IN','KRE'])('%s formal: penyetuju berbeda dari penandatangan; nomor me
  await decide(id,3);await rows('select issue_letter_number($1,$2,$3)',[id,actor(5),'different-roles-'+id]);
  expect((await rows('select signer_id from signature_requests where letter_id=$1',[id]))[0].signer_id).toBe(actor(2));
 });
-it('pembuat pejabat mengonfirmasi versi saat pengajuan, tidak dipaksa menyetujui dua kali',async()=>{
- const id=await draft({type:'KRE',signers:[3],mandatory:[3],extra:[3,3]},3);
- await expect(submit(id,3)).rejects.toThrow(/Konfirmasikan/);expect(await steps(id)).toHaveLength(0);
- await submit(id,3,true);const s=await steps(id);expect(s).toHaveLength(1);expect(s[0]).toMatchObject({status:'APPROVED',decision_origin:'CREATOR_SUBMISSION'});
- expect((await get(id)).official_number).toBeNull();await expect(decide(id,3)).rejects.toThrow();
- await rows('select issue_letter_number($1,$2,$3)',[id,actor(3),'creator-self']);
- expect((await rows('select status from signature_requests where letter_id=$1',[id]))[0].status).toBe('PENDING');
+it('SM tetap memerlukan persetujuan Direktur; TTD dapat tetap dilakukan SM',async()=>{
+ const id=await draft({type:'KRE',signers:[3],mandatory:[2]},3);await submit(id,3);expect((await steps(id))[0]).toMatchObject({approver_id:actor(2),status:'PENDING'});await decide(id,2);await rows('select issue_letter_number($1,$2,$3)',[id,actor(3),'sm-needs-director']);expect((await rows('select signer_id from signature_requests where letter_id=$1',[id]))[0].signer_id).toBe(actor(3));
 });
 it('tambahan duplikat digabung; jumlah approval tidak lagi sama dengan jumlah TTD',async()=>{
  const id=await draft({type:'KRE',signers:[2],mandatory:[3],extra:[4,4,3]});await submit(id);
@@ -43,11 +38,9 @@ it('tambahan duplikat digabung; jumlah approval tidak lagi sama dengan jumlah TT
  await decide(id,3);await decide(id,4);await rows('select issue_letter_number($1,$2,$3)',[id,actor(5),'two-approvals-one-signature']);
  expect((await rows('select id from signature_requests where letter_id=$1',[id]))).toHaveLength(1);
 });
-it('review tidak menjadi approval; pengguna dengan dua peran tetap memutuskan setiap jenis tindakan',async()=>{
+it('kategori lama dan reviewer tidak membuat tahapan review terpisah',async()=>{
  const id=await draft({type:'KRE',signers:[2],mandatory:[3],extra:[4],category:'PERMOHONAN',reviewer:4});await submit(id);
- const r=(await rows('select * from review_steps where letter_id=$1',[id]))[0];let l=await get(id);
- await rows('select decide_letter_review($1,$2,$3,$4,$5,null)',[actor(4),r.id,r.version_id,l.revision,'PASS']);
- expect(await steps(id)).toHaveLength(0);await submit(id);await decide(id,3);expect((await get(id)).status).toBe('IN_REVIEW');await decide(id,4);
+ expect(await rows('select id from review_steps where letter_id=$1',[id])).toHaveLength(0);expect(await steps(id)).toHaveLength(2);await decide(id,3);await decide(id,4);
 });
 it('restart mewajibkan versi baru, mempertahankan keputusan lama dan mengulang approval',async()=>{
  const id=await draft({type:'KRE',signers:[2]});await submit(id);await decide(id,2);const l=await get(id),old=(await steps(id))[0];
@@ -65,9 +58,8 @@ it('RLS menolak pengguna lain dan approver lama pada versi draft baru',async()=>
  await expect(asUser(4,'select review_letter($1,$2,$3,0,null)',[actor(4),id,'APPROVE'])).rejects.toThrow(/permission denied/);
  expect(await asUser(1,'select id from letters where id=$1',[id])).toHaveLength(0);
 });
-it('pencabutan grant/akun nonaktif menutup keputusan dan penerbitan',async()=>{
- const id=await draft({extra:[4]});await submit(id);await db.exec(`update approver_authorizations set is_active=false where approver_id='${actor(4)}'`);
- try{await expect(decide(id,4)).rejects.toThrow(/penugasan/);expect(await asUser(4,'select id from letters where id=$1',[id])).toHaveLength(0);}finally{await db.exec(`update approver_authorizations set is_active=true where approver_id='${actor(4)}'`);}
+it('penugasan akun nonaktif menutup keputusan dan penerbitan',async()=>{
+ const id=await draft({extra:[4]});await submit(id);
  await decide(id,4);await db.exec(`update profiles set is_active=false where id='${actor(4)}'`);
  try{await expect(rows('select issue_letter_number($1,$2,$3)',[id,actor(5),'inactive-approver'])).rejects.toThrow();}finally{await db.exec(`update profiles set is_active=true where id='${actor(4)}'`);}
 });
@@ -77,7 +69,7 @@ it('gagal notifikasi membatalkan approval, status, giliran dan audit sekaligus',
  try{await expect(decide(id,2)).rejects.toThrow(/Event gagal/);expect(await steps(id)).toEqual(before);expect(await get(id)).toEqual(l);}finally{await db.exec('drop trigger fail_approval_event on notifications;drop function app.fail_approval_event()');}
 });
 it('otorisasi tambahan tidak diwarisi otomatis dari Super Admin atau pemeriksa',async()=>{
- await expect(draft({extra:[1]})).rejects.toThrow(/penugasan/);
+ await expect(draft({extra:[1]})).rejects.toThrow(/hierarki/);
  await expect(rows('select authorize_letter_approver($1,$2,null,null,true,null,$3)',[actor(4),actor(6),'Tanpa otoritas'])).rejects.toThrow(/pengelola/);
 });
 it('tagihan pembuat SM Finance: tidak ada approval ganda, Direktur tetap wajib dan TTD berurutan',async()=>{
@@ -97,11 +89,11 @@ it('pembuat Direktur yang berwenang di Finance: konfirmasi pengajuan berlaku ses
  }finally{await db.exec('rollback');}
 });
 it('tagihan menolak urutan salah dan SM tanpa mandat Finance lintas unit',async()=>{
- await expect(draft({type:'Tag',signers:[3,2],mandatory:[2,3]},6)).rejects.toThrow(/kewenangan/);
+ await expect(draft({type:'Tag',signers:[3,2],mandatory:[2,3]},6)).rejects.toThrow(/hierarki|kewenangan/);
  await db.exec('begin');try{
   await rows("update user_assignments set unit_id=(select id from organizational_units where code='ACH') where profile_id=$1",[actor(3)]);
   await rows('update approver_authorizations set is_active=false where approver_id=$1',[actor(3)]);
-  await expect(draft({type:'Tag',signers:[3,2]},6)).rejects.toThrow(/kewenangan/);
+  await expect(draft({type:'Tag',signers:[3,2]},6)).rejects.toThrow(/hierarki|kewenangan/);
  }finally{await db.exec('rollback');}
 });
 it('gagal audit penomoran rollback allocator, counter, dan antrean tanda tangan',async()=>{

@@ -1,36 +1,4 @@
-'use server';
-import {assertReviewerHierarchy} from "@/server/reviewer-hierarchy";
-import {readLetter} from "@/server/letter-workflow";
-import { requireUser } from '@/server/auth';
-import { createClient } from '@/lib/supabase/server';
-import { createAdminClient } from '@/lib/supabase/admin';
-import { revalidatePath } from 'next/cache';
-export async function getPendingReviewsAction() {
-  const user = await requireUser();
-  const { data, error } = await (await createClient()).from('review_steps')
-    .select('id,letter_id,version_id,cycle,letter:letters!review_steps_letter_id_fkey(id,subject,current_version_id,reviewer_id,review_status,revision,status)')
-    .eq('reviewer_id', user.id).eq('status', 'PENDING').order('assigned_at');
-  if (error) throw new Error('Daftar pemeriksaan belum dapat diambil.');
-  return (data || []).filter(row => {
-    const letter = row.letter as any;
-    return !!letter && letter.current_version_id === row.version_id && letter.reviewer_id === user.id && letter.review_status === 'WAITING';
-  }).map(row => ({ id: row.id, letterId: row.letter_id, subject: (row.letter as any).subject }));
-}
-export async function decideReviewAction(stepId: string, versionId: string, revision: number, action: 'COMMENT' | 'PASS' | 'REQUEST_REVISION', note?: string) {
-  try {
-    const user = await requireUser();
-    const {data:step,error:stepError}=await (await createClient()).from('review_steps').select('letter_id').eq('id',stepId).eq('reviewer_id',user.id).single();
-    if(stepError||!step)throw new Error('Anda bukan pemeriksa aktif.');
-    const letter=await readLetter(step.letter_id);
-    await assertReviewerHierarchy(letter.creator_id,user.id);
-    const { error } = await createAdminClient().rpc('decide_letter_review', {
-      p_actor: user.id, p_step: stepId, p_version: versionId, p_revision: revision,
-      p_action: action, p_note: note || null,
-    });
-    if (error) throw new Error(error.message);
-    for (const path of ['/pemeriksaan','/surat','/notifikasi','/']) revalidatePath(path);
-    return { success: true };
-  } catch (e) {
-    return { success: false, error: e instanceof Error ? e.message : 'Pemeriksaan gagal disimpan.' };
-  }
-}
+"use server";
+import {requireUser} from '@/server/auth';
+export async function getPendingReviewsAction(){await requireUser();return [];}
+export async function decideReviewAction(_step:string,_version:string,_revision:number,_action:'COMMENT'|'PASS'|'REQUEST_REVISION',_note?:string){await requireUser();return {success:false,error:'Pemeriksaan isi dilakukan melalui Persetujuan Surat.'};}

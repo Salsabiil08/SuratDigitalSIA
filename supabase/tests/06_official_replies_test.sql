@@ -63,9 +63,9 @@ begin
  failed:=false;begin delete from official_reply_links where id=link_id;exception when others then failed:=true;end;assert failed;
  failed:=false;begin insert into official_reply_links(origin_dispatch_id,origin_letter_id,recipient_id,reply_letter_id,created_by,idempotency_key) values(d,orig,r,orig,r,gen_random_uuid());exception when others then failed:=true;end;assert failed;
  failed:=false;begin update letters set recipient_user_id=cc where id=reply;exception when others then failed:=true;end;assert failed;
- -- Draf/review/nomor/final bukan status dibalas; kategori wajib tetap menghalangi submit tanpa reviewer.
+ -- Categories no longer create a separate review; a draft/number is still not a sent reply.
  l:=test_support.reply_draft(r,d,gen_random_uuid(),'PERMOHONAN');
- failed:=false;begin perform test_support.submit(r,l);exception when others then failed:=true;end;assert failed;
+ perform test_support.submit(r,l);assert(select status='READY_TO_ISSUE' from letters where id=l);
  assert not exists(select 1 from official_reply_sends);
  -- Jalur internal biasa tetap alur nyata. Pengesahan wajib diuji melalui regresi PR-04.
  perform test_support.submit(r,reply);
@@ -107,30 +107,27 @@ begin
  assert(select count(*)=0 from letter_versions where letter_id=reply);assert(select count(*)=0 from official_reply_sends);reset role;
  assert(select to_jsonb(x)=before_orig from letters x where id=orig);
 
- -- Balasan formal: pemeriksaan terpisah, approval versi baru, nomor lalu TTD.
+ -- Formal reply goes to a higher official; examination is included in approval.
+ d2:=test_support.reply_origin(manager,r);
  insert into review_policy_managers values(manager);
  perform authorize_letter_reviewer(manager,cc,null,null,true,null,'Pemeriksa balasan fixture');
- formal_reply:=test_support.reply_draft(r,d,gen_random_uuid(),'LAPORAN',cc,array[manager]);
+ formal_reply:=test_support.reply_draft(r,d2,gen_random_uuid(),'LAPORAN',cc,array[manager]);
  perform test_support.submit(r,formal_reply);
- select * into rr from review_steps where letter_id=formal_reply and status='PENDING';select revision into rev from letters where id=formal_reply;
- failed:=false;begin perform test_support.number(r,formal_reply,'reply-no-review');exception when others then failed:=true;end;assert failed;
- perform decide_letter_review(cc,rr.id,rr.version_id,rev,'PASS',null);
- assert not exists(select 1 from approval_steps where letter_id=formal_reply);
- perform test_support.submit(r,formal_reply);select revision,current_version_id into rev,old_version from letters where id=formal_reply;
+ assert not exists(select 1 from review_steps where letter_id=formal_reply);
+ select revision,current_version_id into rev,old_version from letters where id=formal_reply;
  failed:=false;begin perform test_support.number(r,formal_reply,'reply-no-approval');exception when others then failed:=true;end;assert failed;
  failed:=false;begin perform review_letter(cc,formal_reply,'APPROVE',rev,null);exception when others then failed:=true;end;assert failed;
  perform review_letter(manager,formal_reply,'APPROVE',rev,null);
  perform restart_letter_approval(r,formal_reply,rev,'Koreksi substansial balasan');
  select revision into rev from letters where id=formal_reply;
  payload:=jsonb_build_object('id',formal_reply,'revision',rev,'source','CREATE','letterTypeCode','IN','categoryCode','LAPORAN','reviewerId',cc,'subject','Koreksi balasan','letterDate',(now() at time zone 'Asia/Jakarta')::date,
- 'recipientUserId',a,'signatureMode','IN_APP','signerIds',jsonb_build_array(manager),'areas','[]'::jsonb,'content','Isi koreksi balasan');
+ 'recipientUserId',manager,'signatureMode','IN_APP','signerIds',jsonb_build_array(manager),'areas','[]'::jsonb,'content','Isi koreksi balasan');
  perform save_letter_draft(r,payload,jsonb_build_object('path',r::text||'/reply-revised.docx','format','DOCX','hash','reply-revised-hash'));
  assert(select current_version_id<>old_version from letters where id=formal_reply);
  perform test_support.submit(r,formal_reply);
- select * into rr from review_steps where letter_id=formal_reply and status='PENDING';select revision into rev from letters where id=formal_reply;
+ select revision into rev from letters where id=formal_reply;
  failed:=false;begin perform test_support.number(r,formal_reply,'reply-old-decisions');exception when others then failed:=true;end;assert failed;
- perform decide_letter_review(cc,rr.id,rr.version_id,rev,'PASS',null);
- perform test_support.submit(r,formal_reply);select revision into rev from letters where id=formal_reply;
+
  perform review_letter(manager,formal_reply,'APPROVE',rev,null);
  perform test_support.number(r,formal_reply,'reply-formal-number');select revision,current_version_id into rev,old_version from letters where id=formal_reply;
  failed:=false;begin perform finalize_letter(r,formal_reply,rev,false);exception when others then failed:=true;end;assert failed;

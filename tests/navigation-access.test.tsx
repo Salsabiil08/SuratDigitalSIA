@@ -13,8 +13,8 @@ function menu(positionCode:string,extra:Partial<typeof base>={}){
 }
 it.each(['STF','GM'])('%s memiliki surat/disposisi, tanpa menu kewenangan yang tidak ditugaskan',role=>{
  const html=menu(role);for(const href of ['/surat','/surat/buat','/kotak-masuk','/kotak-keluar','/disposisi'])expect(html).toContain(`href="${href}"`);
- for(const href of ['/persetujuan','/pengesahan','/admin/organisasi','/tagihan/buat'])expect(html).not.toContain(`href="${href}"`);
- expect(html.includes('href="/pemeriksaan"')).toBe(role==='GM');
+ for(const href of ['/pengesahan','/admin/organisasi','/tagihan/buat'])expect(html).not.toContain(`href="${href}"`);
+ expect(html).not.toContain('href="/pemeriksaan"');expect(html.includes('href="/persetujuan"')).toBe(role==='GM');
 });
 it.each(['SM','DIR'])('%s melihat persetujuan dan TTD hanya dengan mandat penandatangan',role=>{
  expect(menu(role)).toContain('href="/persetujuan"');expect(menu(role)).not.toContain('href="/pengesahan"');

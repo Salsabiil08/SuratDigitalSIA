@@ -1,7 +1,6 @@
 "use server";
 import {readCommentContext} from '@/server/letter-comments';
 import {assertPeerLetterPlan} from "@/server/peer-internal";
-import {assertReviewerHierarchy} from "@/server/reviewer-hierarchy";
 import {readDispositionLetterContext} from "@/server/disposition-integration";
 import {readReplyContext} from "@/server/official-replies";
 import { requireUser } from "@/server/auth";
@@ -101,11 +100,12 @@ export async function getWorkflowLetter(id: string) {
     reviews: reviews || [],
     isCreator: l.creator_id === user.id,
     userId: user.id,
+    userPosition: user.position?.code,
   };
 }
 export async function reviewLetterAction(
   id: string,
-  action: "PREVIEW" | "SUBMIT" | "APPROVE" | "REJECT" | "REQUEST_REVISION",
+  action: "PREVIEW" | "SUBMIT" | "APPROVE" | "REJECT" | "REQUEST_REVISION" | "COMMENT",
   revision: number,
   note?: string,
   confirmCreatorApproval = false,
@@ -115,7 +115,6 @@ export async function reviewLetterAction(
     const l = await readLetter(id);
     if (action === "SUBMIT") {
       await assertPeerLetterPlan(l);
-      if(l.reviewer_id)await assertReviewerHierarchy(l.creator_id,l.reviewer_id);
       const doc = await downloadVersion(l, false);
       if(l.manual_number_reservation_id){
         const {data:r,error}=await createAdminClient().from("manual_number_reservations").select("uploaded_version_id,uploaded_hash,confirmed_at,owner_id").eq("id",l.manual_number_reservation_id).eq("letter_id",id).single();

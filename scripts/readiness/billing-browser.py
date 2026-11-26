@@ -17,7 +17,7 @@ async def main():
     raw=route.request.post_data_buffer.decode();start=raw.index('{');end=raw.rindex('}')+1;saved.append(json.loads(raw[start:end]));await route.fulfill(status=200,json={'id':'local-fixture'})
    await page.route('**/api/letters/draft',draft)
    await page.goto(base)
-   await page.get_by_label('Perlu pemeriksaan isi?',exact=True).select_option('no')
+   assert await page.locator('#letter-review-needed,#letter-reviewer').count()==0
    assert await page.locator('#recipient-address').count()==0
    assert await page.locator('#item-0').count()==1 and await page.locator('#item-1').count()==0
    await page.locator('#bank').select_option('mandiri')

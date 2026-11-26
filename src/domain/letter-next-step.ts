@@ -1,10 +1,8 @@
 export function letterNextStep(l:{status:string;manual_number_reservation_id?:string|null;review_status?:string;required_signature_count:number;signature_mode:string;signature_status?:string;finalized_at?:string|null;type?:{category?:string}},a:{creator:boolean;review:boolean;approval:boolean;signing:boolean;sent:boolean;recipient:boolean;received:boolean}){
   if(l.status==='CANCELLED'||l.status==='REJECTED')return {title:'Surat '+(l.status==='CANCELLED'?'dibatalkan':'ditolak'),description:'Periksa riwayat dan catatan keputusan.',target:'history'};
   if(a.sent)return {title:a.recipient&&!a.received?'Konfirmasi penerimaan':'Surat sudah dikirim',description:a.recipient&&!a.received?'Baca surat, lalu konfirmasikan bahwa Anda menerimanya.':'Lihat status setiap penerima pada bagian pengiriman.',target:'delivery'};
-  if(a.review)return {title:'Periksa naskah surat',description:'Baca pratinjau, lalu beri hasil pemeriksaan di bawahnya.',target:'preview'};
   if(a.approval)return {title:'Berikan persetujuan',description:'Baca pratinjau, lalu pilih Setujui, Minta Revisi, atau Tolak.',target:'preview'};
   if(a.signing)return {title:'Tandatangani surat',description:'Pilih gambar TTD, periksa hasilnya, lalu simpan tanda tangan.',target:'signing'};
-  if(l.review_status==='WAITING')return {title:'Menunggu pemeriksa',description:'Pemeriksa sedang menilai naskah. Perubahan status akan muncul otomatis.'};
   if(l.status==='IN_REVIEW')return {title:'Menunggu persetujuan',description:'Pejabat yang ditunjuk perlu memberikan keputusan. Status diperbarui otomatis.'};
   if(a.creator&&['DRAFT','REVISION_REQUESTED'].includes(l.status))return {title:'Periksa dan ajukan surat',description:'Koreksi bila perlu, baca pratinjau, lalu tekan Ajukan Surat.',target:'preview'};
   if(a.creator&&l.status==='READY_TO_ISSUE'&&l.manual_number_reservation_id)return {title:'Lanjutkan dokumen bernomor',description:'Persetujuan selesai. Lanjutkan dengan nomor yang sudah diambil.',target:'number'};

@@ -40,7 +40,8 @@
       "fix/mobile-attachments-clock": false,
       "fix/reviewer-role-hierarchy": false,
       "fix/reviewer-hierarchy-integration": false,
-      "fix/mobile-preview-disposition-edit": false
+      "fix/mobile-preview-disposition-edit": false,
+      "fix/unified-content-approval": false
     }
   }
 }

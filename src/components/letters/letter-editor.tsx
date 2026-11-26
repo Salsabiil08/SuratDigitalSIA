@@ -30,8 +30,9 @@ function draftFromData(
     manualNumberConfirmed:false,
     id: l.id,
     categoryCode: l.document_category?.code || "",
-    reviewerId: l.reviewer_id || "",
-    reviewRequested: l.review_requested ?? !!l.reviewer_id,
+    reviewerId: "",
+    approvalRequired: l.content_approval_required || false,
+    reviewRequested: false,
     revision: l.revision,
     source: l.source,
     letterTypeCode: l.type.code,
@@ -166,27 +167,26 @@ export function LetterEditor({
   const recipient=options.people.find(p=>p.id===input.recipientUserId);
   const peer=peerInternal(input.letterTypeCode,options.user.position?.level||0,recipient?.level||0);
   const count = internal ? (peer ? 0 : formal ? 1 : 0) : isBill ? 2 : 1;
-  const reviewers = options.people.filter(p => p.id !== options.user.id && roleReviewer(options.user.position?.code||'',p.position)).sort((a,b)=>(REVIEWER_ROLE_ORDER[a.position]||0)-(REVIEWER_ROLE_ORDER[b.position]||0)||a.name.localeCompare(b.name,'id'));
-  const reviewerKey=reviewers.map(p=>p.id).join(',');
-  useEffect(()=>{if(!input.reviewRequested)return;setInput(old=>{if(reviewers.some(p=>p.id===old.reviewerId))return old;const reviewerId=reviewers.length===1?reviewers[0]!.id:'';return old.reviewerId===reviewerId?old:{...old,reviewerId};});},[input.reviewRequested,reviewerKey]);
+  const approvers=options.people.filter(p=>p.id!==options.user.id&&roleReviewer(options.user.position?.code||'',p.position)&&(p.position!=='GM'||p.unitId===options.user.unit?.id)).sort((a,b)=>(REVIEWER_ROLE_ORDER[a.position]||0)-(REVIEWER_ROLE_ORDER[b.position]||0)||a.name.localeCompare(b.name,'id'));
   const signers = options?.people.filter((p) => p.signer) || [];
   function updateSigner(index: number, value: string) {
     const ids = [...input.signerIds];
     ids[index] = value;
     setInput(x=>({...x,signerIds:ids.slice(0,count),mandatoryApproverIds:differentSigners?(x.mandatoryApproverIds||[]):ids.slice(0,count)}));
   }
-  const [differentSigners,setDifferentSigners]=useState(()=>!!initialData?.letter.mandatory_approver_ids?.some((value:string,i:number)=>value!==initialData.letter.signer_ids?.[i]));
+  const [differentSigners,setDifferentSigners]=useState(()=>!isBill||!!initialData?.letter.mandatory_approver_ids?.some((id:string,i:number)=>id!==initialData.letter.signer_ids?.[i]));
+  useEffect(()=>setDifferentSigners(!isBill||!!initialData?.letter.mandatory_approver_ids?.some((id:string,i:number)=>id!==initialData.letter.signer_ids?.[i])),[isBill]);
   useEffect(()=>{
     if(peer || count===0)return;
     setInput(old=>{
       const signerIds=Array.from({length:count},(_,i)=>{const eligible=signers.filter(p=>!isBill||(i===0?p.position==='SM':p.position==='DIR'));return old.signerIds[i] || (eligible.length===1?eligible[0]!.id:'');});
-      const mandatoryApproverIds=Array.from({length:count},(_,i)=>{const eligible=signers.filter(p=>!isBill||(i===0?p.position==='SM':p.position==='DIR'));return differentSigners?(old.mandatoryApproverIds?.[i] || (eligible.length===1?eligible[0]!.id:'')):signerIds[i]!;});
+      const mandatoryApproverIds=Array.from({length:count},(_,i)=>{const eligible=isBill?signers.filter(p=>i===0?p.position==='SM':p.position==='DIR'):approvers;return differentSigners?(eligible.some(p=>p.id===old.mandatoryApproverIds?.[i])?old.mandatoryApproverIds![i]!:(eligible.length===1?eligible[0]!.id:'')):signerIds[i]!;});
       if(JSON.stringify(signerIds)===JSON.stringify(old.signerIds)&&JSON.stringify(mandatoryApproverIds)===JSON.stringify(old.mandatoryApproverIds))return old;
       return {...old,signerIds,mandatoryApproverIds};
     });
   },[peer,count,isBill,differentSigners,options.people]);
-  const canChooseDifferentSigners = differentSigners || Array.from({length:count},(_,i)=>signers.filter(p=>!isBill||(i===0?p.position==='SM':p.position==='DIR')).length).some(n=>n>1);
-  const additionalApprovers=options.people.filter(p=>options.approverGrants.some(g=>g.approverId===p.id&&(!g.typeCode||g.typeCode===input.letterTypeCode)));
+
+  const additionalApprovers=approvers;
   async function save(preview: boolean) {
     setBusy(true);
     setError("");
@@ -198,8 +198,9 @@ export function LetterEditor({
       const data = {
         ...input,
         signerIds: ids,
-        mandatoryApproverIds: input.mandatoryApproverIds?.slice(0,count) || ids,
-        additionalApproverIds: peer ? [] : input.additionalApproverIds,
+        mandatoryApproverIds: options.user.position?.code==='DIR'&&!isBill ? ids : input.mandatoryApproverIds?.slice(0,count) || ids,
+        additionalApproverIds: peer || options.user.position?.code==='DIR' ? [] : input.additionalApproverIds,
+        approvalRequired:!peer&&options.user.position?.code!=='DIR'&&!!input.approvalRequired,
         stampArea: peer || input.signatureMode==='EXTERNAL' ? undefined : input.stampArea,
         areas: currentFormat === 'PDF' && input.signatureMode==='IN_APP' ? input.areas.slice(0, count) : [],
       };
@@ -312,18 +313,7 @@ export function LetterEditor({
               </p>
             </Field>
           </div>
-          <Field label="Perlu pemeriksaan isi?" htmlFor="letter-review-needed">
-            <Select id="letter-review-needed" value={input.reviewRequested ? 'yes' : 'no'} onChange={e=>setInput(old=>({...old,reviewRequested:e.target.value==='yes',reviewerId:e.target.value==='yes'?old.reviewerId:''}))}>
-              <option value="no">Tidak</option><option value="yes" disabled={options.user.position?.code==='DIR'}>Ya</option>
-            </Select>
-          </Field>
-          {input.reviewRequested && <Field label="Pemeriksa Isi Surat" htmlFor="letter-reviewer">
-            <Select id="letter-reviewer" disabled={reviewers.length===0} value={input.reviewerId || ''} onChange={e=>change('reviewerId',e.target.value)}>
-              <option value="">Pilih pemeriksa</option>
-              {reviewers.map(p=><option key={p.id} value={p.id}>{p.name} — {p.title}</option>)}
-            </Select>
-            <p className="text-xs text-neutral-600">{reviewers.length===0?(options.user.position?.code==='DIR'?'Tidak ada jabatan pemeriksa di atas Direktur Utama.':'Belum ada pejabat aktif di atas jabatan Anda.'):'Pilih pemeriksa sebelum mengajukan surat.'}</p>
-          </Field>}
+
           <Field
             label="Tanggal Surat"
             htmlFor="letter-date"
@@ -569,20 +559,22 @@ export function LetterEditor({
         {internal && !recipient && <Card className="p-5"><p className="text-sm text-neutral-600">Pilih penerima untuk melihat kebutuhan persetujuan dan tanda tangan.</p></Card>}
         {peer && <Card className="p-5"><p className="text-sm">Surat ini tidak memerlukan persetujuan atau tanda tangan.</p></Card>}
         {(!internal || !!recipient) && !peer && <>
-        {(count > 0 || additionalApprovers.length > 0) && <Card className="p-5 space-y-4">
+        {((count > 0 && (isBill || options.user.position?.code!=='DIR')) || additionalApprovers.length > 0) && <Card className="p-5 space-y-4">
 
           <h2 className="font-bold">{differentSigners?"Persetujuan Surat":"Persetujuan dan Tanda Tangan"}</h2>
           
-          {Array.from({length:count},(_,index)=><Field key={`approval-${index}`} label={isBill?(index===0?'SM pengaju':'Direktur'):differentSigners?'Penyetuju surat':'Penyetuju dan penandatangan'} required>
-            <OfficialChoice people={signers.filter(p=>!isBill||(index===0?p.position==='SM':p.position==='DIR'))} value={input.mandatoryApproverIds?.[index] || input.signerIds[index] || ''} onChange={value=>{if(!differentSigners){updateSigner(index,value);return;}const ids=[...(input.mandatoryApproverIds||[])];ids[index]=value;change('mandatoryApproverIds',ids);}} />
+          {Array.from({length:isBill||options.user.position?.code!=='DIR'?count:0},(_,index)=><Field key={`approval-${index}`} label={isBill?(index===0?'SM pengaju':'Direktur'):differentSigners?'Penyetuju surat':'Penyetuju dan penandatangan'} required>
+            <OfficialChoice people={isBill?signers.filter(p=>index===0?p.position==='SM':p.position==='DIR'):approvers} value={input.mandatoryApproverIds?.[index] || input.signerIds[index] || ''} onChange={value=>{if(!differentSigners){updateSigner(index,value);return;}const ids=[...(input.mandatoryApproverIds||[])];ids[index]=value;change('mandatoryApproverIds',ids);}} />
           </Field>)}
-          {additionalApprovers.length > 0 && <Field label="Penyetuju tambahan (opsional)">
-            {additionalApprovers.map(p=><label key={p.id} className="flex gap-2 text-sm"><input type="checkbox" checked={input.additionalApproverIds?.includes(p.id)||false} onChange={e=>change('additionalApproverIds',e.target.checked?[...(input.additionalApproverIds||[]),p.id]:(input.additionalApproverIds||[]).filter(id=>id!==p.id))}/>{p.name} — {p.title}</label>)}
-          </Field>}
+          {count===0 && additionalApprovers.length>0 && <>
+            <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={input.approvalRequired||false} onChange={e=>setInput(old=>({...old,approvalRequired:e.target.checked,additionalApproverIds:e.target.checked?(additionalApprovers.length===1?[additionalApprovers[0]!.id]:[]):[]}))}/>Perlu persetujuan?</label>
+            {input.approvalRequired&&<Field label="Pemberi persetujuan" required htmlFor="content-approver"><Select id="content-approver" required value={input.additionalApproverIds?.[0]||''} onChange={e=>change('additionalApproverIds',e.target.value?[e.target.value]:[])}><option value="">Pilih pemberi persetujuan</option>{additionalApprovers.map(p=><option key={p.id} value={p.id}>{p.name} — {p.title}</option>)}</Select></Field>}
+          </>}
         </Card>}
         <Card className="p-5 space-y-4">
           <h2 className="font-bold">Cara Penandatanganan</h2>
-          {count>0&&canChooseDifferentSigners&&<label className="flex gap-2 text-sm"><input type="checkbox" checked={differentSigners} onChange={e=>setDifferentSigners(e.target.checked)}/>Penandatangan berbeda dari penyetuju</label>}
+          {isBill&&signers.filter(p=>p.position==='SM').length>1&&<label className="flex gap-2 text-sm"><input type="checkbox" checked={differentSigners} onChange={e=>setDifferentSigners(e.target.checked)}/>Penandatangan berbeda dari penyetuju</label>}
+
 
           {internal && !peer && (
             <label className="flex items-center gap-2 text-sm">
@@ -604,7 +596,7 @@ export function LetterEditor({
                 : "Surat eksternal memerlukan satu tanda tangan SM atau Direktur."}
             </p>
           )}
-          {differentSigners && Array.from({ length: count }, (_, index) => (
+          {(differentSigners||!isBill) && Array.from({ length: count }, (_, index) => (
             <Field
               key={index}
               label={

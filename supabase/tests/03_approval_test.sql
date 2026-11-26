@@ -23,22 +23,17 @@ begin
  perform review_letter(gm,l,'APPROVE',rev,null);
  iss:=test_support.number(a,l,'pg-separated');assert iss.official_number like '%/KRE.DIR/%','Seri mengikuti signer, bukan approver';
  assert(select count(*)=1 from signature_requests where letter_id=l and signer_id=d);
- l2:=test_support.draft(sm,'KRE',array[sm],'PEMBERITAHUAN',null,array[sm],array[sm]);
- failed:=false;begin perform test_support.submit(sm,l2,false);exception when others then failed:=true;end;assert failed,'Konfirmasi pembuat tidak boleh dipalsukan';
- perform test_support.submit(sm,l2,true);
- assert(select count(*)=1 from approval_steps where letter_id=l2 and decision_origin='CREATOR_SUBMISSION' and status='APPROVED');
- assert(select official_number is null from letters where id=l2);
+ l2:=test_support.draft(sm,'KRE',array[sm],'PEMBERITAHUAN',null,array[d]);perform test_support.submit(sm,l2);
+ assert(select count(*)=1 from approval_steps where letter_id=l2 and approver_id=d and status='PENDING');
  l3:=test_support.draft(sm,'Tag',array[sm,d]);perform test_support.submit(sm,l3,true);
  assert(select count(*)=1 from approval_steps where letter_id=l3 and approver_id=d and status='PENDING');
  select revision into rev from letters where id=l3;perform review_letter(d,l3,'APPROVE',rev,null);
  perform test_support.number(sm,l3,'pg-billing');
  assert(select count(*)=2 from signature_requests where letter_id=l3);
- -- Review tetap terpisah dan restart tidak memalsukan hasil versi baru.
+ -- Content review is now part of approval, without a second review task.
  l:=test_support.draft(a,'KRE',array[d],'PERMOHONAN',gm);perform test_support.submit(a,l);
- select * into r from review_steps where letter_id=l;select revision into rev from letters where id=l;
- perform decide_letter_review(gm,r.id,r.version_id,rev,'PASS',null);
- assert(select count(*)=0 from approval_steps where letter_id=l);
- perform test_support.submit(a,l);select revision into rev from letters where id=l;perform review_letter(d,l,'APPROVE',rev,null);
+ assert(select count(*)=0 from review_steps where letter_id=l);
+ select revision into rev from letters where id=l;perform review_letter(d,l,'APPROVE',rev,null);
  select current_version_id,revision into old_version,rev from letters where id=l;perform restart_letter_approval(a,l,rev,'Koreksi fixture');
  failed:=false;begin perform test_support.submit(a,l);exception when others then failed:=true;end;assert failed,'Restart harus diikuti versi baru';
  assert(select count(*)=1 from approval_steps where letter_id=l and status='APPROVED' and version_id=old_version);

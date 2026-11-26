@@ -24,7 +24,7 @@ async function asUser(n: number, sql: string, params:any[] = []) {
 }
 beforeAll(async()=>{
  await db.exec(readFileSync('supabase/tests/00_stub_supabase.sql','utf8'));
- const files=readdirSync('supabase/migrations').filter(f=>f.endsWith('.sql')).sort();
+ const files=readdirSync('supabase/migrations').filter(f=>f.endsWith('.sql')&&!f.endsWith('_unified_content_approval.sql')).sort();
  for(const f of files.filter(f=>f<'20261118045220'))await db.exec(readFileSync('supabase/migrations/'+f,'utf8'));
  await db.exec(readFileSync('supabase/seed.sql','utf8'));
  // Simulasi 13 surat bernomor lama tanpa versi. Migrasi tidak boleh menyentuhnya.
@@ -40,7 +40,7 @@ beforeAll(async()=>{
  select authorize_letter_reviewer('${actor(2)}','${actor(4)}',(select id from organizational_units where code='ACH'),null,true,null,'Penugasan pengujian perusahaan');`);
 },30000);
 afterAll(()=>db.close());
-describe('PR-02 kategori/reviewer independen', { concurrent: false }, () =>{
+describe('Historical PR-02 before unified approval migration', { concurrent: false }, () =>{
  it('pilihan Tidak melewati pemeriksaan kategori lama tanpa mengubah nomor otomatis',async()=>{
   const id=await draft({categoryCode:'LAPORAN',reviewRequested:false,reviewerId:''});await submit(id);
   expect((await get(id)).review_requested).toBe(false);expect((await get(id)).review_status).toBe('NOT_REQUIRED');expect((await get(id)).status).toBe('READY_TO_ISSUE');expect((await get(id)).official_number).toBeNull();expect(await steps(id)).toHaveLength(0);

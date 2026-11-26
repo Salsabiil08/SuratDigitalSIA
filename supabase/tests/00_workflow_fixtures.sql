@@ -5,6 +5,7 @@ language plpgsql as $$
 declare p jsonb; bank uuid;doc jsonb;
 begin
  p:=jsonb_build_object('source','CREATE','letterTypeCode',p_type,'categoryCode',p_category,'reviewerId',p_reviewer,'subject','Fixture sah','letterDate',(now() at time zone 'Asia/Jakarta')::date,'recipientUserId','a0000000-0000-0000-0000-000000000006','recipientName','Penerima','recipientOrg','Instansi','recipientAddress','Alamat','content','Dokumen pengujian','signatureMode','IN_APP','signerIds',to_jsonb(p_signers),'areas','[]'::jsonb,'additionalApproverIds',to_jsonb(p_extra));
+ if p_type='IN' and (cardinality(p_signers)>0 or cardinality(p_extra)>0) then p:=p||jsonb_build_object('recipientUserId','a0000000-0000-0000-0000-000000000004');end if;
  if p_mandatory is not null then p:=p||jsonb_build_object('mandatoryApproverIds',to_jsonb(p_mandatory));end if;
  doc:=jsonb_build_object('path',p_actor::text||'/fixture.docx','format','DOCX','hash','fixture-only-hash');
  if p_type='Tag' then

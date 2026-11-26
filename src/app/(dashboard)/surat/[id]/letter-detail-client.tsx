@@ -5,7 +5,6 @@ import {responseLabel} from "@/domain/letter-comments";
 import {ActionNotice} from "@/components/ui/action-notice";
 import {DispositionLetterPanel} from "@/components/letters/disposition-letter-panel";
 import {OfficialReplyPanel} from "@/components/letters/official-reply-panel";
-import { decideReviewAction } from "@/server/actions/reviews";
 import { sendInternalLetterAction,receiveInternalLetterAction } from "@/server/actions/delivery";
 import {useSearchParams} from "next/navigation";
 import { displayLabel } from "@/domain/display-labels";
@@ -82,7 +81,7 @@ export function LetterDetailClient({
   const [syncError,setSyncError]=useState('');
   useEffect(()=>{
     let active=true;
-    const waiting=['IN_REVIEW','READY_TO_ISSUE','NUMBERED'].includes(data.letter.status)||data.letter.review_status==='WAITING';
+    const waiting=['IN_REVIEW','READY_TO_ISSUE','NUMBERED'].includes(data.letter.status);
     const stop=startLiveUpdates({poll:waiting,blocked:()=>busyRef.current,onError:()=>setSyncError('Pembaruan otomatis tertunda. Sambungan akan dicoba kembali.'),refresh:async()=>{
       const result=await getWorkflowLetter(id);if(active){setData(previous=>JSON.stringify(previous)===JSON.stringify(result)?previous:result);setSyncError('');}
     }},{window,document,navigator});
@@ -92,8 +91,7 @@ export function LetterDetailClient({
   const v = data.versions.find((v) => v.id === l.current_version_id);
   const editable =
     data.isCreator && ["DRAFT", "REVISION_REQUESTED"].includes(l.status);
-  const creatorApprovalRequired = [...(l.mandatory_approver_ids || l.signer_ids || []),...(l.additional_approver_ids || [])].includes(data.userId);
-  const activeReview = data.reviews.find(r => r.reviewer_id === data.userId && r.status === 'PENDING' && r.version_id === l.current_version_id && l.review_status === 'WAITING');
+  const creatorApprovalRequired = (l.type?.category==='BILLING'||data.userPosition!=='DIR') && [...(l.mandatory_approver_ids || l.signer_ids || []),...(l.additional_approver_ids || [])].includes(data.userId);
   const activeApproval = data.approvals.find(
     (a) => a.approver_id === data.userId && a.status === "PENDING" && a.version_id===l.current_version_id && a.cycle===l.approval_cycle,
   );
@@ -102,11 +100,10 @@ export function LetterDetailClient({
   );
   const [hasLayoutCopy,setHasLayoutCopy]=useState(false);
   useEffect(()=>setHasLayoutCopy(false),[id]);
-  const next=letterNextStep(l,{creator:data.isCreator,review:!!activeReview,approval:!!activeApproval,signing:!!signing,sent:!!data.delivery?.dispatch,recipient:!!data.delivery?.recipientRole,received:!!data.delivery?.recipients.find((r:any)=>r.profile_id===data.userId)?.received_at});
+  const next=letterNextStep(l,{creator:data.isCreator,review:false,approval:!!activeApproval,signing:!!signing,sent:!!data.delivery?.dispatch,recipient:!!data.delivery?.recipientRole,received:!!data.delivery?.recipients.find((r:any)=>r.profile_id===data.userId)?.received_at});
   const pendingSigner = data.signatures.find(s=>s.status==='PENDING')?.signer as unknown as {full_name?:string}|{full_name?:string}[]|undefined;
   const pendingSignerName = Array.isArray(pendingSigner)?pendingSigner[0]?.full_name:pendingSigner?.full_name;
-  const waitingName = !data.delivery?.dispatch && !activeReview && !activeApproval && !signing ? (
-    data.reviews.find(r=>r.status==='PENDING'&&r.version_id===l.current_version_id)?.reviewer?.full_name ||
+  const waitingName = !data.delivery?.dispatch && !activeApproval && !signing ? (
     data.approvals.find(a=>a.status==='PENDING'&&a.version_id===l.current_version_id&&a.cycle===l.approval_cycle)?.approver?.full_name ||
     pendingSignerName
   ) : null;
@@ -228,16 +225,15 @@ export function LetterDetailClient({
           </p>
         )}
       </Card>
-      {editable && l.review_status==='NOT_STARTED' && !l.reviewer_id && <p className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm">Pemeriksa wajib belum dipilih. <Link className="font-semibold text-red-800 underline" href={`/surat/${id}/edit`}>Lengkapi Pemeriksa</Link>. Jika daftar kosong, hubungi pengelola. Draf tetap tersimpan.</p>}
       <div className="flex flex-wrap items-center gap-3">
         {editable && (
           <>
             <Link href={`/surat/${id}/edit`}>
               <Button variant="secondary">Edit / Koreksi Draft</Button>
             </Link>
-            {creatorApprovalRequired && ["PASSED","NOT_REQUIRED"].includes(l.review_status) && <label className="text-sm flex items-start gap-2"><input type="checkbox" checked={confirmSelf} onChange={e=>setConfirmSelf(e.target.checked)}/>Saya mengajukan dan menyetujui versi ini sesuai kewenangan saya. Persetujuan pejabat lain, nomor resmi, dan tanda tangan tetap melalui tahapnya.</label>}
+            {creatorApprovalRequired && <label className="text-sm flex items-start gap-2"><input type="checkbox" checked={confirmSelf} onChange={e=>setConfirmSelf(e.target.checked)}/>Saya mengajukan dan menyetujui versi ini sesuai kewenangan saya. Persetujuan pejabat lain, nomor resmi, dan tanda tangan tetap melalui tahapnya.</label>}
             <Button
-              disabled={!previewed} disabledReason={!previewed?"Tunggu pratinjau selesai dimuat, lalu periksa dokumen.":l.review_status==='NOT_STARTED'&&!l.reviewer_id?"Pilih pemeriksa melalui Edit / Koreksi Draft. Jika daftar kosong, hubungi pengelola.":creatorApprovalRequired&&!confirmSelf&&["PASSED","NOT_REQUIRED"].includes(l.review_status)?"Centang persetujuan sesuai kewenangan Anda sebelum mengajukan.":undefined}
+              disabled={!previewed} disabledReason={!previewed?"Tunggu pratinjau selesai dimuat, lalu periksa dokumen.":creatorApprovalRequired&&!confirmSelf?"Centang persetujuan sesuai kewenangan Anda sebelum mengajukan.":undefined}
               isLoading={busy} loadingLabel="Mengajukan…"
               onClick={() =>
                 act(
@@ -249,7 +245,7 @@ export function LetterDetailClient({
                 )
               }
             >
-              {l.review_status === "PASSED" ? ((l.mandatory_approver_ids||l.signer_ids||[]).length+(l.additional_approver_ids||[]).length===0?"Lanjutkan ke Penomoran":"Ajukan Persetujuan") : "Ajukan Surat"}
+              Ajukan Surat
             </Button>
           </>
         )}
@@ -267,16 +263,6 @@ export function LetterDetailClient({
           </Button>
         )}
       </div>
-      {activeReview && <Card className="p-5 space-y-4">
-        <h2 className="font-bold">Hasil Pemeriksaan Naskah</h2>
-        <p className="text-sm">Beri catatan pemeriksaan. Perubahan isi dilakukan pembuat surat.</p>
-        <label htmlFor="review-note" className="block text-sm">Catatan (wajib untuk memberi catatan atau meminta perbaikan)</label>
-        <textarea id="review-note" className="w-full border rounded-xl p-3" value={note} onChange={e => setNote(e.target.value)} />
-        <div className="flex gap-3 flex-wrap">{([['COMMENT','Simpan Catatan'],['PASS','Lolos Pemeriksaan'],['REQUEST_REVISION','Minta Perbaikan']] as const).map(([action,label]) =>
-          <Button key={action} disabled={!previewed} disabledReason={!previewed?"Tunggu pratinjau selesai dimuat, lalu periksa dokumen.":action!=='PASS'&&!note.trim()?"Isi catatan pemeriksaan terlebih dahulu.":undefined} isLoading={busy} variant={action === 'PASS' ? 'primary' : 'secondary'} onClick={() => act(() => decideReviewAction(activeReview.id, activeReview.version_id, l.revision, action, note), 'Hasil pemeriksaan tersimpan.')}>{label}</Button>)}</div>
-      </Card>}
-
-      {data.isCreator && !l.official_number && !l.finalized_at && ['IN_REVIEW','READY_TO_ISSUE'].includes(l.status) && <Card className="p-5 space-y-3"><h2 className="font-bold">Koreksi Pengajuan</h2><p className="text-sm">Tarik pengajuan untuk menyimpan versi koreksi. Keputusan lama tetap tercatat dan tidak berlaku untuk versi baru.</p><textarea aria-label="Alasan koreksi" className="border rounded-xl p-3 w-full" value={note} onChange={e=>setNote(e.target.value)}/><Button variant="secondary" isLoading={busy} onClick={()=>act(()=>restartApprovalAction(id,l.revision,note),'Pengajuan ditarik. Edit dan simpan versi baru sebelum mengajukan kembali.')}>Tarik untuk Koreksi</Button></Card>}
       {activeApproval && (
         <Card className="p-5 space-y-4">
           <h2 className="font-bold">
@@ -294,6 +280,7 @@ export function LetterDetailClient({
           <div className="flex flex-wrap gap-3">
             {(
               [
+                ["COMMENT", "Simpan Catatan"],
                 ["APPROVE", "Setujui"],
                 ["REQUEST_REVISION", "Minta Revisi"],
                 ["REJECT", "Tolak"],
@@ -452,7 +439,7 @@ export function LetterDetailClient({
       {(hasLayoutCopy || data.reviews.length>0 || data.approvals.length>0 || data.signatures.length>0) && <details id="history" className="rounded-xl border bg-white p-5 space-y-3"><summary className="cursor-pointer font-bold">Riwayat Surat</summary>
         {hasLayoutCopy&&<a className="inline-block text-sm text-brand-red underline" href={`${documentUrl}&original=1&download=1`}>Unduh dokumen sebelum penyesuaian format</a>}
         {data.reviews.map(r => <div key={r.id} className="text-sm border-b pb-2">
-          <p>{r.reviewer?.full_name} — {r.status === 'PASSED' ? 'Lolos pemeriksaan' : r.status === 'REVISION_REQUESTED' ? 'Perlu perbaikan' : 'Menunggu pemeriksaan'}{r.version_id !== l.current_version_id ? ' (pemeriksaan naskah sebelum perubahan dokumen)' : ''}</p>
+          <p>{r.reviewer?.full_name} — {r.status === 'SUPERSEDED' ? 'Dialihkan ke persetujuan' : r.status === 'PASSED' ? 'Lolos pemeriksaan' : r.status === 'REVISION_REQUESTED' ? 'Perlu perbaikan' : 'Menunggu pemeriksaan'}{r.version_id !== l.current_version_id ? ' (pemeriksaan naskah sebelum perubahan dokumen)' : ''}</p>
           {r.decision_note && <p>Catatan: {r.decision_note}</p>}
           {r.comments.map((c: { id: string; note: string }) => <p key={c.id}>Catatan pemeriksa: {c.note}</p>)}
         </div>)}
@@ -462,6 +449,7 @@ export function LetterDetailClient({
             {(a.approver as any)?.full_name} — {displayLabel(a.status)}
             {a.version_id!==l.current_version_id && <span className="text-neutral-500"> · {a.cycle===l.approval_cycle && a.version_id===l.approval_plan_version ? "Naskah sebelum penomoran" : "Versi sebelumnya"}</span>}
             {a.decision_note ? ` · ${a.decision_note}` : ""}
+            {(a.comments||[]).map((c:any,i:number)=><span key={i} className="block">Catatan: {c.note}</span>)}
             {a.decided_at
               ? ` · ${new Date(a.decided_at).toLocaleString("id-ID", { timeZone: "Asia/Jakarta" })} WIB`
               : ""}

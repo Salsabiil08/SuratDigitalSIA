@@ -27,7 +27,7 @@ async def main():
     await route.fulfill(path='test-results/editor-harness/'+file,content_type=mime,headers={'X-SIADocs-Document-Variant':'unsigned' if 'variant=unsigned' in route.request.url else 'signed'})
    await page.route('**/api/letters/export-*/document?*',export_source)
    await page.goto('http://127.0.0.1:3121')
-   await page.get_by_label('Perlu pemeriksaan isi?',exact=True).select_option('no')
+   assert await page.locator('#letter-review-needed,#letter-reviewer').count()==0
    await page.get_by_label('Penerima Internal',exact=False).select_option('receiver')
    assert await page.get_by_text('Surat ini tidak memerlukan persetujuan atau tanda tangan.',exact=True).is_visible()
    assert await page.get_by_role('heading',name='Persetujuan Surat',exact=True).count()==0
