@@ -11,19 +11,27 @@ async def main():
  async with async_playwright() as p:
   browser=await p.chromium.launch(executable_path=os.environ.get('CHROMIUM_PATH'),args=['--no-sandbox'])
   for name,width,height in [('desktop',1366,768),('mobile',390,844)]:
-   state={'id':'task','revision':1,'subject':'Tugas pengujian UI','instruction':'Siapkan catatan hasil','priority':'NORMAL','status':'NEW','requiresLetter':False,'responseEditable':False,'responseFinal':False,'integrated':True,'sourceAccessible':False,'files':[],'submissions':[],'giverName':'Ahmad Penguji','recipientName':'Rina Penguji','createdAt':'2026-11-23T01:00:00Z'};actions=[]
+   state={'id':'task','recipientId':'staff','editable':True,'revision':1,'subject':'Tugas pengujian UI','instruction':'Siapkan catatan hasil','priority':'NORMAL','status':'NEW','requiresLetter':False,'responseEditable':False,'responseFinal':False,'integrated':True,'sourceAccessible':False,'files':[],'submissions':[],'giverName':'Ahmad Penguji','recipientName':'Rina Penguji','createdAt':'2026-11-23T01:00:00Z'};actions=[]
    context=await browser.new_context(viewport={'width':width,'height':height})
    async def data(route):
     giver='actor=giver' in route.request.url
     await route.fulfill(json={'success':True,'data':{'inbox':[] if giver else [state],'outbox':[state] if giver else [],'availableLetters':[],'availableProfiles':[],'canCreateDisposition':False,'canReceiveDisposition':not giver}})
    async def act(route):
     payload=route.request.post_data_json;action=payload['action'];actions.append(action);await asyncio.sleep(.15)
-    if action=='START':state['status']='IN_PROGRESS'
+    if action=='START':state['status']='IN_PROGRESS';state['editable']=False
     elif action=='SUBMIT':state['status']='IN_REVIEW';state['followUpNote']=payload['note'];state['submissions'].append({'id':'s'+str(len(state['submissions'])),'note':payload['note'],'created_at':'2026-11-23T02:00:00Z','result_letter_id':None})
     elif action=='RETURN':state['status']='REVISION_REQUESTED';state['reviewNote']=payload['note'];state['submissions'][-1]['decision']={'decision':'RETURN','note':payload['note'],'created_at':'2026-11-23T03:00:00Z'}
     elif action=='ACCEPT':state['status']='DONE';state['submissions'][-1]['decision']={'decision':'ACCEPT','note':payload['note'],'created_at':'2026-11-23T04:00:00Z'}
     state['revision']+=1;await route.fulfill(json={'success':True})
    await context.route('**/ux-data*',data);await context.route('**/ux-action*',act)
+   edits=[]
+   async def edit(route):
+    payload=route.request.post_data_json;edits.append(payload)
+    assert payload['dispositionId']=='task' and payload['revision']==state['revision']
+    for key in ['subject','instruction','priority','requiresLetter']:state[key]=payload[key]
+    state['revision']+=1
+    await route.fulfill(json={'success':True})
+   await context.route('**/ux-edit*',edit)
    preview_attempts=[]
    async def preview(route):
     preview_attempts.append(1)
@@ -41,11 +49,21 @@ async def main():
    await retry.wait_for(timeout=20000);await retry.click()
    await page.frame_locator('iframe').locator('.docx-wrapper').wait_for(timeout=20000)
    assert len(preview_attempts)>=2
+   await page.goto(base+'/?actor=giver')
+   await page.get_by_role('button',name='Edit Disposisi',exact=True).click()
+   edit_dialog=page.get_by_role('dialog',name='Edit disposisi',exact=True)
+   await edit_dialog.locator('input').first.fill('Perihal dikoreksi')
+   await edit_dialog.locator('textarea').fill('Arahan pekerjaan diperbaiki')
+   await edit_dialog.get_by_role('button',name='Simpan Perubahan',exact=True).click()
+   await page.get_by_text('Perubahan disposisi tersimpan.',exact=True).wait_for()
+   assert len(edits)==1 and state['subject']=='Perihal dikoreksi' and state['instruction']=='Arahan pekerjaan diperbaiki'
+   await page.goto(base+'/?actor=recipient')
    await page.get_by_role('button',name='Mulai Kerjakan',exact=True).click()
    await page.get_by_text('Tahap: Diproses',exact=True).wait_for()
    await page.get_by_role('button',name='Kirim Hasil untuk Diperiksa',exact=True).click()
    dialog=page.get_by_role('dialog');send=dialog.get_by_role('button',name='Kirim kepada Pemberi',exact=True)
    assert await send.is_disabled();await dialog.get_by_role('textbox').fill('Hasil pertama')
+   assert await send.is_enabled()
    await send.evaluate('(el)=>{el.click();el.click();}')
    await page.get_by_text('Tahap: Menunggu Pemeriksaan',exact=True).wait_for()
    assert actions.count('SUBMIT')==1

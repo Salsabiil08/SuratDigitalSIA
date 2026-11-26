@@ -111,7 +111,7 @@ export async function getDispositionsAction(sourceLetterId?:string): Promise<{
         id: d.id,
         revision: d.revision,
         recipientId: d.recipient_id,
-        editable: d.giver_id === user.id && d.status === "NEW" && !d.read_at && !d.response_letter_id && !d.submitted_at && !(submissions||[]).some(s=>s.disposition_id===d.id),
+        editable: d.giver_id === user.id && d.status === "NEW" && !d.response_letter_id && !d.submitted_at && !(submissions||[]).some(s=>s.disposition_id===d.id),
         subject: d.subject,
         instruction: d.instruction,
         priority: d.priority,

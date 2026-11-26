@@ -16,7 +16,7 @@ export function PdfCanvas({blob,areas=[],activeKey,onPlace,onLoaded}:{blob:Blob;
   return()=>{alive=false;void task?.destroy().catch(()=>{});};
  },[blob,attempt]);
  const reportLoaded=()=>{if(!loaded.current){loaded.current=true;onLoadedRef.current?.();}};
- return <div className="space-y-3">
+ return <div className="min-w-0 w-full space-y-3">
  {pdf&&!error&&<div className="sticky top-0 z-10 bg-neutral-100/95 rounded-lg p-1 flex items-center gap-2 text-xs"><button type="button" aria-label="Perkecil PDF" disabled={zoom<=1} onClick={()=>setZoom(z=>Math.max(1,z-.25))} className="w-10 h-10 rounded hover:bg-white disabled:opacity-40 text-lg">−</button><span>{Math.round(zoom*100)}%</span><button type="button" aria-label="Perbesar PDF" disabled={zoom>=3} onClick={()=>setZoom(z=>Math.min(3,z+.25))} className="w-10 h-10 rounded hover:bg-white disabled:opacity-40 text-lg">+</button><span className="ml-auto">{pdf.numPages} halaman</span></div>}
  <div className="space-y-3" style={{width:`${zoom*100}%`,minWidth:'100%'}}>
   {error?<div role="alert" className="rounded-xl border border-red-200 bg-white p-4 space-y-3"><p>{error}</p><Button type="button" variant="secondary" onClick={()=>setAttempt(n=>n+1)}>Muat Ulang PDF</Button></div>:!pdf?<p role="status" className="p-4 text-sm text-neutral-600">Menyiapkan halaman PDF…</p>:Array.from({length:pdf.numPages},(_,i)=><PdfPage key={i} pdf={pdf} pageNumber={i+1} areas={areas} active={areas.find(a=>a.key===activeKey)} onPlace={onPlace} onLoaded={reportLoaded} onError={()=>setError('Halaman PDF gagal ditampilkan. Coba muat ulang pratinjau.')}/>)}

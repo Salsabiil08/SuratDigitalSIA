@@ -56,10 +56,24 @@ export async function renderDocxInFrame(blob:Blob,frame:HTMLIFrameElement):Promi
           }
         }
         const pages=Array.from(doc.querySelectorAll<HTMLElement>('.docx-wrapper>section'));
+        const wrapper=doc.querySelector<HTMLElement>('.docx-wrapper');
+        const main=doc.querySelector<HTMLElement>('main');
+        // Scale the fixed Word page as a whole. CSS zoom on body changes its layout
+        // viewport and can center/crop the page on narrow mobile browsers.
         const pageWidth=Math.max(0,...pages.map(page=>page.offsetWidth));
         const fitMobile=()=>{
-          const scale=frame.clientWidth<640&&pageWidth>0?Math.min(1,Math.max(1,frame.clientWidth-24)/pageWidth):1;
-          doc.body.style.setProperty('zoom',String(scale));
+          if(!wrapper||!main)return;
+          const available=frame.clientWidth;
+          const mobile=available<640&&pageWidth>0;
+          const naturalWidth=pageWidth+24;
+          const scale=mobile?Math.min(1,Math.max(1,available)/naturalWidth):1;
+          wrapper.style.width=mobile?`${naturalWidth}px`:'';
+          wrapper.style.boxSizing=mobile?'border-box':'';
+          wrapper.style.transformOrigin='top left';
+          wrapper.style.transform=mobile?`scale(${scale})`:'';
+          main.style.height=mobile?`${wrapper.offsetHeight*scale}px`:'';
+          doc.documentElement.style.overflowX=mobile?'hidden':'';
+          doc.body.style.overflowX=mobile?'hidden':'';
         };
         fitMobile();
         if(typeof ResizeObserver==='undefined'){
@@ -68,5 +82,6 @@ export async function renderDocxInFrame(blob:Blob,frame:HTMLIFrameElement):Promi
         }
         const observer=new ResizeObserver(fitMobile);
         observer.observe(frame);
+        if(wrapper)observer.observe(wrapper);
         return ()=>observer.disconnect();
 }

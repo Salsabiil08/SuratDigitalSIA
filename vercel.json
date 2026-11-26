@@ -39,7 +39,8 @@
       "fix/cancellation-status-notifications": false,
       "fix/mobile-attachments-clock": false,
       "fix/reviewer-role-hierarchy": false,
-      "fix/reviewer-hierarchy-integration": false
+      "fix/reviewer-hierarchy-integration": false,
+      "fix/mobile-preview-disposition-edit": false
     }
   }
 }

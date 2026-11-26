@@ -23,10 +23,13 @@ begin
  assert(select count(*)=1 from audit_logs where action='DISPOSITION_CREATE' and entity_id=task::text);
  select revision into rev from dispositions where id=task;
  submit_data:=jsonb_build_object('operationKey',gen_random_uuid(),'recipientId',staff,'subject','Arahan diperbaiki','instruction','Gunakan format laporan terbaru','priority','IMPORTANT','dueDate','2026-12-01','requiresLetter',true);
+ update dispositions set read_at=now() where id=task;
  perform disposition_workflow(gm,'EDIT',task,rev,submit_data);
  perform disposition_workflow(gm,'EDIT',task,rev,submit_data);
  assert(select subject='Arahan diperbaiki' and instruction='Gunakan format laporan terbaru' and priority='IMPORTANT' and due_date='2026-12-01'::date and revision=rev+1 from dispositions where id=task);
- assert(select count(*)=1 from audit_logs where action='DISPOSITION_EDIT' and entity_id=task::text);
+ assert(select read_at is null from dispositions where id=task),'Updated instructions must be read again';
+ assert(select count(*)=1 from audit_logs where action='DISPOSITION_EDIT' and entity_id=task::text and metadata->>'previous_read_at' is not null);
+ assert(select count(*)=1 from notifications where disposition_id=task and title='Disposisi diperbarui' and not is_read);
  select revision into rev from dispositions where id=task;
  failed:=false;begin perform disposition_workflow(staff,'EDIT',task,rev,submit_data||jsonb_build_object('operationKey',gen_random_uuid()));exception when others then failed:=true;end;assert failed,'Pelaksana tidak dapat mengubah arahan keluar';
  failed:=false;begin perform disposition_workflow(gm,'CREATE',null,null,payload||jsonb_build_object('instruction','Diubah'));exception when others then failed:=true;end;assert failed;
@@ -39,6 +42,10 @@ begin
  select revision into rev from dispositions where id=task;
  submit_data:=jsonb_build_object('note','Draf saja belum cukup','operationKey',gen_random_uuid());
  failed:=false;begin perform disposition_workflow(staff,'SUBMIT',task,rev,submit_data);exception when others then failed:=true;end;assert failed;
+ -- Reading is not starting work, but START locks outgoing corrections.
+ perform disposition_workflow(staff,'START',task,rev,jsonb_build_object('operationKey',gen_random_uuid()));
+ select revision into rev from dispositions where id=task;
+ failed:=false;begin perform disposition_workflow(gm,'EDIT',task,rev,jsonb_build_object('operationKey',gen_random_uuid(),'recipientId',staff,'subject','Changed after start','instruction','Changed','priority','NORMAL','requiresLetter',true));exception when others then failed:=true;end;assert failed,'Started work must not be silently rewritten';
  result:=test_support.disposition_result(staff,task,gen_random_uuid());
  assert(select official_number is null and status='DRAFT' from letters where id=result);assert(select status<>'DONE' from dispositions where id=task);
  select revision into rev from dispositions where id=task;

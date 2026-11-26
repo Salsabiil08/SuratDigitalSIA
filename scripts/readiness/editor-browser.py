@@ -63,6 +63,13 @@ async def main():
    await page.locator('iframe[title="Pratinjau dokumen surat"]').scroll_into_view_if_needed()
    logo=frame.get_by_alt_text('Kop resmi PT Semen Indonesia Aceh');await logo.wait_for()
    assert await logo.evaluate('(img)=>img.complete&&img.naturalWidth>0')
+   if name=='mobile':
+    # Fit every Word page at narrow widths and after an orientation change.
+    for preview_width in [320,390,600,390]:
+     await page.set_viewport_size({'width':preview_width,'height':844})
+     await page.wait_for_timeout(150)
+     assert await frame.locator('.docx-wrapper>section').evaluate_all("els=>els.length>0&&els.every(e=>{const r=e.getBoundingClientRect();return r.left>=-1&&r.right<=document.documentElement.clientWidth+1;})"),'Word preview cropped on mobile'
+
    overlapping=await frame.locator('div[style]').evaluate_all("els=>els.filter(e=>e.style.width==='0px'&&e.style.height==='0px'&&e.style.zIndex==='2').some(e=>{const stamp=e.querySelector('img');const signature=e.closest('p')?.querySelectorAll('img');if(!stamp||!signature||signature.length<2)return false;const a=stamp.getBoundingClientRect(),b=signature[1].getBoundingClientRect();return a.left<b.right&&a.right>b.left&&a.top<b.bottom&&a.bottom>b.top;})")
    assert overlapping,'Stamp is not layered in signature paragraph'
    await page.screenshot(path=str(out/f'guided-preview-{name}.png'),full_page=True)
