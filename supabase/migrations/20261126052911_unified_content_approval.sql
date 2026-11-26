@@ -29,7 +29,7 @@ begin
  if peer and (cardinality(ids)>0 or cardinality(extra)>0 or l.required_signature_count>0) then raise exception 'Surat internal sesama level tanpa persetujuan dan TTD.';end if;
  if t.category='BILLING' and ids[1]=ids[2] then raise exception 'SM dan Direktur harus berbeda.';end if;
  for i in 1..cardinality(ids) loop
-  actor:=ids[i];role:=case when t.category='BILLING' then case when i=1 then 'BILLING_FINANCE' else 'BILLING_DIRECTOR' end else 'FORMAL_AUTHORITY' end;
+  actor:=ids[i];role:=case when t.category='BILLING' then case when i=1 then 'BILLING_FINANCE' else 'BILLING_DIRECTOR' end else 'CONTENT_APPROVER' end;
   if t.category<>'BILLING' and creator_code='DIR' then continue;end if;
   if actor is null or not app.approval_roles_valid(actor,array[role],l.creator_unit_id,l.letter_type_id)
     or (t.category<>'BILLING' and not app.content_approver(l.creator_id,actor)) then raise exception 'Pilih penyetuju atasan yang aktif sesuai hierarki dan unit.';end if;
@@ -38,7 +38,7 @@ begin
  foreach actor in array extra loop
   if actor=any(ids) then continue;end if;
   if not app.content_approver(l.creator_id,actor) then raise exception 'Pilih penyetuju atasan yang aktif sesuai hierarki dan unit.';end if;
-  entries:=entries||jsonb_build_array(jsonb_build_object('actor',actor,'role','ADDITIONAL','ord',cardinality(ids)+array_position(extra,actor)));
+  entries:=entries||jsonb_build_array(jsonb_build_object('actor',actor,'role','CONTENT_APPROVER','ord',cardinality(ids)+array_position(extra,actor)));
  end loop;
  select coalesce(jsonb_agg(jsonb_build_object('actor',x.actor,'roles',x.roles,'ord',x.ord) order by x.ord,x.actor),'[]') into result
  from(select e->>'actor' actor,jsonb_agg(distinct e->>'role' order by e->>'role') roles,min((e->>'ord')::integer) ord from jsonb_array_elements(entries) e group by e->>'actor') x;
@@ -56,11 +56,12 @@ begin
  a:=app.active_assignment(p_actor);if a.id is null or p_roles is null or cardinality(p_roles)=0 then return false;end if;
  select positions.code into code from positions where id=a.position_id;
  foreach r in array p_roles loop
-  if r is null or r not in ('FORMAL_AUTHORITY','BILLING_FINANCE','BILLING_DIRECTOR','ADDITIONAL') then return false;end if;
-  if r='FORMAL_AUTHORITY' and (code not in ('GM','SM','DIR') or (code='GM' and a.unit_id<>p_unit)) then return false;
+  if r is null or r not in ('FORMAL_AUTHORITY','BILLING_FINANCE','BILLING_DIRECTOR','ADDITIONAL','CONTENT_APPROVER') then return false;end if;
+  if r='FORMAL_AUTHORITY' and not app.valid_signer(p_actor) then return false;
   elsif r='BILLING_FINANCE' and (code<>'SM' or not app.valid_signer(p_actor) or (a.unit_id<>p_unit and not app.authorized_approver(p_actor,p_unit,p_type))) then return false;
   elsif r='BILLING_DIRECTOR' and (code<>'DIR' or not app.valid_signer(p_actor)) then return false;
-  elsif r='ADDITIONAL' and (code not in ('GM','SM','DIR') or (code='GM' and a.unit_id<>p_unit)) then return false;
+  elsif r='ADDITIONAL' and cardinality(p_roles)=1 and not app.authorized_approver(p_actor,p_unit,p_type) then return false;
+  elsif r='CONTENT_APPROVER' and (code not in ('GM','SM','DIR') or (code='GM' and a.unit_id<>p_unit)) then return false;
   end if;
  end loop;
  return true;
