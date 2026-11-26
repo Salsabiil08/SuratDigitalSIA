@@ -1,3 +1,4 @@
+import {roleReviewer} from "@/domain/reviewer-hierarchy";
 import {storeAttachment,removeAttachments} from "@/server/attachments";
 import {validateBillingItems,billingItemsWithSharedPayment} from '@/domain/billing';
 import {assertPeerInternalAuthorization} from "@/domain/peer-internal";
@@ -98,7 +99,6 @@ export async function peopleOptions() {
     { data: billingType },
     { data: categories, error: catError },
     { data: rules, error: ruleError },
-    { data: grants, error: grantError },
     { data: approvalGrants, error: approvalGrantError },
   ] = await Promise.all([
     db.from("profiles").select("id,full_name").eq("is_active", true),
@@ -108,12 +108,11 @@ export async function peopleOptions() {
         "profile_id,is_official_signer,start_date,end_date,position:positions!user_assignments_position_id_fkey(code,name,level,is_active),unit:organizational_units!user_assignments_unit_id_fkey(id,code,name,is_active)",
       )
       .eq("is_active", true)
-      .order("start_date", { ascending: false }),
+      .order("start_date", { ascending: false, nullsFirst: false }),
     db.from("master_bank").select("id,name").eq("is_active", true),
     db.from('letter_types').select('creator_unit_id').eq('category','BILLING').eq('is_active',true).maybeSingle(),
     db.from('document_categories').select('id,code,name').eq('is_active', true).in('code', ['PERMOHONAN','LAPORAN','PEMBERITAHUAN']),
     db.from('review_policies').select('id,category_code,requires_review,validation_status,revision,type:letter_types(code)'),
-    createAdminClient().from('review_authorizations').select('reviewer_id,unit_id,starts_on,ends_on,type:letter_types(code)').eq('is_active', true),
     createAdminClient().from('approver_authorizations').select('approver_id,unit_id,starts_on,ends_on,type:letter_types(code)').eq('is_active',true),
   ]);
   if (error || ae || be)
@@ -151,13 +150,11 @@ export async function peopleOptions() {
       };
     })
     .filter((p) => p.position && p.active);
-  if (catError || ruleError || grantError) throw new Error('Konfigurasi pemeriksaan belum dapat diambil.');
-  const reviewerGrants = (grants || []).filter(g => (!g.unit_id || g.unit_id === user.unit?.id) && g.starts_on <= today && (!g.ends_on || g.ends_on >= today))
-    .map(g => ({ reviewerId: g.reviewer_id, typeCode: (g.type as any)?.code || null }));
+  if (catError || ruleError) throw new Error('Konfigurasi pemeriksaan belum dapat diambil.');
   if(approvalGrantError)throw new Error('Konfigurasi persetujuan belum dapat diambil.');
   const approverGrants=(approvalGrants||[]).filter(g=>(!g.unit_id||g.unit_id===user.unit?.id)&&g.starts_on<=today&&(!g.ends_on||g.ends_on>=today)).map(g=>({approverId:g.approver_id,typeCode:(g.type as any)?.code||null}));
   const reviewRules = (rules || []).map(r => ({ ...r, typeCode: (r.type as any)?.code || null }));
-  return { user, people, banks: banks || [], financeUnitId:billingType?.creator_unit_id || '', categories: categories || [], reviewRules, reviewerGrants, approverGrants };
+  return { user, people, banks: banks || [], financeUnitId:billingType?.creator_unit_id || '', categories: categories || [], reviewRules, approverGrants };
 }
 export async function saveDraft(
   input: DraftInput,
@@ -193,7 +190,7 @@ export async function saveDraft(
     throw new Error("Sumber surat tidak valid.");
   if (old && input.source !== old.source)
     throw new Error("Sumber dokumen tidak dapat diganti.");
-  const { people, banks, categories, reviewerGrants } = await peopleOptions();
+  const { people, banks, categories } = await peopleOptions();
   if(input.reviewRequested!==undefined){
     if(typeof input.reviewRequested!=='boolean')throw new Error('Pilihan pemeriksaan tidak valid.');
     if(!input.reviewRequested&&input.reviewerId)throw new Error('Pilih Ya untuk menggunakan pemeriksa.');
@@ -202,8 +199,8 @@ export async function saveDraft(
   assertPeerInternalAuthorization(input.letterTypeCode,user.position?.level||0,people.find(p=>p.id===input.recipientUserId)?.level||0,input);
   if(input.reviewerId)await assertReviewerHierarchy(user.id,input.reviewerId);
   if (!categories.some(c => c.code === input.categoryCode)) throw new Error('Pilih kategori surat yang aktif.');
-  if (input.reviewerId && (input.reviewerId === user.id || !people.some(p => p.id === input.reviewerId && ['GM','SM','DIR'].includes(p.position)) || !reviewerGrants.some(g => g.reviewerId === input.reviewerId && (!g.typeCode || g.typeCode === input.letterTypeCode))))
-    throw new Error('Pilih pemeriksa berbeda yang berwenang untuk jenis dan unit surat.');
+  if (input.reviewerId && (input.reviewerId === user.id || !people.some(p => p.id === input.reviewerId) || !people.some(p=>p.id===input.reviewerId&&roleReviewer(user.position?.code||'',p.position))))
+    throw new Error('Pilih pemeriksa dengan jabatan lebih tinggi.');
   const signers = input.signerIds.map((id) =>
     people.find((p) => p.id === id && p.signer),
   );

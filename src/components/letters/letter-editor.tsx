@@ -17,7 +17,7 @@ import { Button } from "@/components/ui/button";
 import {PdfPlacement} from './pdf-placement';
 import { RupiahInput } from "@/components/ui/rupiah-input";
 import {peerInternal} from "@/domain/peer-internal";
-import { higherReviewer } from "@/domain/reviewer-hierarchy";
+import { roleReviewer, REVIEWER_ROLE_ORDER } from "@/domain/reviewer-hierarchy";
 import { terbilangRupiah } from "@/domain/terbilang";
 
 function draftFromData(
@@ -166,8 +166,9 @@ export function LetterEditor({
   const recipient=options.people.find(p=>p.id===input.recipientUserId);
   const peer=peerInternal(input.letterTypeCode,options.user.position?.level||0,recipient?.level||0);
   const count = internal ? (peer ? 0 : formal ? 1 : 0) : isBill ? 2 : 1;
-  const reviewers = options.people.filter(p => p.id !== options.user.id && ['GM','SM','DIR'].includes(p.position) && higherReviewer(options.user.position?.level || 0,p.level) && options.reviewerGrants.some(g => g.reviewerId === p.id && (!g.typeCode || g.typeCode === input.letterTypeCode)));
-  const reviewerHierarchyHint=options.user.position?.code==='STF'?'GM, Senior Manager, atau Direktur Utama':options.user.position?.code==='GM'?'Senior Manager atau Direktur Utama':options.user.position?.code==='SM'?'Direktur Utama':'jabatan di atas Anda';
+  const reviewers = options.people.filter(p => p.id !== options.user.id && roleReviewer(options.user.position?.code||'',p.position)).sort((a,b)=>(REVIEWER_ROLE_ORDER[a.position]||0)-(REVIEWER_ROLE_ORDER[b.position]||0)||a.name.localeCompare(b.name,'id'));
+  const reviewerKey=reviewers.map(p=>p.id).join(',');
+  useEffect(()=>{if(!input.reviewRequested)return;setInput(old=>{if(reviewers.some(p=>p.id===old.reviewerId))return old;const reviewerId=reviewers.length===1?reviewers[0]!.id:'';return old.reviewerId===reviewerId?old:{...old,reviewerId};});},[input.reviewRequested,reviewerKey]);
   const signers = options?.people.filter((p) => p.signer) || [];
   function updateSigner(index: number, value: string) {
     const ids = [...input.signerIds];
@@ -313,7 +314,7 @@ export function LetterEditor({
           </div>
           <Field label="Perlu pemeriksaan isi?" htmlFor="letter-review-needed">
             <Select id="letter-review-needed" value={input.reviewRequested ? 'yes' : 'no'} onChange={e=>setInput(old=>({...old,reviewRequested:e.target.value==='yes',reviewerId:e.target.value==='yes'?old.reviewerId:''}))}>
-              <option value="no">Tidak</option><option value="yes">Ya</option>
+              <option value="no">Tidak</option><option value="yes" disabled={options.user.position?.code==='DIR'}>Ya</option>
             </Select>
           </Field>
           {input.reviewRequested && <Field label="Pemeriksa Isi Surat" htmlFor="letter-reviewer">
@@ -321,7 +322,7 @@ export function LetterEditor({
               <option value="">Pilih pemeriksa</option>
               {reviewers.map(p=><option key={p.id} value={p.id}>{p.name} — {p.title}</option>)}
             </Select>
-            <p className="text-xs text-neutral-600">{reviewers.length===0?'Pemeriksa belum tersedia. Hubungi Super Admin. Draf tetap dapat disimpan.':`Pilih satu pemeriksa berwenang dari ${reviewerHierarchyHint}.`}</p>
+            <p className="text-xs text-neutral-600">{reviewers.length===0?(options.user.position?.code==='DIR'?'Tidak ada jabatan pemeriksa di atas Direktur Utama.':'Belum ada pejabat aktif di atas jabatan Anda.'):'Pilih pemeriksa sebelum mengajukan surat.'}</p>
           </Field>}
           <Field
             label="Tanggal Surat"

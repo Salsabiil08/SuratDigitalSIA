@@ -18,6 +18,18 @@ async def main():
     for name in pages:
      errors.clear();await page.goto(f'{base}/?role={role}&page={name}');await page.locator(f'[data-fixture-page="{name}"]').wait_for();await page.locator('main.dashboard-content').wait_for();await page.wait_for_timeout(150)
      check(not errors,(role,name,width,errors))
+     if name in ['create','billing','import']:
+      expected={'STF':['gm','sm','dir'],'GM':['sm','dir'],'SM':['dir'],'DIR':[],'ADMIN':[]}[role]
+      needed=page.locator('#letter-review-needed')
+      if role=='DIR':check(await needed.locator('option[value=yes]').is_disabled(),(role,name,width,'top role must not select a reviewer'))
+      elif expected:
+       await needed.select_option('yes');reviewer=page.locator('#letter-reviewer');await reviewer.wait_for()
+       ids=await reviewer.locator('option').evaluate_all('(nodes)=>nodes.map(n=>n.value).filter(Boolean)')
+       check(ids==expected,(role,name,width,'reviewers',ids,expected))
+       if len(expected)==1:
+        await page.wait_for_function("document.querySelector('#letter-reviewer').value==='dir'")
+       else:await reviewer.select_option(expected[0])
+
      sizes=await page.evaluate('''()=>{const m=document.querySelector('main.dashboard-content');return {page:document.documentElement.scrollWidth,viewport:innerWidth,main:m.scrollWidth,client:m.clientWidth};}''')
      header=await page.locator('header').first.evaluate('(h)=>({scroll:h.scrollWidth,client:h.clientWidth})');check(header['scroll']<=header['client']+1,(role,name,width,header))
      check(sizes['page']<=width+1 and sizes['main']<=sizes['client']+1,(role,name,width,sizes))

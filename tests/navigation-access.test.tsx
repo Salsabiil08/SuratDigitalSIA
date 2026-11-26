@@ -13,7 +13,8 @@ function menu(positionCode:string,extra:Partial<typeof base>={}){
 }
 it.each(['STF','GM'])('%s memiliki surat/disposisi, tanpa menu kewenangan yang tidak ditugaskan',role=>{
  const html=menu(role);for(const href of ['/surat','/surat/buat','/kotak-masuk','/kotak-keluar','/disposisi'])expect(html).toContain(`href="${href}"`);
- for(const href of ['/persetujuan','/pengesahan','/pemeriksaan','/admin/organisasi','/tagihan/buat'])expect(html).not.toContain(`href="${href}"`);
+ for(const href of ['/persetujuan','/pengesahan','/admin/organisasi','/tagihan/buat'])expect(html).not.toContain(`href="${href}"`);
+ expect(html.includes('href="/pemeriksaan"')).toBe(role==='GM');
 });
 it.each(['SM','DIR'])('%s melihat persetujuan dan TTD hanya dengan mandat penandatangan',role=>{
  expect(menu(role)).toContain('href="/persetujuan"');expect(menu(role)).not.toContain('href="/pengesahan"');
@@ -22,8 +23,8 @@ it.each(['SM','DIR'])('%s melihat persetujuan dan TTD hanya dengan mandat penand
 it('Finance melihat pengantar tagihan, tanpa menjadi penyetuju/penandatangan otomatis',()=>{
  const html=menu('STF',{isFinance:true});expect(html).toContain('href="/tagihan/buat"');expect(html).not.toContain('href="/persetujuan"');expect(html).not.toContain('href="/pengesahan"');
 });
-it('penugasan reviewer dan approver tambahan independen dari jabatan',()=>{
- const html=menu('STF',{reviewerAssigned:true,approverAssigned:true});expect(html).toContain('href="/pemeriksaan"');expect(html).toContain('href="/persetujuan"');expect(html).not.toContain('href="/pengesahan"');
+it('pemeriksa mengikuti jabatan sedangkan approver tambahan tetap mengikuti mandat',()=>{
+ const html=menu('STF',{reviewerAssigned:true,approverAssigned:true});expect(html).not.toContain('href="/pemeriksaan"');expect(html).toContain('href="/persetujuan"');expect(html).not.toContain('href="/pengesahan"');
 });
 it('Super Admin tanpa penugasan hanya mendapat menu administrasi, bukan kewenangan bisnis',()=>{
  const html=menu('',{hasAssignment:false,isSuperAdmin:true,reviewerAssigned:true,isOfficialSigner:true,isFinance:true});

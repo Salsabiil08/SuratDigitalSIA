@@ -73,10 +73,11 @@ describe('PR-02 kategori/reviewer independen', { concurrent: false }, () =>{
   const id=await draft({categoryCode:'PEMBERITAHUAN'});await submit(id);
   expect((await get(id)).review_status).toBe('WAITING');expect((await get(id)).status).toBe('DRAFT');
  });
- it('self-review, reviewer tanpa grant dan lingkup unit salah ditolak',async()=>{
+ it('self-review dan admin ditolak, pejabat lebih tinggi lintas unit tidak memerlukan grant',async()=>{
   await expect(draft({reviewerId:actor(5)})).rejects.toThrow(/pemeriksa/);
-  await expect(draft({reviewerId:actor(3)})).rejects.toThrow(/pemeriksa/);
-  await expect(draft({reviewerId:actor(4)},6)).rejects.toThrow(/pemeriksa/);
+  await expect(draft({reviewerId:actor(1)})).rejects.toThrow(/pemeriksa/);
+  await expect(draft({reviewerId:actor(3)})).resolves.toBeTruthy();
+  await expect(draft({reviewerId:actor(4)},6)).resolves.toBeTruthy();
  });
  it('komentar, lolos pemeriksaan, approval dan TTD tidak dicampur',async()=>{
   const id=await draft({letterTypeCode:'KRE',signerIds:[actor(2)]});await submit(id);
@@ -133,11 +134,11 @@ describe('PR-02 kategori/reviewer independen', { concurrent: false }, () =>{
  });
  it('hak reviewer dicabut/nonaktif/berakhir tidak dapat mengambil keputusan atau menerbitkan nomor',async()=>{
   const id=await draft();await submit(id);await decide(id);await submit(id);
-  await db.exec(`update review_authorizations set is_active=false where reviewer_id='${actor(4)}'`);
+  await db.exec(`update user_assignments set is_active=false where profile_id='${actor(4)}'`);
   try {
    expect(await asUser(4,'select id from letters where id=$1',[id])).toHaveLength(0);
    await expect(rows('select issue_letter_number($1,$2,$3)',[id,actor(5),'review-expired'])).rejects.toThrow(/Pemeriksaan/);
-  } finally {await db.exec(`update review_authorizations set is_active=true where reviewer_id='${actor(4)}'`);}
+  } finally {await db.exec(`update user_assignments set is_active=true where profile_id='${actor(4)}'`);}
  });
  it('override jenis mengharuskan Pemberitahuan direview dan config hanya pengelola perusahaan',async()=>{
   await expect(rows('select configure_review_policy($1,$2,null,true,$3)',[actor(1),'PEMBERITAHUAN','Uji admin'])).rejects.toThrow(/pengelola/);
@@ -199,10 +200,36 @@ it('review versi yang salah, akun nonaktif dan penugasan berakhir ditolak',async
  await db.exec(`update profiles set is_active=false where id='${actor(4)}'`);
  try {await expect(decide(id)).rejects.toThrow(/pemeriksa/);}finally {await db.exec(`update profiles set is_active=true where id='${actor(4)}'`);}
  // Gunakan rentang sah yang memang telah berakhir.
- await db.exec(`update review_authorizations set starts_on=current_date-10,ends_on=current_date-1 where reviewer_id='${actor(4)}'`);
- try {await expect(decide(id)).rejects.toThrow(/pemeriksa/);}finally {await db.exec(`update review_authorizations set starts_on=current_date,ends_on=null,is_active=true where reviewer_id='${actor(4)}'`);}
+ await db.exec(`update user_assignments set start_date=current_date-10,end_date=current_date-1 where profile_id='${actor(4)}'`);
+ try {await expect(decide(id)).rejects.toThrow(/pemeriksa/);}finally {await db.exec(`update user_assignments set start_date=current_date,end_date=null,is_active=true where profile_id='${actor(4)}'`);}
 });
 it('pengajuan ulang saat menunggu tidak menggandakan tugas/notifikasi',async()=>{
  const id=await draft();await submit(id);const before=await rows('select id from notifications where letter_id=$1',[id]);
  await act(id,'SUBMIT');expect(await steps(id)).toHaveLength(1);expect(await rows('select id from notifications where letter_id=$1',[id])).toEqual(before);
+});
+
+it('role hierarchy allows exactly higher SIA roles without manual reviewer grants',async()=>{
+ const rank:Record<number,number>={1:0,2:4,3:3,4:2,5:1,6:1};
+ for(const creator of [2,3,4,5,6])for(const reviewer of [1,2,3,4,5,6]){
+  const allowed=(await rows('select app.review_hierarchy($1,$2) allowed',[actor(creator),actor(reviewer)]))[0].allowed;
+  expect(allowed,`creator ${creator}, reviewer ${reviewer}`).toBe(creator!==reviewer&&rank[reviewer]!>rank[creator]!);
+ }
+});
+it('all creation paths accept higher reviewers with zero reviewer grants and preserve assignment-scoped access',async()=>{
+ await db.exec('begin');
+ try{
+  await db.exec('delete from review_authorizations');
+  for(const source of ['CREATE','UPLOAD'])for(const [creator,reviewer] of ([[5,4],[5,3],[5,2],[4,3],[4,2],[3,2]] as const)){
+   const id=await draft({source,reviewRequested:true,reviewerId:actor(reviewer)},creator);
+   const l=await get(id);await act(id,'PREVIEW',creator);await rows('select submit_letter_for_approval($1,$2,$3,false)',[actor(creator),id,l.revision]);
+   expect((await get(id)).review_status).toBe('WAITING');expect((await steps(id))[0].reviewer_id).toBe(actor(reviewer));
+  }
+  const visibleAs=async(n:number,id:string)=>{await rows("select set_config('request.jwt.claim.sub',$1,true)",[actor(n)]);await db.exec('set local role authenticated');try{return await rows('select id from letters where id=$1',[id]);}finally{await db.exec('reset role');}};
+  const id=await draft({reviewRequested:true,reviewerId:actor(4)});expect(await visibleAs(4,id)).toHaveLength(0);await submit(id);
+  expect(await visibleAs(4,id)).toHaveLength(1);
+  expect(await visibleAs(2,id)).toHaveLength(0);
+ }finally{await db.exec('rollback');}
+});
+it('a manual grant cannot authorize peer, lower, staff or technical admin as reviewer',async()=>{
+ for(const [creator,reviewer] of ([[4,4],[4,5],[3,4],[2,3],[5,1]] as const))await expect(draft({reviewRequested:true,reviewerId:actor(reviewer)},creator)).rejects.toThrow(/pemeriksa/);
 });
