@@ -3,6 +3,7 @@ begin;
 alter table letters add column unified_approval boolean not null default false;
 alter table letters alter column unified_approval set default true;
 alter table letters add column content_approval_required boolean not null default false;
+alter table letters add column approval_required_from_review boolean not null default false;
 alter table approval_steps add column comments jsonb not null default '[]';
 create function app.content_approver(p_creator uuid,p_approver uuid) returns boolean
 language sql stable security definer set search_path=public,pg_temp as $$
@@ -75,7 +76,7 @@ begin
  v_id:=save_letter_draft_pre_review(p_actor,p_data,p_document);
  select c.id into category from document_categories c where c.code=p_data->>'categoryCode';
  update letters set category_id=coalesce(category,category_id),reviewer_id=null,review_requested=false,review_status='NOT_REQUIRED',unified_approval=true,
- content_approval_required=coalesce((p_data->>'approvalRequired')::boolean,false) where letters.id=v_id;
+ content_approval_required=approval_required_from_review or coalesce((p_data->>'approvalRequired')::boolean,false) where letters.id=v_id;
  return v_id;
 end $$;
 create or replace function save_letter_draft(p_actor uuid,p_data jsonb,p_document jsonb) returns uuid
@@ -165,7 +166,7 @@ create function app.guard_unified_approval() returns trigger language plpgsql se
 begin
  if current_user in ('anon','authenticated') then
   if tg_table_name='letters' then
-   if (new.unified_approval,new.content_approval_required) is distinct from (old.unified_approval,old.content_approval_required) then raise exception 'Persetujuan hanya melalui alur resmi.' using errcode='42501';end if;
+   if (new.unified_approval,new.content_approval_required,new.approval_required_from_review) is distinct from (old.unified_approval,old.content_approval_required,old.approval_required_from_review) then raise exception 'Persetujuan hanya melalui alur resmi.' using errcode='42501';end if;
   elsif new.comments is distinct from old.comments then raise exception 'Catatan hanya melalui persetujuan resmi.' using errcode='42501';end if;
  end if;return new;
 end $$;
@@ -183,7 +184,7 @@ do $$ declare l letters;wanted boolean;peer boolean;extras uuid[];transitioned b
   transitioned:=coalesce(l.review_requested,false) or l.reviewer_id is not null or l.review_status in('WAITING','NOT_STARTED','REVISION_REQUESTED');
   extras:=coalesce(l.additional_approver_ids,'{}');
   if wanted and l.reviewer_id is not null and app.content_approver(l.creator_id,l.reviewer_id) and not l.reviewer_id=any(extras||coalesce(l.mandatory_approver_ids,l.signer_ids,'{}')) then extras:=extras||l.reviewer_id;end if;
-  update letters set status=case when l.status='IN_REVIEW' then 'DRAFT' else l.status end,unified_approval=true,content_approval_required=wanted,additional_approver_ids=extras,review_status='NOT_REQUIRED',review_requested=false,reviewer_id=null,
+  update letters set status=case when l.status='IN_REVIEW' then 'DRAFT' else l.status end,unified_approval=true,content_approval_required=wanted,approval_required_from_review=wanted,additional_approver_ids=extras,review_status='NOT_REQUIRED',review_requested=false,reviewer_id=null,
     revision=revision+case when transitioned then 1 else 0 end,previewed_revision=case when transitioned then null else l.previewed_revision end,resubmission_required_version=case when l.review_status='REVISION_REQUESTED' then l.current_version_id else l.resubmission_required_version end where id=l.id;
   update approval_steps set status='SUPERSEDED' where letter_id=l.id and status in('PENDING','WAITING');
   update review_steps set status='SUPERSEDED' where letter_id=l.id and status='PENDING';

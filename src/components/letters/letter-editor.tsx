@@ -567,7 +567,7 @@ export function LetterEditor({
             <OfficialChoice people={isBill?signers.filter(p=>index===0?p.position==='SM':p.position==='DIR'):approvers} value={input.mandatoryApproverIds?.[index] || input.signerIds[index] || ''} onChange={value=>{if(!differentSigners){updateSigner(index,value);return;}const ids=[...(input.mandatoryApproverIds||[])];ids[index]=value;change('mandatoryApproverIds',ids);}} />
           </Field>)}
           {count===0 && additionalApprovers.length>0 && <>
-            <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={input.approvalRequired||false} onChange={e=>setInput(old=>({...old,approvalRequired:e.target.checked,additionalApproverIds:e.target.checked?(additionalApprovers.length===1?[additionalApprovers[0]!.id]:[]):[]}))}/>Perlu persetujuan?</label>
+            <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={input.approvalRequired||false} disabled={!!initialData?.letter.approval_required_from_review} onChange={e=>setInput(old=>({...old,approvalRequired:e.target.checked,additionalApproverIds:e.target.checked?(additionalApprovers.length===1?[additionalApprovers[0]!.id]:[]):[]}))}/>Perlu persetujuan?</label>
             {input.approvalRequired&&<Field label="Pemberi persetujuan" required htmlFor="content-approver"><Select id="content-approver" required value={input.additionalApproverIds?.[0]||''} onChange={e=>change('additionalApproverIds',e.target.value?[e.target.value]:[])}><option value="">Pilih pemberi persetujuan</option>{additionalApprovers.map(p=><option key={p.id} value={p.id}>{p.name} — {p.title}</option>)}</Select></Field>}
           </>}
         </Card>}
