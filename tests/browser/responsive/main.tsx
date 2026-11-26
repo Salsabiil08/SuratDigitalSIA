@@ -3,13 +3,20 @@ import React from 'react';import {createRoot} from 'react-dom/client';import {Da
 document.documentElement.style.setProperty('--font-inter','Arial');
 const params=new URLSearchParams(location.search),role=params.get('role')||'STF',page=params.get('page')||'notifications';const long='ContohNamaDokumenDanPerihalSangatPanjangTanpaSpasi'.repeat(3);
 const options:any={user:{id:'actor',fullName:'Pengguna '+role,unit:{id:'fin',code:'FIN',name:'Finance'},position:{code:role,level:role==='STF'?1:role==='GM'?2:3}},financeUnitId:'fin',people:[{id:'gm',name:'Pejabat GM',title:'General Manager',position:'GM',unit:'FIN',unitId:'fin',level:2,signer:false},{id:'admin-candidate',name:'Super Admin',title:'Admin',position:'ADMIN',unit:'ACH',level:99,signer:false},{id:'sm',name:'Pejabat SM',title:'Senior Manager',position:'SM',unit:'FIN',level:3,signer:true},{id:'dir',name:'Pejabat Direktur',title:'Direktur Utama',position:'DIR',unit:'ACH',level:4,signer:true},{id:'peer',name:'Penerima '+long,title:'Staff',position:'STF',unit:'FIN',level:1}],banks:[],categories:[],reviewRules:[],reviewerGrants:[],approverGrants:[]};
+if(params.has('r05')){
+ options.organizationUnits=[{id:'fin',parentId:null},{id:'ach',parentId:null}];
+ options.categories=[{code:'PEMBERITAHUAN',name:'Pemberitahuan'}];
+ options.paymentAccounts=[];
+ options.people.push({id:'actor',name:'Pembuat Surat',title:'Jabatan '+role,position:role,unit:'FIN',unitId:'fin',level:options.user.position.level,signer:role==='SM'||role==='DIR'});
+ options.people.push({id:'other-gm',name:'GM Unit Lain',title:'General Manager',position:'GM',unit:'ACH',unitId:'ach',level:2,signer:false});
+}
 const sidebar:any={name:'Pengguna '+long,initials:'PG',position:role,positionCode:role,positionLevel:options.user.position.level,isSuperAdmin:role==='ADMIN',access:navigationAccess({hasAssignment:true,isSuperAdmin:role==='ADMIN',positionCode:role,isOfficialSigner:true,isFinance:true,reviewerAssigned:role==='GM',approverAssigned:false})};
 const letters:any=[{id:'l',officialNumber:'001-IN/FIN/SIA/11.2026',subject:long,recipientText:long,typeName:'Surat Internal',typeCategory:'INTERNAL',status:'NUMBERED',signatureStatus:'WAITING',createdAt:'2026-11-24T18:00:00Z',workflowStatus:'Menunggu TTD'}];
 const task:any={id:'task',revision:1,subject:long,instruction:long,priority:'NORMAL',status:'NEW',requiresLetter:false,responseEditable:false,responseFinal:false,integrated:true,sourceAccessible:false,files:[],submissions:[],giverName:long,recipientName:long,createdAt:'2026-11-23T01:00:00Z'};
 const mailbox:any={items:[{dispatch_id:'d',letter_id:'l',sender_id:'sender',sender_name:long,subject:long,official_number:'001-IN/FIN/SIA/11.2026',sent_at:'2026-11-24T18:00:00Z',finalized_at:'2026-11-24T17:00:00Z',letter_status:'NUMBERED',recipients:[{profile_id:'actor',name:long,role:'PRIMARY',read_at:null,received_at:null,requires_response:false}]}],total:1,page:1,pageSize:10,pages:1};
 let content:React.ReactNode;
 if(page==='notifications')content=<NotifikasiClient initialData={notifications} initialUnread={6}/>;
-else if(['create','billing','import'].includes(page))content=<LetterEditor source={page==='import'?'UPLOAD':'CREATE'} billing={page==='billing'} initialOptions={options} manualReservation={page==='import'?{id:'reserved',official_number:'001-Tag/FIN/SIA/11.2026',subject:long,typeCode:'Tag',reserved_signer_id:null,letter_id:null,status:'RESERVED'}:undefined}/>;
+else if(['create','billing','import'].includes(page))content=<LetterEditor source={page==='import'?'UPLOAD':'CREATE'} billing={page==='billing'} initialOptions={options} manualReservation={page==='import'&&!params.has('r05')?{id:'reserved',official_number:'001-Tag/FIN/SIA/11.2026',subject:long,typeCode:'Tag',reserved_signer_id:null,letter_id:null,status:'RESERVED'}:undefined}/>;
 else if(page==='letters')content=<SuratSayaClient initialData={letters}/>;
 else if(page==='approval')content=<PersetujuanClient initialData={[{id:'a',letterId:'l',subject:long,letterType:'Surat Eksternal',creatorName:long,recipientName:long,stepOrder:1,totalSteps:2,revision:1}]}/>;
 else if(page==='organization')content=<OrganisasiClient initialUnits={[{id:'u',name:long,code:'FIN',isActive:true}]} initialPositions={[{id:'p',name:long,code:'SM',level:3,isActive:true}]}/>;
