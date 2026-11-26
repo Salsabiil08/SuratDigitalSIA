@@ -68,6 +68,10 @@ export function Sidebar({ user, unreadNotificationsCount, className }: SidebarPr
       items: suratItems,
     },
     {
+      title: 'Data/Laporan',
+      items: access?.correspondence ? [{label:'Register Nomor Surat',href:'/register-nomor'}] : [],
+    },
+    {
       title: 'Administrasi',
       items: adminItems,
     },
