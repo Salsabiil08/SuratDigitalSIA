@@ -13,7 +13,7 @@ export function registerFilters(params: URLSearchParams) {
   return {
     p_search: (params.get('q') || '').trim().slice(0,150),
     p_type: ['IN','KRE','Tag'].includes(type) ? type : '',
-    p_status: ['ALLOCATED','COMPLETED','CANCELLED'].includes(status) ? status : '',
+    p_status: ['ISSUED','ALLOCATED','COMPLETED','CANCELLED'].includes(status) ? status : '',
     p_year: numeric('tahun',1900,9999), p_month: numeric('bulan',1,12),
   };
 }
@@ -44,7 +44,7 @@ interface RegisterRow {
   number_status:string;
 }
 
-const statusLabels:Record<string,string>={ALLOCATED:'Diterbitkan',COMPLETED:'Selesai',CANCELLED:'Batal'};
+const statusLabels:Record<string,string>={ISSUED:'Diterbitkan',ALLOCATED:'Dicadangkan',COMPLETED:'Selesai',CANCELLED:'Batal'};
 export function registerCells(row:RegisterRow) {
   return [row.sequence_number,row.official_number,row.letter_date,row.type_name,row.unit_name,row.sender_name,row.recipient_name,row.subject,row.month,row.year,statusLabels[row.number_status]||row.number_status];
 }

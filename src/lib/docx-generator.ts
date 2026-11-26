@@ -52,14 +52,14 @@ function escapeXml(str = ''): string {
 /**
  * Menghasilkan file Word (.docx) berbasis template resmi PT Semen Indonesia Aceh (KOP Asli).
  */
-export async function generateLetterDocx(data: LetterDocxData): Promise<Buffer> {
+export async function generateLetterDocx(data: LetterDocxData, masterTemplate?: Uint8Array): Promise<Buffer> {
   const templatePath = path.resolve(process.cwd(), 'public/templates/template-kop-sia.docx');
 
-  if (!fs.existsSync(templatePath)) {
+  if (!masterTemplate && !fs.existsSync(templatePath)) {
     throw new Error(`Master template KOP tidak ditemukan di ${templatePath}`);
   }
 
-  const templateBuffer = fs.readFileSync(templatePath);
+  const templateBuffer = masterTemplate ?? fs.readFileSync(templatePath);
   const zip = await JSZip.loadAsync(templateBuffer);
 
   const fontName = 'SIG Text';

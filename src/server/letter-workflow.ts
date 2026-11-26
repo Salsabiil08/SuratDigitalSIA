@@ -1,3 +1,4 @@
+import { getLetterhead } from "@/server/letterhead";
 import { organizationMember, resolveInternalSender } from "@/domain/official-sender";
 import {storeAttachment,removeAttachments} from "@/server/attachments";
 import {validateBillingItems,billingItemsWithSharedPayment} from '@/domain/billing';
@@ -320,7 +321,7 @@ export async function saveDraft(
       signerName: signers[0]?.name || user.fullName,
       signerTitle: signers[0]?.title || user.unit?.name,
       signaturePlaceholders: true,
-    });
+    },await getLetterhead(input.letterTypeCode));
     format = "DOCX";
   }
   await inspectDocument(bytes, format, input.signerIds.length, [

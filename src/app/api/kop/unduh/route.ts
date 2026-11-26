@@ -1,9 +1,16 @@
 import { NextResponse } from 'next/server';
 import { generateLetterDocx } from '@/lib/docx-generator';
 
-export async function GET() {
+import { requireUser } from '@/server/auth';
+import { getLetterhead } from '@/server/letterhead';
+
+export async function GET(request:Request) {
   try {
-    const docxBuffer = await generateLetterDocx({
+    await requireUser();
+    const requested=new URL(request.url).searchParams.get('jenis')||'IN';
+    const code=['IN','KRE','Tag'].includes(requested)?requested:'IN';
+    const master=await getLetterhead(code);
+    const docxBuffer = master??await generateLetterDocx({
       officialNumber: '00___/___/SIA/11.2026 (Nomor Resmi Terbit Melalui SIADocs)',
       subject: '[Tuliskan Perihal Surat Resmi di Sini]',
       recipientName: '[Nama Penerima / Jabatan]',
@@ -21,6 +28,7 @@ export async function GET() {
       status: 200,
       headers: {
         'Content-Type': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'Cache-Control':'private, no-store',
         'Content-Disposition': 'attachment; filename="KOP_SURAT_RESMI_PT_SEMEN_INDONESIA_ACEH.docx"',
       },
     });

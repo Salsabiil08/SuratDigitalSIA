@@ -24,7 +24,7 @@ export default async function NumberRegisterPage({searchParams}: {searchParams:P
       <Input name="bulan" type="number" min={1} max={12} aria-label="Bulan penerbitan" placeholder="Bulan (1–12)" defaultValue={filters.p_month??''} />
       <Input name="tahun" type="number" min={1900} max={9999} aria-label="Tahun penerbitan" placeholder="Tahun" defaultValue={filters.p_year??''} />
       <Select name="status" aria-label="Status nomor" defaultValue={filters.p_status}>
-        <option value="">Semua status</option><option value="ALLOCATED">Diterbitkan</option><option value="COMPLETED">Selesai</option><option value="CANCELLED">Batal</option>
+        <option value="">Semua status</option><option value="ISSUED">Diterbitkan</option><option value="ALLOCATED">Dicadangkan</option><option value="COMPLETED">Selesai</option><option value="CANCELLED">Batal</option>
       </Select>
       <Button type="submit">Cari</Button>
     </form>

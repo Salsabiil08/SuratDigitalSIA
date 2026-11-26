@@ -328,6 +328,11 @@ export function LetterEditor({
             </Field>
           </div>
 
+          {!!options.organizationUnits && <Field label="Kategori Surat" htmlFor="letter-category">
+            <Select id="letter-category" value={input.categoryCode||'PEMBERITAHUAN'} onChange={event=>change('categoryCode',event.target.value)}>
+              {options.categories.map(category=><option key={category.code} value={category.code}>{category.name}</option>)}
+            </Select>
+          </Field>}
           <Field
             label="Tanggal Surat"
             htmlFor="letter-date"
@@ -452,7 +457,7 @@ export function LetterEditor({
               </Field>
               <a
                 className="text-brand-red underline text-sm"
-                href="/api/kop/unduh"
+                href={`/api/kop/unduh?jenis=${input.letterTypeCode}`}
               >
                 Unduh kop DOCX
               </a>
