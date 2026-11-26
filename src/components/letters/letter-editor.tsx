@@ -64,6 +64,7 @@ function draftFromData(
           accountNumber: data.billing.account_number,
           accountHolder: data.billing.payee_name,
           items: data.items,
+          sharedPayment: new Set(data.items.map(item=>JSON.stringify([item.bankName,item.accountNumber,item.payeeName]))).size<=1,
         }
       : undefined,
   };
@@ -210,7 +211,7 @@ export function LetterEditor({
       const data = {
         ...input,
         signerIds: ids,
-        ...(r05 ? {officialSenderId:senderId, signatureMode:"IN_APP" as const} : {}),
+        ...(r05 ? {officialSenderId:senderId, signatureMode:"IN_APP" as const} : isBill ? {signatureMode:"IN_APP" as const} : {}),
         mandatoryApproverIds: options.user.position?.code==='DIR'&&!isBill ? ids : input.mandatoryApproverIds?.slice(0,count) || ids,
         additionalApproverIds: peer || options.user.position?.code==='DIR' ? [] : input.additionalApproverIds,
         approvalRequired:!peer&&options.user.position?.code!=='DIR'&&!!input.approvalRequired,
@@ -476,6 +477,11 @@ export function LetterEditor({
           <Card className="p-5 space-y-4">
             <h2 className="font-bold">Rincian Permintaan Pembayaran</h2>
             <p className="text-sm text-neutral-600">Isi rincian pembayaran yang akan dicantumkan pada surat.</p>
+            <label className="flex items-center gap-2 text-sm">
+              <input type="checkbox" checked={input.billing.sharedPayment!==false} onChange={event=>change("billing",{...input.billing!,sharedPayment:event.target.checked})}/>
+              Gunakan bank dan rekening yang sama untuk semua rincian
+            </label>
+            {input.billing.sharedPayment!==false && <>
             <Field label="Bank Penyalur Pembayaran" htmlFor="bank" required>
               <Select
                 id="bank"
@@ -516,9 +522,18 @@ export function LetterEditor({
               <Field label="Penerima Pembayaran" htmlFor="payment-payee" required><Input id="payment-payee" value={input.billing.accountHolder} required maxLength={500} onChange={e=>change('billing',{...input.billing!,accountHolder:e.target.value,items:input.billing!.items.map(item=>({...item,payeeName:e.target.value}))})}/></Field>
               <Field label="No. Rekening Penerima" htmlFor="payment-account" required><Input id="payment-account" value={input.billing.accountNumber} required maxLength={500} onChange={e=>change('billing',{...input.billing!,accountNumber:e.target.value,items:input.billing!.items.map(item=>({...item,accountNumber:e.target.value}))})}/></Field>
             </div>
+            </>}
             {input.billing.items.map((item, index) => (
               <div className="grid sm:grid-cols-3 gap-3" key={index}>
                 <div className="sm:col-span-3 flex items-center justify-between gap-3"><h3 className="font-semibold">Rincian {index + 1}</h3>{input.billing!.items.length>1 && <Button type="button" variant="ghost" size="sm" aria-label={`Hapus rincian ${index+1}`} onClick={()=>change('billing',{...input.billing!,items:input.billing!.items.filter((_,i)=>i!==index)})}>Hapus</Button>}</div>
+                {input.billing!.sharedPayment===false && ([
+                  ['payeeName','Penerima pembayaran'],
+                  ['bankName','Bank'],
+                  ['accountNumber','No. Rekening'],
+                ] as const).map(([field,label])=><Field key={field} label={label} htmlFor={`payment-${field}-${index}`} required>
+                  <Input id={`payment-${field}-${index}`} value={item[field]||''} required maxLength={500}
+                    onChange={event=>change('billing',{...input.billing!,items:input.billing!.items.map((row,i)=>i===index?{...row,[field]:event.target.value}:row)})}/>
+                </Field>)}
                 <Field label="No. Dokumen" htmlFor={`documentNumber-${index}`} required>
                   <Input id={`documentNumber-${index}`} value={item.documentNumber||''} required maxLength={120} onChange={e=>{const items=[...input.billing!.items];items[index]={...item,documentNumber:e.target.value};change('billing',{...input.billing!,items});}}/>
                 </Field>
@@ -633,7 +648,7 @@ export function LetterEditor({
               <OfficialChoice id={`signer-${index}`} people={signers.filter(p=>!isBill||(index===0?p.position==='SM':p.position==='DIR'))} value={input.signerIds[index] || ''} onChange={value=>updateSigner(index,value)} />
             </Field>
           ))}
-          {count > 0 && (
+          {count > 0 && !isBill && (
             <Field label="Cara penandatanganan" htmlFor="signature-mode">
               <Select
                 id="signature-mode"

@@ -219,11 +219,25 @@ export async function saveDraft(
   if (signers.some((s) => !s))
     throw new Error("Pilih pejabat penandatangan aktif.");
   if (input.letterTypeCode === 'Tag') {
+    input.signatureMode='IN_APP';
     if(input.source==='CREATE'){
     if (!input.billing) throw new Error('Lengkapi rincian pembayaran.');
-    input.billing={...input.billing,items:billingItemsWithSharedPayment(input.billing,banks.find(bank=>bank.id===input.billing!.bankId)?.name)};
-    validateBillingItems(input.billing.items);
-    input.billing = {...input.billing, layout: 'PAYMENT_REQUEST', accountNumber: input.billing.items[0]!.accountNumber!, accountHolder: input.billing.items[0]!.payeeName!};
+    const billing = input.billing;
+    const selectedBank = banks.find(bank => bank.id === billing.bankId)?.name;
+    const items = billing.sharedPayment === false
+      ? billing.items
+      : billingItemsWithSharedPayment(billing.sharedPayment===true ? {
+          ...billing,
+          items:billing.items.map(item=>({...item,payeeName:undefined,bankName:undefined,accountNumber:undefined})),
+        } : billing, selectedBank);
+    validateBillingItems(items);
+    const first = items[0]!;
+    input.billing = {
+      ...billing, items, layout:'PAYMENT_REQUEST',
+      bankId: billing.sharedPayment === false ? '' : billing.bankId,
+      bankName: billing.sharedPayment === false ? first.bankName : selectedBank || billing.bankName,
+      accountNumber: first.accountNumber!, accountHolder: first.payeeName!,
+    };
     }else input.billing=undefined;
     input.recipientName = signers[1]?.name || '';
     input.recipientOrg = 'PT Semen Indonesia Aceh';
@@ -268,7 +282,7 @@ export async function saveDraft(
     }
     bytes = await generateLetterDocx({
       officialNumber: "{{OFFICIAL_NUMBER}}",
-      r05: officialSender ? {
+      r05: billingData ? {kind:"BILLING",senderName:signers[0]!.name,senderTitle:signers[0]!.title} : officialSender ? {
         kind: input.letterTypeCode === "IN" ? "INTERNAL" : "EXTERNAL",
         city: input.originCity,
         senderName: officialSender.name,

@@ -16,6 +16,6 @@ Master kop, tanda tangan, stempel, bank, dan rekening memakai infrastruktur exis
 
 - R05-01: From internal/eksternal terhubung melalui form, server, migrasi, dan perencanaan persetujuan. Surat internal R.05 tanpa aset pengesahan, dan hanya From yang dapat mengirim. Pengesahan gabungan eksternal serta uji browser lintas akun masih diperlukan.
 - R05-02: jalur render DOCX R.05 untuk internal/eksternal tersedia. Master, otorisasi, dan PDF final masih diperlukan.
-- R05-03: format tabel dan kalimat bank tunggal/jamak di renderer tagihan tersedia. Master rekening dan form rincian masih diperlukan.
+- R05-03: Form tagihan mendukung tujuan pembayaran bersama atau isi bank/rekening per rincian. DOCX baru memakai format tabel dan kalimat bank tunggal/jamak. Master rekening dan pilihan rekening tersimpan masih diperlukan.
 - R05-04: Register terhubung ke nomor terbit dan nomor batal, dengan pencarian, filter, dan ekspor XLSX. Penomoran otomatis dan finalisasi PDF masih diperlukan.
 - R05-05: jangan promosikan cabang ini ke produksi sebelum seluruh tahap dan pengujian alur selesai.

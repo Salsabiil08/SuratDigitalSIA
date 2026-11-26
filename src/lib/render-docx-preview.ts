@@ -29,7 +29,7 @@ export async function renderDocxInFrame(blob:Blob,frame:HTMLIFrameElement):Promi
         const billingHeaders=['No','No Dokumen','Keterangan','Penerima','Bank','No Rekening','Nominal (Rp)'];
         for(const table of Array.from(doc.querySelectorAll<HTMLTableElement>('table'))){
           const cells=Array.from(table.rows[0]?.cells||[]);
-          if(cells.length!==billingHeaders.length || !cells.every((cell,i)=>cell.textContent?.replace(/\s+/g,' ').trim()===billingHeaders[i]))continue;
+          if(cells.length!==billingHeaders.length || !cells.every((cell,i)=>{const label=cell.textContent?.replace(/\s+/g,' ').trim();return label===billingHeaders[i]||(i===1&&label==='No Document');}))continue;
           table.style.borderCollapse='collapse';
           for(const cell of Array.from(table.querySelectorAll<HTMLTableCellElement>('td,th'))){cell.style.border='0.5pt solid #333333';cell.style.backgroundColor='#ffffff';}
         }

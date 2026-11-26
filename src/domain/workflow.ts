@@ -40,6 +40,7 @@ export interface DraftInput {
   stampArea?: SignatureArea;
   numberArea?: SignatureArea;
   billing?: {
+    sharedPayment?: boolean;
     bankId: string;
     bankName?: string;
     accountNumber: string;
