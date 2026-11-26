@@ -6,3 +6,5 @@ export async function getLettersAction(){return [];}export async function getWor
 export async function approveStepAction(){return {success:true};}export async function requestRevisionAction(){return {success:true};}export async function rejectLetterAction(){return {success:true};}export async function getPendingApprovalsAction(){return [];}
 export async function createUnitAction(){return {success:false};}export async function updateUnitAction(){return {success:false};}export async function deleteUnitAction(){return {success:false};}export async function createPositionAction(){return {success:false};}export async function updatePositionAction(){return {success:false};}export async function deletePositionAction(){return {success:false};}
 export async function getDispositionsAction(){return {success:false};}export async function createDispositionAction(){return {success:false};}export async function updateDispositionStatusAction(){return {success:false};}export async function receiveInternalLetterAction(){return {success:true};}
+
+export async function updateDispositionAction(){return {success:false,error:'Perubahan tidak digunakan pada fixture ini.'};}
