@@ -63,7 +63,7 @@ export async function renderDocxInFrame(blob:Blob,frame:HTMLIFrameElement):Promi
         const pageWidth=Math.max(0,...pages.map(page=>page.offsetWidth));
         const fitMobile=()=>{
           if(!wrapper||!main)return;
-          const available=frame.clientWidth;
+          const available=doc.documentElement.clientWidth||frame.clientWidth;
           const mobile=available<640&&pageWidth>0;
           const naturalWidth=pageWidth+24;
           const scale=mobile?Math.min(1,Math.max(1,available)/naturalWidth):1;
@@ -72,6 +72,7 @@ export async function renderDocxInFrame(blob:Blob,frame:HTMLIFrameElement):Promi
           wrapper.style.transformOrigin='top left';
           wrapper.style.transform=mobile?`scale(${scale})`:'';
           main.style.height=mobile?`${wrapper.offsetHeight*scale}px`:'';
+          main.style.overflow=mobile?'hidden':'';
           doc.documentElement.style.overflowX=mobile?'hidden':'';
           doc.body.style.overflowX=mobile?'hidden':'';
         };
@@ -83,5 +84,6 @@ export async function renderDocxInFrame(blob:Blob,frame:HTMLIFrameElement):Promi
         const observer=new ResizeObserver(fitMobile);
         observer.observe(frame);
         if(wrapper)observer.observe(wrapper);
+        observer.observe(doc.documentElement);
         return ()=>observer.disconnect();
 }
