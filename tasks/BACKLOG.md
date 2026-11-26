@@ -176,4 +176,4 @@ Kerjakan berurutan. Tugas selesai bila kriteria terpenuhi dan `npm run check` lu
 - [x] Penyetuju yang sama memeriksa, memberi catatan, meminta versi revisi baru, menyetujui atau menolak. Hierarki dan GM unit terkait ditegakkan di database.
 - [x] Riwayat review/komentar/versi lama disimpan; surat tertahan review perlu diajukan ke persetujuan, tanpa keputusan palsu atau melewati persetujuan. Surat tanpa versi dan dokumen bernomor/final tidak direkonstruksi.
 - [x] Internal sesama level tetap tanpa persetujuan/TTD; eksternal dan dua pengesahan tagihan tetap melalui gate masing-masing.
-- [ ] Deploy hanya setelah tes aplikasi, PostgreSQL, browser dan build lulus.
+- [x] Gate deployment: 408 tes aplikasi, PostgreSQL, browser dan build lulus; migrasi `20261126054854_unified_content_approval` terpasang dan gate/RLS diverifikasi melalui metadata schema.
