@@ -20,7 +20,7 @@ export function billingLetterBody(data: LetterDocxData, sectPr: string) {
   function signature(index:number,label:string){
     const signer=data.signers?.[index];
     // Spatial order differs from approval order: DIR left (slot 2), SM right (slot 1).
-    const marker=data.signaturePlaceholders?`<w:p><w:pPr><w:spacing w:before="240" w:after="240"/></w:pPr>${index===0?'<w:r><w:t>{{STAMP}}</w:t></w:r>':''}<w:r><w:t>{{SIGNATURE_${index+1}}}</w:t></w:r></w:p>`:'<w:p><w:pPr><w:spacing w:after="900"/></w:pPr></w:p>';
+    const marker=data.signaturePlaceholders?`<w:p><w:pPr><w:spacing w:before="240" w:after="240"/></w:pPr>${data.r05?`<w:r><w:t>{{STAMP_${index+1}}}</w:t></w:r>`:index===0?'<w:r><w:t>{{STAMP}}</w:t></w:r>':''}<w:r><w:t>{{SIGNATURE_${index+1}}}</w:t></w:r></w:p>`:'<w:p><w:pPr><w:spacing w:after="900"/></w:pPr></w:p>';
     return `<w:tc><w:tcPr><w:tcW w:w="4748" w:type="dxa"/></w:tcPr>${paragraph(label)}${marker}${paragraph(signer?.name||'[Nama pejabat]',{bold:true,after:20})}${paragraph(signer?.title||'[Jabatan]',{after:0})}</w:tc>`;
   }
   const signatures=`<w:tbl><w:tblPr><w:tblW w:w="9497" w:type="dxa"/><w:tblBorders>${['top','left','bottom','right','insideH','insideV'].map(e=>`<w:${e} w:val="nil"/>`).join('')}</w:tblBorders></w:tblPr><w:tblGrid><w:gridCol w:w="4748"/><w:gridCol w:w="4749"/></w:tblGrid><w:tr>${signature(1,'Disetujui oleh,')}${signature(0,'Diajukan oleh,')}</w:tr></w:tbl>`;

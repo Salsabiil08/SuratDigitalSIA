@@ -224,6 +224,9 @@ export async function saveDraft(
     throw new Error("Pilih pejabat penandatangan aktif.");
   if (input.letterTypeCode === 'Tag') {
     input.signatureMode='IN_APP';
+    input.officialSenderId=signers[0]?.id;
+    input.mandatoryApproverIds=input.signerIds;
+    input.additionalApproverIds=[];
     if(input.source==='CREATE'){
     if (!input.billing) throw new Error('Lengkapi rincian pembayaran.');
     const billing = input.billing;

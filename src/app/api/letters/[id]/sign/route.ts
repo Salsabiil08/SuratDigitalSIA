@@ -30,6 +30,7 @@ export async function POST(
     const user = await requireUser();
     const form = await request.formData();
     const letter = await readLetter((await params).id);
+    if(letter.official_sender_id)throw new Error("Gunakan tindakan persetujuan dan tanda tangan pada detail surat.");
     if (
       !user.isOfficialSigner ||
       !["SM", "DIR"].includes(user.position?.code || "")

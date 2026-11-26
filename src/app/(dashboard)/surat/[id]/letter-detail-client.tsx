@@ -14,6 +14,8 @@ import {
   getWorkflowLetter,
   reviewLetterAction,
   finalizeLetterAction,
+  retryR05OutputAction,
+  confirmR05OwnSignatureAction,
   restartApprovalAction,
 } from "@/server/actions/workflow";
 import { issueLetterNumberAction } from "@/server/actions/approvals";
@@ -45,6 +47,7 @@ export function LetterDetailClient({
   const [busy, setBusy] = useState(false);
   const [external, setExternal] = useState(false);
   const [previewed, setPreviewed] = useState(false);
+  const [applyStamp,setApplyStamp]=useState(false);
   const [confirmSelf,setConfirmSelf]=useState(false);
   const [sendConfirmed,setSendConfirmed]=useState(false);
   const [ccIds,setCcIds]=useState<string[]>([]);
@@ -72,6 +75,7 @@ export function LetterDetailClient({
       try {await reload();}catch{setSyncError("Tindakan berhasil. Status terbaru belum dapat dimuat. Gunakan Perbarui status.");}
     } catch (e) {
       setError(e instanceof Error ? e.message : "Proses gagal.");
+      void reload().catch(()=>{});
     } finally {
       busyRef.current=false;
       setBusy(false);
@@ -91,6 +95,8 @@ export function LetterDetailClient({
   const v = data.versions.find((v) => v.id === l.current_version_id);
   const editable =
     data.isCreator && ["DRAFT", "REVISION_REQUESTED"].includes(l.status);
+  const combinedSigning=!!l.official_sender_id&&l.required_signature_count>0;
+  const confirmOwnSignature=combinedSigning&&l.required_signature_count===1&&l.official_sender_id===data.userId&&data.isCreator&&l.status==="READY_TO_ISSUE";
   const creatorApprovalRequired = (l.type?.category==='BILLING'||data.userPosition!=='DIR') && [...(l.mandatory_approver_ids || l.signer_ids || []),...(l.additional_approver_ids || [])].includes(data.userId);
   const activeApproval = data.approvals.find(
     (a) => a.approver_id === data.userId && a.status === "PENDING" && a.version_id===l.current_version_id && a.cycle===l.approval_cycle,
@@ -239,7 +245,7 @@ export function LetterDetailClient({
                 act(
                   async () => {
                     if(l.previewed_revision!==l.revision){const checked=await reviewLetterAction(id,"PREVIEW",l.revision);if(!checked.success)return checked;}
-                    return reviewLetterAction(id,"SUBMIT",l.revision,undefined,confirmSelf);
+                    return reviewLetterAction(id,"SUBMIT",l.revision,undefined,confirmSelf,applyStamp);
                   },
                   "Surat berhasil diajukan sesuai alur kewenangan.",
                 )
@@ -249,7 +255,9 @@ export function LetterDetailClient({
             </Button>
           </>
         )}
-        {data.isCreator && l.status === "READY_TO_ISSUE" && !(l.official_sender_id&&l.required_signature_count===0) && (
+        {combinedSigning&&(confirmOwnSignature||activeApproval||(editable&&creatorApprovalRequired))&&<label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={applyStamp} onChange={event=>setApplyStamp(event.target.checked)}/>Sertakan stempel tersimpan</label>}
+        {confirmOwnSignature&&<Button disabled={!previewed} isLoading={busy} onClick={()=>act(()=>confirmR05OwnSignatureAction(id,l.revision,applyStamp),"Surat ditandatangani dan PDF final siap.")}>Finalisasi &amp; Tanda Tangani</Button>}
+        {data.isCreator && !combinedSigning && l.status === "READY_TO_ISSUE" && !(l.official_sender_id&&l.required_signature_count===0) && (
           <Button id="number"
             isLoading={busy}
             onClick={() =>
@@ -293,18 +301,21 @@ export function LetterDetailClient({
                 isLoading={busy}
                 onClick={() =>
                   act(
-                    () => reviewLetterAction(id, action, l.revision, note),
+                    () => reviewLetterAction(id, action, l.revision, note,false,applyStamp),
                     "Keputusan tersimpan.",
                   )
                 }
               >
-                {label}
+                {combinedSigning&&action==="APPROVE"?"Setujui & Tanda Tangani":label}
               </Button>
             ))}
           </div>
         </Card>
       )}
-      {signing && (
+      {combinedSigning && l.status==="NUMBERED" && !l.finalized_at && (data.isCreator||l.signer_ids?.includes(data.userId))&&<Card className="p-5">
+        <Button isLoading={busy} onClick={()=>act(()=>retryR05OutputAction(id),"PDF final siap.")}>Lanjutkan pembuatan PDF final</Button>
+      </Card>}
+      {signing && !combinedSigning && (
         <Card id="signing" className="p-5 scroll-mt-24">
           <SignPanel
             key={`${l.revision}-${signing.id}`}
@@ -317,7 +328,7 @@ export function LetterDetailClient({
           />
         </Card>
       )}
-      {data.isCreator && (l.status === "NUMBERED" || (l.status==="READY_TO_ISSUE"&&l.official_sender_id&&l.required_signature_count===0)) && !l.finalized_at && (
+      {data.isCreator && !combinedSigning && (l.status === "NUMBERED" || (l.status==="READY_TO_ISSUE"&&l.official_sender_id&&l.required_signature_count===0)) && !l.finalized_at && (
         <Card id="finalize" className="p-5 space-y-4 scroll-mt-24">
           <h2 className="font-bold">Finalisasi</h2>
           <p className="text-sm">

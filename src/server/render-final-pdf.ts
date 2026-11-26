@@ -50,7 +50,7 @@ export async function renderFinalPdf(bytes: Uint8Array) {
       if(sections.length<1||sections.length>40) throw new Error('Dokumen harus berisi 1 sampai 40 halaman.');
       const texts=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT);
       let text:Node|null;
-      while((text=texts.nextNode()))text.textContent=text.textContent?.replace(/\{\{(?:SIGNATURE_\d+|STAMP)\}\}/g,'')||'';
+      while((text=texts.nextNode()))text.textContent=text.textContent?.replace(/\{\{(?:SIGNATURE_\d+|STAMP(?:_\d+)?)\}\}/g,'')||'';
       for(const anchor of document.querySelectorAll<HTMLElement>('div[style]')){
         if(anchor.style.width==='0px'&&anchor.style.height==='0px'&&anchor.style.position==='relative'){
           Object.assign(anchor.style,{display:'inline-block',verticalAlign:'top',zIndex:'2'});

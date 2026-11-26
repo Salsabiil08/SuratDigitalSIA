@@ -110,6 +110,7 @@ export async function reviewLetterAction(
   revision: number,
   note?: string,
   confirmCreatorApproval = false,
+  applyStamp = false,
 ) {
   try {
     const user = await requireUser();
@@ -124,8 +125,8 @@ export async function reviewLetterAction(
       await inspectDocument(
         doc.bytes,
         doc.format,
-        l.signature_mode==='EXTERNAL'||l.source==='UPLOAD'?0:l.required_signature_count,
-        l.signature_mode==='EXTERNAL'||l.source==='UPLOAD'?[]:l.signature_areas,
+        l.signature_mode==='EXTERNAL'||(l.source==='UPLOAD'&&!l.official_sender_id)?0:l.required_signature_count,
+        l.signature_mode==='EXTERNAL'||(l.source==='UPLOAD'&&!l.official_sender_id)?[]:l.signature_areas,
         true,
         ...(l.manual_number_reservation_id ? [false] : []),
       );
@@ -134,10 +135,20 @@ export async function reviewLetterAction(
           "Tentukan area nomor resmi pada PDF sebelum mengajukan.",
         );
     }
-    const { data, error } = action === 'SUBMIT'
-      ? await createAdminClient().rpc('submit_letter_for_approval', {p_actor:user.id,p_letter:id,p_revision:revision,p_confirm_self:confirmCreatorApproval})
-      : await createAdminClient().rpc('review_letter', {p_actor:user.id,p_letter:id,p_action:action,p_revision:revision,p_note:note || null});
-    if (error) throw new Error(error.message);
+    const signing=!!l.official_sender_id&&l.required_signature_count>0;
+    const creatorSigns=signing&&action==='SUBMIT'&&l.required_signature_count===2&&l.signer_ids.includes(user.id);
+    const db=createAdminClient();
+    if(creatorSigns&&!confirmCreatorApproval)throw new Error("Konfirmasikan pengajuan dan penggunaan TTD Anda.");
+    const {data,error}=signing&&(action==='APPROVE'||creatorSigns)
+      ? await db.rpc('confirm_r05_signing',{p_actor:user.id,p_letter:id,p_revision:revision,p_mode:creatorSigns?'SUBMIT':'APPROVE',p_stamp:applyStamp,p_note:note||null})
+      : action==='SUBMIT'
+      ? await db.rpc('submit_letter_for_approval',{p_actor:user.id,p_letter:id,p_revision:revision,p_confirm_self:confirmCreatorApproval})
+      : await db.rpc('review_letter',{p_actor:user.id,p_letter:id,p_action:action,p_revision:revision,p_note:note||null});
+    if(error)throw new Error(error.message);
+    if(signing&&data==='NUMBERED'){
+      const result=await retryR05OutputAction(id);
+      if(!result.success)throw new Error("Persetujuan dan nomor tersimpan. "+result.error);
+    }
     for (const p of [
       "/surat",
       "/persetujuan",
@@ -155,6 +166,30 @@ export async function reviewLetterAction(
     };
   }
 }
+export async function retryR05OutputAction(id:string) {
+  try {
+    const {finishAuthorizedOutput}=await import('@/server/r05-authorized-output');
+    await finishAuthorizedOutput(id);
+    revalidatePath('/surat');
+    revalidatePath('/persetujuan');
+    revalidatePath(`/surat/${id}`);
+    return {success:true};
+  } catch(e) {
+    return {success:false,error:e instanceof Error?e.message:'Pengesahan atau PDF belum selesai. Coba lagi.'};
+  }
+}
+
+export async function confirmR05OwnSignatureAction(id:string,revision:number,stamp:boolean) {
+  try {
+    const user=await requireUser();
+    const {error}=await createAdminClient().rpc('confirm_r05_signing',{
+      p_actor:user.id,p_letter:id,p_revision:revision,p_mode:'SELF',p_stamp:stamp,
+    });
+    if(error)throw new Error(error.message);
+    return retryR05OutputAction(id);
+  } catch(e) {return {success:false,error:e instanceof Error?e.message:'Konfirmasi TTD gagal.'};}
+}
+
 export async function finalizeLetterAction(
   id: string,
   revision: number,

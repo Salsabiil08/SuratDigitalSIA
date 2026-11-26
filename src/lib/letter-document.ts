@@ -121,7 +121,7 @@ export async function applyDocumentImages(
         image.marker==='{{STAMP}}'?'Area stempel belum dapat digunakan. Minta pembuat memperbaiki dokumen sebelum melanjutkan.':'Area tanda tangan belum dapat digunakan. Minta pembuat memperbaiki dokumen sebelum melanjutkan.',
       );
     const pngWidth=Buffer.from(image.bytes).readUInt32BE(16),pngHeight=Buffer.from(image.bytes).readUInt32BE(20);
-    const isStamp=image.marker==='{{STAMP}}';
+    const isStamp=/^\{\{STAMP(?:_\d+)?\}\}$/.test(image.marker);
     // Imported documents retain their explicit marker position; overlay is only for a shared template paragraph.
     const paragraph=(xml.match(/<w:p[ >][\s\S]*?<\/w:p>/g)||[]).find(p=>p.includes(image.marker))||'';
     const overlay=isStamp&&/<wp:docPr[^>]*name="Pengesahan [^"]+"/.test(paragraph);

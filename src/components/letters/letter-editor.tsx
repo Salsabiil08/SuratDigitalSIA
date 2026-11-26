@@ -180,14 +180,14 @@ export function LetterEditor({
   const senderId = senderOptions.length === 1 ? senderOptions[0]!.id : senderOptions.some(person => person.id === input.officialSenderId) ? input.officialSenderId : undefined;
   const count = r05 ? (internal ? 0 : 1) : internal ? (peer ? 0 : formal ? 1 : 0) : isBill ? 2 : 1;
   const approvers=options.people.filter(p=>p.id!==options.user.id&&roleReviewer(options.user.position?.code||'',p.position)&&(p.position!=='GM'||p.unitId===options.user.unit?.id)).sort((a,b)=>(REVIEWER_ROLE_ORDER[a.position]||0)-(REVIEWER_ROLE_ORDER[b.position]||0)||a.name.localeCompare(b.name,'id'));
-  const signers = options?.people.filter((p) => p.signer) || [];
+  const signers = options?.people.filter(p => p.signer && (!isBill || p.position==="DIR" || p.unitId===options.financeUnitId || !options.organizationUnits)) || [];
   function updateSigner(index: number, value: string) {
     const ids = [...input.signerIds];
     ids[index] = value;
     setInput(x=>({...x,signerIds:ids.slice(0,count),mandatoryApproverIds:differentSigners?(x.mandatoryApproverIds||[]):ids.slice(0,count)}));
   }
-  const [differentSigners,setDifferentSigners]=useState(()=>!isBill||!!initialData?.letter.mandatory_approver_ids?.some((id:string,i:number)=>id!==initialData.letter.signer_ids?.[i]));
-  useEffect(()=>setDifferentSigners(!isBill||!!initialData?.letter.mandatory_approver_ids?.some((id:string,i:number)=>id!==initialData.letter.signer_ids?.[i])),[isBill]);
+  const [differentSigners,setDifferentSigners]=useState(()=>!isBill||(!options.organizationUnits&&!!initialData?.letter.mandatory_approver_ids?.some((id:string,i:number)=>id!==initialData.letter.signer_ids?.[i])));
+  useEffect(()=>setDifferentSigners(!isBill||(!options.organizationUnits&&!!initialData?.letter.mandatory_approver_ids?.some((id:string,i:number)=>id!==initialData.letter.signer_ids?.[i]))),[isBill,options.organizationUnits]);
   useEffect(()=>{
     if(peer || count===0)return;
     setInput(old=>{
@@ -626,7 +626,7 @@ export function LetterEditor({
         </Card>}
         <Card className="p-5 space-y-4">
           <h2 className="font-bold">Cara Penandatanganan</h2>
-          {isBill&&signers.filter(p=>p.position==='SM').length>1&&<label className="flex gap-2 text-sm"><input type="checkbox" checked={differentSigners} onChange={e=>setDifferentSigners(e.target.checked)}/>Penandatangan berbeda dari penyetuju</label>}
+          {isBill&&!options.organizationUnits&&signers.filter(p=>p.position==='SM').length>1&&<label className="flex gap-2 text-sm"><input type="checkbox" checked={differentSigners} onChange={e=>setDifferentSigners(e.target.checked)}/>Penandatangan berbeda dari penyetuju</label>}
 
 
           {internal && !peer && (
