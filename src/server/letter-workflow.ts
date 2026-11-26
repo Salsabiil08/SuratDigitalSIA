@@ -1,6 +1,6 @@
+import { organizationMember, resolveInternalSender } from "@/domain/official-sender";
 import {storeAttachment,removeAttachments} from "@/server/attachments";
 import {validateBillingItems,billingItemsWithSharedPayment} from '@/domain/billing';
-import {assertPeerInternalAuthorization} from "@/domain/peer-internal";
 import {sanitizeLetterHtml,plainTextHtml,letterText,escapeText} from '@/domain/rich-text';
 import { randomUUID, createHash } from "node:crypto";
 import { createClient } from "@/lib/supabase/server";
@@ -95,6 +95,7 @@ export async function peopleOptions() {
     { data: assignments, error: ae },
     { data: banks, error: be },
     { data: billingType },
+    { data: units, error: unitError },
     { data: categories, error: catError },
     { data: approvalGrants, error: approvalGrantError },
   ] = await Promise.all([
@@ -102,18 +103,19 @@ export async function peopleOptions() {
     db
       .from("user_assignments")
       .select(
-        "profile_id,is_official_signer,start_date,end_date,position:positions!user_assignments_position_id_fkey(code,name,level,is_active),unit:organizational_units!user_assignments_unit_id_fkey(id,code,name,is_active)",
+        "id,supervisor_assignment_id,profile_id,is_official_signer,start_date,end_date,position:positions!user_assignments_position_id_fkey(code,name,level,is_active),unit:organizational_units!user_assignments_unit_id_fkey(id,code,name,is_active)",
       )
       .eq("is_active", true)
       .order("start_date", { ascending: false, nullsFirst: false }),
     db.from("master_bank").select("id,name").eq("is_active", true),
     db.from('letter_types').select('creator_unit_id').eq('category','BILLING').eq('is_active',true).maybeSingle(),
+    db.from('organizational_units').select('id,parent_id').eq('is_active',true),
     db.from('document_categories').select('id,code,name').eq('is_active', true).in('code', ['PERMOHONAN','LAPORAN','PEMBERITAHUAN']),
     createAdminClient().from('approver_authorizations').select('approver_id,unit_id,starts_on,ends_on,type:letter_types(code)').eq('is_active',true),
   ]);
-  if (error || ae || be)
+  if (error || ae || be || unitError)
     throw new Error(
-      "Gagal memuat struktur organisasi: " + (error || ae || be)?.message,
+      "Gagal memuat struktur organisasi: " + (error || ae || be || unitError)?.message,
     );
   const today = jakartaDate();
   const seen = new Set<string>();
@@ -133,6 +135,8 @@ export async function peopleOptions() {
       const a = active.find((a) => a.profile_id === p.id) as any;
       return {
         id: p.id,
+        assignmentId: a?.id,
+        supervisorAssignmentId: a?.supervisor_assignment_id,
         name: p.full_name,
         title: a?.position?.name || "",
         position: a?.position?.code || "",
@@ -150,7 +154,7 @@ export async function peopleOptions() {
   if(approvalGrantError)throw new Error('Konfigurasi persetujuan belum dapat diambil.');
   const approverGrants=(approvalGrants||[]).filter(g=>(!g.unit_id||g.unit_id===user.unit?.id)&&g.starts_on<=today&&(!g.ends_on||g.ends_on>=today)).map(g=>({approverId:g.approver_id,typeCode:(g.type as any)?.code||null}));
   const reviewRules:never[]=[];
-  return { user, people, banks: banks || [], financeUnitId:billingType?.creator_unit_id || '', categories: categories || [], reviewRules, approverGrants };
+  return { user, people, organizationUnits:(units||[]).map(unit=>({id:unit.id,parentId:unit.parent_id})), banks: banks || [], financeUnitId:billingType?.creator_unit_id || '', categories: categories || [], reviewRules, approverGrants };
 }
 export async function saveDraft(
   input: DraftInput,
@@ -186,13 +190,29 @@ export async function saveDraft(
     throw new Error("Sumber surat tidak valid.");
   if (old && input.source !== old.source)
     throw new Error("Sumber dokumen tidak dapat diganti.");
-  const { people, banks, categories } = await peopleOptions();
+  const { people, banks, categories, organizationUnits } = await peopleOptions();
   // Obsolete review inputs never create a separate workflow, including old client requests.
   if(input.approvalRequired!==undefined&&typeof input.approvalRequired!=='boolean')throw new Error('Pilihan persetujuan tidak valid.');
   input.approvalRequired=!!input.approvalRequired||input.reviewRequested===true||!!input.reviewerId;
   input.reviewRequested=false;input.reviewerId='';
   input.categoryCode=input.categoryCode || old?.document_category?.code || 'PEMBERITAHUAN';
-  assertPeerInternalAuthorization(input.letterTypeCode,user.position?.level||0,people.find(p=>p.id===input.recipientUserId)?.level||0,input);
+  if (!categories.some(category => category.code === input.categoryCode)) throw new Error("Kategori surat tidak aktif.");
+  let officialSender: (typeof people)[number] | undefined;
+  if (input.letterTypeCode === "IN") {
+    const members = people.flatMap(person => organizationMember(person.id, person.position, person.unitId, person.assignmentId, person.supervisorAssignmentId) || []);
+    const creator = members.find(member => member.id === user.id);
+    const recipient = members.find(member => member.id === input.recipientUserId);
+    if (!creator || !recipient) throw new Error("Pilih penerima dengan jabatan dan unit aktif.");
+    const { senderId } = resolveInternalSender(creator, recipient, members, organizationUnits, input.officialSenderId);
+    officialSender = people.find(person => person.id === senderId);
+    input = { ...input, officialSenderId: senderId, originCity: undefined, signerIds: [], mandatoryApproverIds: [], additionalApproverIds: [], areas: [], stampArea: undefined, signatureMode: "IN_APP" };
+  } else if (input.letterTypeCode === "KRE") {
+    officialSender = people.find(person => person.id === input.officialSenderId && person.signer);
+    if (!officialSender) throw new Error("Pilih pengirim resmi SM atau Direktur yang berwenang.");
+    input.originCity = input.originCity?.trim();
+    if (!input.originCity || input.originCity.length > 100) throw new Error("Isi kota surat eksternal (maksimal 100 karakter).");
+    input = { ...input, signerIds: [officialSender.id], mandatoryApproverIds: [], additionalApproverIds: [], signatureMode: "IN_APP" };
+  }
   const signers = input.signerIds.map((id) =>
     people.find((p) => p.id === id && p.signer),
   );
@@ -248,8 +268,14 @@ export async function saveDraft(
     }
     bytes = await generateLetterDocx({
       officialNumber: "{{OFFICIAL_NUMBER}}",
+      r05: officialSender ? {
+        kind: input.letterTypeCode === "IN" ? "INTERNAL" : "EXTERNAL",
+        city: input.originCity,
+        senderName: officialSender.name,
+        senderTitle: officialSender.title,
+      } : undefined,
       letterDate:
-        (input.letterTypeCode === "Tag" ? "" : "Aceh Besar, ") +
+        (input.letterTypeCode === "Tag" || officialSender ? "" : "Aceh Besar, ") +
         new Date(input.letterDate + "T12:00:00+07:00").toLocaleDateString(
           "id-ID",
           {

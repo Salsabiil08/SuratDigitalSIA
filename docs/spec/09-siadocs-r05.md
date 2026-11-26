@@ -14,7 +14,7 @@ Master kop, tanda tangan, stempel, bank, dan rekening memakai infrastruktur exis
 
 ## Progres cabang feat/r05
 
-- R05-01: aturan kandidat pengirim internal tersedia sebagai fungsi domain dengan tes. Integrasi form, server, SQL dan hak pengiriman masih diperlukan.
+- R05-01: From internal/eksternal terhubung melalui form, server, migrasi, dan perencanaan persetujuan. Surat internal R.05 tanpa aset pengesahan, dan hanya From yang dapat mengirim. Pengesahan gabungan eksternal serta uji browser lintas akun masih diperlukan.
 - R05-02: jalur render DOCX R.05 untuk internal/eksternal tersedia. Master, otorisasi, dan PDF final masih diperlukan.
 - R05-03: format tabel dan kalimat bank tunggal/jamak di renderer tagihan tersedia. Master rekening dan form rincian masih diperlukan.
 - R05-04: penomoran otomatis, finalisasi, dan Register belum diintegrasikan.

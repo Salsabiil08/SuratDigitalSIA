@@ -8,6 +8,8 @@ export interface OrganizationMember {
   id: string;
   role: CorrespondenceRole;
   unitId: string;
+  assignmentId?: string;
+  supervisorAssignmentId?: string | null;
 }
 
 export interface OrganizationUnit {
@@ -33,10 +35,18 @@ export function internalSenderOptions(
     unitId = parentByUnit.get(unitId) ?? null;
   }
 
+  const supervisors = new Set<string>();
+  const byAssignment = new Map(members.map(member => [member.assignmentId, member]));
+  let supervisor = creator.supervisorAssignmentId;
+  while (supervisor && !supervisors.has(supervisor)) {
+    supervisors.add(supervisor);
+    supervisor = byAssignment.get(supervisor)?.supervisorAssignmentId;
+  }
+
   return members.filter(member =>
     member.id !== recipient.id &&
     member.role === recipient.role &&
-    ancestors.has(member.unitId),
+    (ancestors.has(member.unitId) || (!!member.assignmentId && supervisors.has(member.assignmentId))),
   );
 }
 
@@ -57,4 +67,8 @@ export function resolveInternalSender(
       : 'Tidak ada pengirim resmi yang sah untuk penerima ini.');
   }
   return { senderId: sender.id, approverId: sender.id === creator.id ? null : sender.id };
+}
+
+export function organizationMember(id: string, role: string, unitId: string, assignmentId?: string, supervisorAssignmentId?: string | null): OrganizationMember | undefined {
+  if (role === 'STF' || role === 'GM' || role === 'SM' || role === 'DIR') return { id, role, unitId, assignmentId, supervisorAssignmentId };
 }

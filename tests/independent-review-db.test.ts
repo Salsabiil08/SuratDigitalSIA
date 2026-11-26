@@ -24,7 +24,7 @@ async function asUser(n: number, sql: string, params:any[] = []) {
 }
 beforeAll(async()=>{
  await db.exec(readFileSync('supabase/tests/00_stub_supabase.sql','utf8'));
- const files=readdirSync('supabase/migrations').filter(f=>f.endsWith('.sql')&&!f.endsWith('_unified_content_approval.sql')).sort();
+ const files=readdirSync('supabase/migrations').filter(f=>f.endsWith('.sql')&&f<'20261126054854_unified_content_approval.sql').sort();
  for(const f of files.filter(f=>f<'20261118045220'))await db.exec(readFileSync('supabase/migrations/'+f,'utf8'));
  await db.exec(readFileSync('supabase/seed.sql','utf8'));
  // Simulasi 13 surat bernomor lama tanpa versi. Migrasi tidak boleh menyentuhnya.

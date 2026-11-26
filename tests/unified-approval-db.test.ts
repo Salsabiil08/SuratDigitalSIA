@@ -13,7 +13,7 @@ async function asUser(n:number,s:string,p:any[]=[]){await db.exec('begin');try{a
 beforeAll(async()=>{
  await db.exec(readFileSync('supabase/tests/00_stub_supabase.sql','utf8'));await db.exec(readFileSync('supabase/tests/00_stub_storage.sql','utf8'));
  const migrations=readdirSync('supabase/migrations').filter(f=>f.endsWith('.sql')).sort();const unified=migrations.find(f=>f.endsWith('_unified_content_approval.sql'))!;
- for(const f of migrations.filter(f=>f!==unified))await db.exec(readFileSync('supabase/migrations/'+f,'utf8'));
+ for(const f of migrations.filter(f=>f<unified))await db.exec(readFileSync('supabase/migrations/'+f,'utf8'));
  await db.exec(readFileSync('supabase/seed.sql','utf8'));await db.exec(readFileSync('supabase/tests/00_workflow_fixtures.sql','utf8'));
  waiting=await save(5,{reviewRequested:true,reviewerId:a(3)});await submit(waiting);
  let step=(await rows('select * from review_steps where letter_id=$1',[waiting]))[0];await rows("select decide_letter_review($1,$2,$3,$4,'COMMENT','Historical note')",[a(3),step.id,step.version_id,(await letter(waiting)).revision]);

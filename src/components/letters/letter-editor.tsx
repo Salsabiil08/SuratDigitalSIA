@@ -1,4 +1,5 @@
 "use client";
+import { internalSenderOptions, organizationMember } from "@/domain/official-sender";
 import {ActionNotice} from "@/components/ui/action-notice";
 import { useCallback, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
@@ -29,6 +30,8 @@ function draftFromData(
     manualNumberId:l.manual_number_reservation_id || undefined,
     manualNumberConfirmed:false,
     id: l.id,
+    officialSenderId:l.official_sender_id || undefined,
+    originCity:l.origin_city || "",
     categoryCode: l.document_category?.code || "",
     reviewerId: "",
     approvalRequired: l.content_approval_required || false,
@@ -166,7 +169,15 @@ export function LetterEditor({
   const canImportBilling=input.source==='UPLOAD' && !!options.financeUnitId && options.user.unit?.id===options.financeUnitId;
   const recipient=options.people.find(p=>p.id===input.recipientUserId);
   const peer=peerInternal(input.letterTypeCode,options.user.position?.level||0,recipient?.level||0);
-  const count = internal ? (peer ? 0 : formal ? 1 : 0) : isBill ? 2 : 1;
+  const r05 = !!options.organizationUnits && !isBill;
+  const members = options.people.flatMap(person => organizationMember(person.id, person.position, person.unitId, person.assignmentId, person.supervisorAssignmentId) || []);
+  const actor = members.find(member => member.id === options.user.id);
+  const to = members.find(member => member.id === input.recipientUserId);
+  const senderOptions = internal && actor && to
+    ? internalSenderOptions(actor, to, members, options.organizationUnits || []).map(member => options.people.find(person => person.id === member.id)!)
+    : options.people.filter(person => !internal && person.signer);
+  const senderId = senderOptions.length === 1 ? senderOptions[0]!.id : senderOptions.some(person => person.id === input.officialSenderId) ? input.officialSenderId : undefined;
+  const count = r05 ? (internal ? 0 : 1) : internal ? (peer ? 0 : formal ? 1 : 0) : isBill ? 2 : 1;
   const approvers=options.people.filter(p=>p.id!==options.user.id&&roleReviewer(options.user.position?.code||'',p.position)&&(p.position!=='GM'||p.unitId===options.user.unit?.id)).sort((a,b)=>(REVIEWER_ROLE_ORDER[a.position]||0)-(REVIEWER_ROLE_ORDER[b.position]||0)||a.name.localeCompare(b.name,'id'));
   const signers = options?.people.filter((p) => p.signer) || [];
   function updateSigner(index: number, value: string) {
@@ -192,12 +203,14 @@ export function LetterEditor({
     setError("");
     try {
       if(manualNumber && !input.manualNumberConfirmed)throw new Error("Konfirmasi nomor pada dokumen unggahan terlebih dahulu.");
-      const ids = input.signerIds.slice(0, count);
+      if (r05 && !senderId) throw new Error("Pilih pengirim resmi yang sah.");
+      const ids = r05 ? (internal ? [] : [senderId!]) : input.signerIds.slice(0, count);
       if (ids.length !== count || ids.some((id) => !id))
         throw new Error("Pilih seluruh pejabat penandatangan wajib.");
       const data = {
         ...input,
         signerIds: ids,
+        ...(r05 ? {officialSenderId:senderId, signatureMode:"IN_APP" as const} : {}),
         mandatoryApproverIds: options.user.position?.code==='DIR'&&!isBill ? ids : input.mandatoryApproverIds?.slice(0,count) || ids,
         additionalApproverIds: peer || options.user.position?.code==='DIR' ? [] : input.additionalApproverIds,
         approvalRequired:!peer&&options.user.position?.code!=='DIR'&&!!input.approvalRequired,
@@ -357,11 +370,11 @@ export function LetterEditor({
                 id="recipient-user"
                 disabled={!!dispositionSeed||!!initialData?.dispositionContext.tasks.some(t=>t.isResult)||!!initialData?.replyContext.links.some(r=>r.direction==='ORIGIN')}
                 value={input.recipientUserId}
-                onChange={(e) => change("recipientUserId", e.target.value)}
+                onChange={(e) => setInput(old=>({...old,recipientUserId:e.target.value,officialSenderId:undefined}))}
                 required
               >
                 <option value="">Pilih penerima</option>
-                {options?.people.map((p) => (
+                {options?.people.filter(p=>!r05||p.id!==options.user.id).map((p) => (
                   <option key={p.id} value={p.id}>
                     {p.name} — {p.title} / {p.unitName}
                   </option>
@@ -556,9 +569,17 @@ export function LetterEditor({
             </p>
           </Card>
         )}
-        {internal && !recipient && <Card className="p-5"><p className="text-sm text-neutral-600">Pilih penerima untuk melihat kebutuhan persetujuan dan tanda tangan.</p></Card>}
-        {peer && <Card className="p-5"><p className="text-sm">Surat ini tidak memerlukan persetujuan atau tanda tangan.</p></Card>}
-        {(!internal || !!recipient) && !peer && <>
+        {r05 && (!internal || recipient) && <Card className="p-5 space-y-3">
+          <Field label="Pengirim resmi (From)" htmlFor="official-sender" required>
+            <OfficialChoice id="official-sender" people={senderOptions} value={senderId||""} onChange={value=>change("officialSenderId",value)} />
+          </Field>
+          {!internal && <Field label="Kota surat" htmlFor="origin-city" required>
+            <Input id="origin-city" required maxLength={100} value={input.originCity||""} onChange={event=>change("originCity",event.target.value)} />
+          </Field>}
+        </Card>}
+        {!r05 && internal && !recipient && <Card className="p-5"><p className="text-sm text-neutral-600">Pilih penerima untuk melihat kebutuhan persetujuan dan tanda tangan.</p></Card>}
+        {!r05 && peer && <Card className="p-5"><p className="text-sm">Surat ini tidak memerlukan persetujuan atau tanda tangan.</p></Card>}
+        {!r05 && (!internal || !!recipient) && !peer && <>
         {((count > 0 && (isBill || options.user.position?.code!=='DIR')) || additionalApprovers.length > 0) && <Card className="p-5 space-y-4">
 
           <h2 className="font-bold">{differentSigners?"Persetujuan Surat":"Persetujuan dan Tanda Tangan"}</h2>
