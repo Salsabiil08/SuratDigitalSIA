@@ -1,5 +1,10 @@
 # AGENTS.md — SIADocs
 
+## Acuan revisi aktif
+
+[SIADocs R.05](docs/spec/09-siadocs-r05.md) mengungguli aturan R.04 yang bertentangan, khususnya pengirim resmi, review, TTD internal, penomoran manual, pengesahan luar sistem untuk tagihan, dan dokumen final. Pertahankan dokumen final lama, identitas audit, counter, dan versi historis. Perubahan database harus berupa migrasi forward-only. R.05 belum aktif di produksi sampai semua tahap siap dan pemeriksaan lulus.
+
+
 ## Pekerjaan aktif dan batas persetujuan
 
 Basis implementasi yang disetujui adalah **Salsabiil08/SuratDigitalSIA**. Jangan merekonsiliasi ke `Salsabiil08/SIAdocs` atau mengganti stack.
