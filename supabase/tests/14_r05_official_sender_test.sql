@@ -36,8 +36,10 @@ begin
  assert denied;
  select revision into revision_number from letters where id=draft;
  perform review_letter(gm,draft,'APPROVE',revision_number,null);
- perform test_support.number(staff,draft,'r05-approved');
- assert(select official_number is not null from letters where id=draft);
+ assert(select status='NUMBERED' and official_number is not null from letters where id=draft);
+ assert(select count(*)=1 from number_issuances where letter_id=draft);
+ perform test_support.number(staff,draft,'issue-'||draft::text);
+ assert(select count(*)=1 from number_issuances where letter_id=draft);
  assert not app.can_read_letter_for(other_gm,draft);
 
  draft:=save_letter_draft(director,input||jsonb_build_object('recipientUserId',staff,'officialSenderId',director),doc);
