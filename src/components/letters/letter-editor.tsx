@@ -482,6 +482,15 @@ export function LetterEditor({
               Gunakan bank dan rekening yang sama untuk semua rincian
             </label>
             {input.billing.sharedPayment!==false && <>
+            {!!options.paymentAccounts?.length && <Field label="Rekening tersimpan" htmlFor="shared-account">
+              <Select id="shared-account" value="" onChange={event=>{
+                const account=options.paymentAccounts.find(item=>item.id===event.target.value);
+                if(!account)return;
+                const bank=options.banks.find(item=>item.id===account.bank_id);
+                if(!bank)return;
+                change('billing',{...input.billing!,bankId:bank.id,bankName:bank.name,accountNumber:account.account_number,accountHolder:account.holder_name});
+              }}><option value="">Isi manual atau pilih rekening</option>{options.paymentAccounts.map(account=><option key={account.id} value={account.id}>{account.holder_name} · {account.account_number}</option>)}</Select>
+            </Field>}
             <Field label="Bank Penyalur Pembayaran" htmlFor="bank" required>
               <Select
                 id="bank"
@@ -526,6 +535,14 @@ export function LetterEditor({
             {input.billing.items.map((item, index) => (
               <div className="grid sm:grid-cols-3 gap-3" key={index}>
                 <div className="sm:col-span-3 flex items-center justify-between gap-3"><h3 className="font-semibold">Rincian {index + 1}</h3>{input.billing!.items.length>1 && <Button type="button" variant="ghost" size="sm" aria-label={`Hapus rincian ${index+1}`} onClick={()=>change('billing',{...input.billing!,items:input.billing!.items.filter((_,i)=>i!==index)})}>Hapus</Button>}</div>
+                {input.billing!.sharedPayment===false && !!options.paymentAccounts?.length && <Field label="Rekening tersimpan" htmlFor={`stored-account-${index}`}>
+                  <Select id={`stored-account-${index}`} value="" onChange={event=>{
+                    const account=options.paymentAccounts.find(row=>row.id===event.target.value);
+                    const bank=options.banks.find(row=>row.id===account?.bank_id);
+                    if(!account||!bank)return;
+                    change('billing',{...input.billing!,items:input.billing!.items.map((row,i)=>i===index?{...row,bankName:bank.name,payeeName:account.holder_name,accountNumber:account.account_number}:row)});
+                  }}><option value="">Isi manual atau pilih rekening</option>{options.paymentAccounts.map(account=><option key={account.id} value={account.id}>{account.holder_name} · {account.account_number}</option>)}</Select>
+                </Field>}
                 {input.billing!.sharedPayment===false && ([
                   ['payeeName','Penerima pembayaran'],
                   ['bankName','Bank'],

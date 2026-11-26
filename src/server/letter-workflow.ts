@@ -154,7 +154,11 @@ export async function peopleOptions() {
   if(approvalGrantError)throw new Error('Konfigurasi persetujuan belum dapat diambil.');
   const approverGrants=(approvalGrants||[]).filter(g=>(!g.unit_id||g.unit_id===user.unit?.id)&&g.starts_on<=today&&(!g.ends_on||g.ends_on>=today)).map(g=>({approverId:g.approver_id,typeCode:(g.type as any)?.code||null}));
   const reviewRules:never[]=[];
-  return { user, people, organizationUnits:(units||[]).map(unit=>({id:unit.id,parentId:unit.parent_id})), banks: banks || [], financeUnitId:billingType?.creator_unit_id || '', categories: categories || [], reviewRules, approverGrants };
+  const accounts = user.unit?.id===billingType?.creator_unit_id && billingType?.creator_unit_id
+    ? await db.from('master_payment_accounts').select('id,bank_id,holder_name,account_number').eq('is_active',true).order('holder_name')
+    : null;
+  if(accounts?.error) throw new Error("Master rekening belum dapat dimuat.");
+  return { user, people, paymentAccounts:accounts?.data||[], organizationUnits:(units||[]).map(unit=>({id:unit.id,parentId:unit.parent_id})), banks: banks || [], financeUnitId:billingType?.creator_unit_id || '', categories: categories || [], reviewRules, approverGrants };
 }
 export async function saveDraft(
   input: DraftInput,

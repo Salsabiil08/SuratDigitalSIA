@@ -41,7 +41,8 @@
       "fix/reviewer-role-hierarchy": false,
       "fix/reviewer-hierarchy-integration": false,
       "fix/mobile-preview-disposition-edit": false,
-      "fix/unified-content-approval": false
+      "fix/unified-content-approval": false,
+      "feat/r05": false
     }
   }
 }

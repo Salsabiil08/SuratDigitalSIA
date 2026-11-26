@@ -72,6 +72,10 @@ export function Sidebar({ user, unreadNotificationsCount, className }: SidebarPr
       items: access?.correspondence ? [{label:'Register Nomor Surat',href:'/register-nomor'}] : [],
     },
     {
+      title: 'Master',
+      items: access?.billing ? [{label:'Master Rekening',href:'/master-rekening'}] : [],
+    },
+    {
       title: 'Administrasi',
       items: adminItems,
     },
