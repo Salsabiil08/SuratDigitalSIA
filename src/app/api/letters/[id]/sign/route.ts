@@ -1,3 +1,4 @@
+import { readSigningAsset } from "@/server/signing-assets";
 import { NextResponse } from "next/server";
 import { randomUUID } from "node:crypto";
 import { requireUser } from "@/server/auth";
@@ -62,8 +63,10 @@ export async function POST(
     const stamp = form.get("stamp") as File | null;
     let sigBytes: Uint8Array | undefined, stampBytes: Uint8Array | undefined;
     if (method === "IMAGE") {
-      if (!signature?.size) throw new Error("Pilih gambar TTD PNG milik Anda.");
-      sigBytes = new Uint8Array(await signature.arrayBuffer());
+      sigBytes = form.get("useStoredSignature")==="1"
+        ? await readSigningAsset(user,"SIGNATURE")
+        : signature?.size ? new Uint8Array(await signature.arrayBuffer()) : undefined;
+      if(!sigBytes) throw new Error("Pilih TTD tersimpan atau unggah PNG milik Anda.");
       const images = [
         {
           marker: `{{SIGNATURE_${s.sign_order}}}`,
@@ -71,10 +74,10 @@ export async function POST(
           area: letter.signature_areas?.[s.sign_order - 1],
         },
       ];
-      if (stamp?.size) {
+      if (stamp?.size || form.get("useStoredStamp")==="1") {
         if (letter.signature_areas?.stamp)
           throw new Error("Konfigurasi area tidak valid.");
-        stampBytes = new Uint8Array(await stamp.arrayBuffer());
+        stampBytes = form.get("useStoredStamp")==="1" ? await readSigningAsset(user,"STAMP") : new Uint8Array(await stamp!.arrayBuffer());
         images.push({
           marker: "{{STAMP}}",
           bytes: stampBytes,

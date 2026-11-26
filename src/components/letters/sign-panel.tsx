@@ -15,6 +15,8 @@ export function SignPanel({
 }) {
   const imageAvailable=letter.source!=="UPLOAD" || !!letter.signature_areas?.[request.sign_order-1];
   const [method, setMethod] = useState(imageAvailable?"IMAGE":"WET_UPLOAD");
+  const [storedSignature,setStoredSignature]=useState(false);
+  const [storedStamp,setStoredStamp]=useState(false);
   const [signature, setSignature] = useState<File | null>(null);
   const [stamp, setStamp] = useState<File | null>(null);
   const [document, setDocument] = useState<File | null>(null);
@@ -42,6 +44,8 @@ export function SignPanel({
       form.set("method", method);
       form.set("requestId", request.id);
       form.set("revision", String(letter.revision));
+      if (storedSignature) form.set("useStoredSignature","1");
+      if (storedStamp) form.set("useStoredStamp","1");
       if (signature) form.set("signature", signature);
       if (stamp) form.set("stamp", stamp);
       if (document) form.set("document", document);
@@ -88,12 +92,21 @@ export function SignPanel({
       </Field>
       {method === "IMAGE" ? (
         <>
+          <label className="flex items-center gap-2 text-sm">
+            <input type="checkbox" checked={storedSignature} onChange={e=>{reset();setStoredSignature(e.target.checked);}}/>
+            Gunakan TTD tersimpan
+          </label>
+          <label className="flex items-center gap-2 text-sm">
+            <input type="checkbox" checked={storedStamp} onChange={e=>{reset();setStoredStamp(e.target.checked);}}/>
+            Gunakan stempel tersimpan
+          </label>
           <Field
             label="Gambar TTD milik Anda (PNG, maks. 512 KB)"
             htmlFor="sig-file"
           >
             <Input
               id="sig-file"
+              disabled={storedSignature}
               type="file"
               accept="image/png"
               onChange={(e) => {
@@ -109,6 +122,7 @@ export function SignPanel({
           >
             <Input
               id="stamp-file"
+              disabled={storedStamp}
               type="file"
               accept="image/png"
               onChange={(e) => {

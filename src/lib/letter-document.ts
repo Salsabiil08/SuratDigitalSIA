@@ -66,21 +66,15 @@ function drawImageXml(rel: string, id: number, width = 140, height = 55, stamp=f
     .replace('<wp:extent', '<wp:simplePos x="0" y="0"/><wp:positionH relativeFrom="character"><wp:posOffset>0</wp:posOffset></wp:positionH><wp:positionV relativeFrom="line"><wp:posOffset>0</wp:posOffset></wp:positionV><wp:extent')
     .replace('<wp:docPr', '<wp:wrapNone/><wp:docPr').replace('</wp:inline>','</wp:anchor>');
 }
-export async function applyDocumentImages(
-  bytes: Uint8Array,
-  format: DocumentFormat,
-  images: { marker: string; bytes: Uint8Array; area?: SignatureArea }[],
-) {
-  // Decode on the server, reject arbitrary content; PNG only (SVG and external URLs cannot enter documents).
-  for (const image of images) {
+export async function validateSigningPng(bytes: Uint8Array) {
     if (
-      Buffer.from(image.bytes.slice(0, 8)).toString("hex") !==
-        "89504e470d0a1a0a" ||
-      image.bytes.length > 512 * 1024
+      Buffer.from(bytes.slice(0, 8)).toString("hex") !==
+        "89504e470d0a1a0a" || bytes.length < 24 ||
+      bytes.length > 512 * 1024
     )
       throw new Error("Gambar TTD/stempel wajib PNG, maksimal 512 KB.");
-    const width = Buffer.from(image.bytes).readUInt32BE(16),
-      height = Buffer.from(image.bytes).readUInt32BE(20);
+    const width = Buffer.from(bytes).readUInt32BE(16),
+      height = Buffer.from(bytes).readUInt32BE(20);
     if (
       !width ||
       !height ||
@@ -90,8 +84,14 @@ export async function applyDocumentImages(
     )
       throw new Error("Resolusi gambar TTD/stempel terlalu besar.");
     const probe = await PDFDocument.create();
-    await probe.embedPng(image.bytes);
-  }
+    await probe.embedPng(bytes);
+}
+export async function applyDocumentImages(
+  bytes: Uint8Array,
+  format: DocumentFormat,
+  images: { marker: string; bytes: Uint8Array; area?: SignatureArea }[],
+) {
+  for (const image of images) await validateSigningPng(image.bytes);
   if (format === "PDF") {
     const pdf = await PDFDocument.load(bytes, { updateMetadata: false });
     const sizes = pdf.getPages().map((p) => p.getSize());

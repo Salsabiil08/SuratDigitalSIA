@@ -73,7 +73,10 @@ export function Sidebar({ user, unreadNotificationsCount, className }: SidebarPr
     },
     {
       title: 'Master',
-      items: access?.billing ? [{label:'Master Rekening',href:'/master-rekening'}] : [],
+      items: [
+        ...(access?.billing ? [{label:'Master Rekening',href:'/master-rekening'}] : []),
+        ...(access?.signatures ? [{label:'Master Pengesahan',href:'/master-pengesahan'}] : []),
+      ],
     },
     {
       title: 'Administrasi',
