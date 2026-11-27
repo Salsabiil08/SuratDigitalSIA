@@ -1,12 +1,11 @@
 import { readFile } from 'node:fs/promises';
-import { createRequire } from 'node:module';
-import { dirname, join } from 'node:path';
+import { join } from 'node:path';
 import JSZip from 'jszip';
 import { PDFDocument } from 'pdf-lib';
 import { CANONICAL_HEADER_SHA256, LETTERHEAD_SVG } from '@/lib/letterhead-preview';
 import { hashBytes } from '@/server/letter-workflow';
 
-const resolve = createRequire(import.meta.url).resolve;
+const browserScripts = join(process.cwd(), 'node_modules');
 
 export async function renderFinalPdf(bytes: Uint8Array) {
   const archive = await JSZip.loadAsync(bytes);
@@ -19,8 +18,8 @@ export async function renderFinalPdf(bytes: Uint8Array) {
 
   const [puppeteer, bundle, zipBundle] = await Promise.all([
     import('puppeteer-core'),
-    readFile(join(dirname(resolve('docx-preview')), 'docx-preview.min.js'), 'utf8'),
-    readFile(join(dirname(resolve('jszip')), '../dist/jszip.min.js'), 'utf8'),
+    readFile(join(browserScripts, 'docx-preview', 'dist', 'docx-preview.min.js'), 'utf8'),
+    readFile(join(browserScripts, 'jszip', 'dist', 'jszip.min.js'), 'utf8'),
   ]);
   // Local CI can point to its installed Chromium. Production uses the binary
   // bundled with the function and never downloads a browser at request time.
