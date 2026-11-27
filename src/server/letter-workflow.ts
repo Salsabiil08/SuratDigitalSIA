@@ -122,9 +122,10 @@ export async function peopleOptions() {
   const seen = new Set<string>();
   const active = (assignments || [])
     .filter(
-      (a) =>
+      (a: any) =>
         (!a.start_date || a.start_date <= today) &&
-        (!a.end_date || a.end_date >= today),
+        (!a.end_date || a.end_date >= today) &&
+        a.position?.is_active && a.unit?.is_active,
     )
     .filter((a) => {
       if (seen.has(a.profile_id)) return false;
@@ -144,13 +145,12 @@ export async function peopleOptions() {
         level: a?.position?.level || 0,
         unit: a?.unit?.code || "",
       unitId: a?.unit?.id || "",
-      active: !!a?.unit?.is_active && !!a?.position?.is_active,
         unitName: a?.unit?.name || "",
         signer:
           !!a?.is_official_signer && ["SM", "DIR"].includes(a?.position?.code),
       };
     })
-    .filter((p) => p.position && p.active);
+    .filter((p) => p.position);
   if (catError) throw new Error('Metadata surat belum dapat diambil.');
   if(approvalGrantError)throw new Error('Konfigurasi persetujuan belum dapat diambil.');
   const approverGrants=(approvalGrants||[]).filter(g=>(!g.unit_id||g.unit_id===user.unit?.id)&&g.starts_on<=today&&(!g.ends_on||g.ends_on>=today)).map(g=>({approverId:g.approver_id,typeCode:(g.type as any)?.code||null}));

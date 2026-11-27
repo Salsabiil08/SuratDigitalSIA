@@ -1,4 +1,4 @@
-import asyncio,json,urllib.request
+import asyncio,json,os,urllib.request
 from pathlib import Path
 from playwright.async_api import async_playwright
 async def main():
@@ -10,7 +10,7 @@ async def main():
  def check(condition,detail):
   if not condition: failures.append(detail)
  async with async_playwright() as p:
-  browser=await p.chromium.launch(headless=True)
+  browser=await p.chromium.launch(headless=True,executable_path=os.environ.get("CHROMIUM_PATH"))
   for width in [320,390,768,1366]:
    context=await browser.new_context(viewport={'width':width,'height':844});page=await context.new_page();errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
    for role in ['STF','GM','SM','DIR','ADMIN']:
@@ -39,18 +39,29 @@ async def main():
    await context.close()
   for width in [320,390,1366]:
    page=await browser.new_page(viewport={'width':width,'height':844})
-   await page.goto(base+'/?role=STF&page=import&r05=1')
+   for form in ['create','import']:
+    await page.goto(base+f'/?role=STF&page={form}&r05=1')
+    recipient=page.get_by_label('Kepada (To)',exact=False)
+    check(await recipient.locator('option[value="sm"]').is_disabled(),('R05',width,form,'only SM cannot be From and To'))
+    check(await recipient.locator('option[value="gm"]').is_disabled(),('R05',width,form,'GM in a different unit cannot substitute'))
+    check(await page.get_by_text('Pengirim dan penerima harus berbeda.',exact=False).is_visible(),('R05',width,form,'blocked recipient explained'))
+    check(await page.get_by_role('button',name='Simpan Draft',exact=True).is_disabled(),('R05',width,form,'save blocked without To'))
+    await recipient.select_option('other-gm')
+    check(await page.locator('#automatic-approver').inner_text()=='Pejabat GM',('R05',width,form,'From automatically approves'))
+    await recipient.select_option('peer')
+    check(await page.locator('#automatic-approver').inner_text()=='Tidak diperlukan',('R05',width,form,'creator sends peer mail'))
+    await page.locator('#letter-type').select_option('KRE')
+    await page.locator('#official-sender').select_option('dir')
+    await page.locator('#origin-city').fill('Banda Aceh')
+    check(await page.locator('#automatic-approver').inner_text()=='Pejabat Direktur',('R05',width,form,'external approval follows sender'))
+    check(await page.locator('#letter-category').count()==1 and await page.locator('#letter-reviewer').count()==0,('R05',width,form,'category without separate review'))
+    check(await page.evaluate('document.documentElement.scrollWidth<=innerWidth'),('R05',width,form,'viewport'))
+   await page.goto(base+'/?role=STF&page=create&r05=1&multi=1')
    await page.locator('#recipient-user').select_option('other-gm')
-   check(await page.get_by_text('Pejabat GM',exact=True).count()==1,('R05',width,'From follows the creator hierarchy'))
-   await page.locator('#recipient-user').select_option('gm')
-   check(await page.get_by_text('Belum ada pejabat berwenang.',exact=False).count()==1,('R05',width,'blocks From equal to To'))
-   await page.locator('#letter-type').select_option('KRE')
-   await page.locator('#official-sender').select_option('dir')
-   await page.locator('#origin-city').fill('Banda Aceh')
-   check(await page.locator('#letter-category').count()==1 and await page.locator('#letter-reviewer').count()==0,('R05',width,'category without separate review'))
-   check(await page.evaluate('document.documentElement.scrollWidth<=innerWidth'),('R05',width,'viewport'))
+   await page.locator('#official-sender').select_option('second-gm')
+   check(await page.locator('#automatic-approver').inner_text()=='Pejabat GM Kedua',('R05',width,'selected eligible sender approves'))
    await page.close()
-   results.append({'width':width,'scope':'R05 import sender and city'})
+   results.append({'width':width,'scope':'R05 creation and import From/To'})
   context=await browser.new_context(viewport={'width':1366,'height':844});page=await context.new_page();await page.clock.install(time=__import__('datetime').datetime(2026,11,24,18,59,0,tzinfo=__import__('datetime').timezone.utc));await page.goto(base+'/?page=admin');await page.get_by_text('01.59 WIB',exact=True).first.wait_for();await page.clock.run_for(60100);await page.get_by_text('02.00 WIB',exact=True).first.wait_for();results.append({'clock_minute_rollover':'PASS'})
   await browser.close()
  (out/'responsive-result.json').write_text(json.dumps({'results':results,'failures':failures},indent=2));print(json.dumps({'cases':len(results),'failures':failures,'scope':'real UI components, synthetic data; no production account writes'}));assert not failures,failures

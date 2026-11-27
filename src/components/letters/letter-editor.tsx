@@ -159,6 +159,7 @@ export function LetterEditor({
       additionalApproverIds: [],
       areas: [],
       recipientUserId: "",
+      officialSenderId: undefined,
       recipientName: "",
       recipientOrg: "",
       recipientAddress: "",
@@ -173,11 +174,23 @@ export function LetterEditor({
   const r05 = !!options.organizationUnits && !isBill;
   const members = options.people.flatMap(person => organizationMember(person.id, person.position, person.unitId, person.assignmentId, person.supervisorAssignmentId) || []);
   const actor = members.find(member => member.id === options.user.id);
-  const to = members.find(member => member.id === input.recipientUserId);
-  const senderOptions = internal && actor && to
-    ? internalSenderOptions(actor, to, members, options.organizationUnits || []).map(member => options.people.find(person => person.id === member.id)!)
-    : options.people.filter(person => !internal && person.signer);
+  const sendersByRecipient = new Map(r05 && internal && actor
+    ? members.map(member => [member.id, internalSenderOptions(actor, member, members, options.organizationUnits || [])] as const)
+    : []);
+  const senderOptions = internal
+    ? (sendersByRecipient.get(input.recipientUserId || '') || []).map(member => options.people.find(person => person.id === member.id)!)
+    : options.people.filter(person => person.signer);
   const senderId = senderOptions.length === 1 ? senderOptions[0]!.id : senderOptions.some(person => person.id === input.officialSenderId) ? input.officialSenderId : undefined;
+  const blockedRecipients = r05 && internal
+    ? options.people.filter(person => person.id !== options.user.id && !sendersByRecipient.get(person.id)?.length)
+    : [];
+  const blockedRecipientIds = new Set(blockedRecipients.map(person => person.id));
+  const senderRequired = r05 && !senderId;
+  const senderHint = internal && !input.recipientUserId ? 'Pilih penerima yang tersedia terlebih dahulu.'
+    : internal && !senderOptions.length ? 'Tidak ada pengirim resmi yang sah untuk penerima ini. Pilih penerima lain atau hubungi pengelola Master Organisasi.'
+    : senderOptions.length > 1 ? 'Pilih pengirim resmi yang berwenang.'
+    : 'Belum ada SM atau Direktur yang berwenang. Hubungi pengelola Master Organisasi.';
+  const approverName = senderId === options.user.id ? 'Tidak diperlukan' : senderOptions.find(person => person.id === senderId)?.name || 'Mengikuti pengirim resmi';
   const count = r05 ? (internal ? 0 : 1) : internal ? (peer ? 0 : formal ? 1 : 0) : isBill ? 2 : 1;
   const approvers=options.people.filter(p=>p.id!==options.user.id&&roleReviewer(options.user.position?.code||'',p.position)&&(p.position!=='GM'||p.unitId===options.user.unit?.id)).sort((a,b)=>(REVIEWER_ROLE_ORDER[a.position]||0)-(REVIEWER_ROLE_ORDER[b.position]||0)||a.name.localeCompare(b.name,'id'));
   const signers = options?.people.filter(p => p.signer && (!isBill || p.position==="DIR" || p.unitId===options.financeUnitId || !options.organizationUnits)) || [];
@@ -204,7 +217,7 @@ export function LetterEditor({
     setError("");
     try {
       if(manualNumber && !input.manualNumberConfirmed)throw new Error("Konfirmasi nomor pada dokumen unggahan terlebih dahulu.");
-      if (r05 && !senderId) throw new Error("Pilih pengirim resmi yang sah.");
+      if (senderRequired) throw new Error(senderHint);
       const ids = r05 ? (internal ? [] : [senderId!]) : input.signerIds.slice(0, count);
       if (ids.length !== count || ids.some((id) => !id))
         throw new Error("Pilih seluruh pejabat penandatangan wajib.");
@@ -320,10 +333,9 @@ export function LetterEditor({
                 {(isBill || canImportBilling) && <option value="Tag">Surat Penagihan</option>}
               </Select>
             </Field>
-            <Field label="Unit Pengirim">
+            <Field label="Pembuat Surat">
               <p className="py-3 text-sm">
-                {options?.user.unit?.name || "Belum ditugaskan"} —{" "}
-                {options?.user.fullName}
+                {options.user.fullName} — {options.user.position?.name || "Belum ditugaskan"} / {options.user.unit?.name || "Tanpa unit"}
               </p>
             </Field>
           </div>
@@ -367,10 +379,11 @@ export function LetterEditor({
           )}
           {internal ? (
             <Field
-              label="Penerima Internal"
+              label={r05 ? "Kepada (To)" : "Penerima Internal"}
               htmlFor="recipient-user"
               required
-              hint="Pilih pegawai beserta jabatan dan unit dari struktur organisasi."
+              hint={blockedRecipients.length ? "Penerima di bagian Tidak tersedia belum memiliki pejabat setara dalam hierarki pembuat yang dapat menjadi pengirim resmi. Pengirim dan penerima harus berbeda." : undefined}
+              error={r05 && blockedRecipientIds.has(input.recipientUserId || "") ? senderHint : undefined}
             >
               <Select
                 id="recipient-user"
@@ -380,11 +393,16 @@ export function LetterEditor({
                 required
               >
                 <option value="">Pilih penerima</option>
-                {options?.people.filter(p=>!r05||p.id!==options.user.id).map((p) => (
+                {options.people.filter(p=>!r05||(p.id!==options.user.id&&!blockedRecipientIds.has(p.id))).map((p) => (
                   <option key={p.id} value={p.id}>
                     {p.name} — {p.title} / {p.unitName}
                   </option>
                 ))}
+                {!!blockedRecipients.length && <optgroup label="Tidak tersedia · tanpa pengirim resmi" disabled>
+                  {blockedRecipients.map(person => <option key={person.id} value={person.id} disabled>
+                    {person.name} — {person.title} / {person.unitName}
+                  </option>)}
+                </optgroup>}
               </Select>
             </Field>
           ) : isBill ? (
@@ -392,7 +410,7 @@ export function LetterEditor({
           ) : (
             <div className="grid sm:grid-cols-2 gap-4">
               <Field
-                label="Nama Penerima Eksternal"
+                label={r05 ? "Kepada (To) — Nama Penerima Eksternal" : "Nama Penerima Eksternal"}
                 htmlFor="recipient-name"
                 required
               >
@@ -431,6 +449,18 @@ export function LetterEditor({
               </div>
             </div>
           )}
+          {r05 && <div className="grid gap-4 sm:grid-cols-2">
+            <Field label="Dari (From)" htmlFor="official-sender" required>
+              {internal && !recipient ? <p className="text-sm text-neutral-600">{senderHint}</p>
+                : <OfficialChoice id="official-sender" people={senderOptions} value={senderId||""} onChange={value=>change("officialSenderId",value)} />}
+            </Field>
+            <Field label="Pemberi Persetujuan">
+              <output id="automatic-approver" className="text-sm" aria-label="Pemberi Persetujuan">{approverName}</output>
+            </Field>
+            {!internal && <Field label="Kota surat" htmlFor="origin-city" required>
+              <Input id="origin-city" required maxLength={100} value={input.originCity||""} onChange={event=>change("originCity",event.target.value)} />
+            </Field>}
+          </div>}
           <Field label="Perihal" htmlFor="letter-subject" required>
             <Input
               id="letter-subject"
@@ -606,14 +636,6 @@ export function LetterEditor({
             </p>
           </Card>
         )}
-        {r05 && (!internal || recipient) && <Card className="p-5 space-y-3">
-          <Field label="Pengirim resmi (From)" htmlFor="official-sender" required>
-            <OfficialChoice id="official-sender" people={senderOptions} value={senderId||""} onChange={value=>change("officialSenderId",value)} />
-          </Field>
-          {!internal && <Field label="Kota surat" htmlFor="origin-city" required>
-            <Input id="origin-city" required maxLength={100} value={input.originCity||""} onChange={event=>change("originCity",event.target.value)} />
-          </Field>}
-        </Card>}
         {!r05 && internal && !recipient && <Card className="p-5"><p className="text-sm text-neutral-600">Pilih penerima untuk melihat kebutuhan persetujuan dan tanda tangan.</p></Card>}
         {!r05 && peer && <Card className="p-5"><p className="text-sm">Surat ini tidak memerlukan persetujuan atau tanda tangan.</p></Card>}
         {!r05 && (!internal || !!recipient) && !peer && <>
@@ -699,13 +721,14 @@ export function LetterEditor({
             onReset={()=>setInput(old=>({...old,numberArea:undefined,areas:[],stampArea:undefined}))}/>
         </Card>}
         <div className="flex flex-wrap gap-3">
-          <Button type="submit" isLoading={busy}>
+          <Button type="submit" isLoading={busy} disabledReason={senderRequired ? senderHint : undefined}>
             Simpan Draft
           </Button>
           <Button
             type="button"
             variant="secondary"
             isLoading={busy}
+            disabledReason={senderRequired ? senderHint : undefined}
             onClick={() => save(true)}
           >
             Simpan dan Pratinjau

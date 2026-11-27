@@ -8,6 +8,7 @@ if(params.has('r05')){
  options.categories=[{code:'PEMBERITAHUAN',name:'Pemberitahuan'}];
  options.paymentAccounts=[];
  options.people.push({id:'actor',name:'Pembuat Surat',title:'Jabatan '+role,position:role,unit:'FIN',unitId:'fin',level:options.user.position.level,signer:role==='SM'||role==='DIR'});
+ if(params.has('multi')) options.people.push({id:'second-gm',name:'Pejabat GM Kedua',title:'General Manager',position:'GM',unit:'FIN',unitId:'fin',level:2,signer:false});
  options.people.push({id:'other-gm',name:'GM Unit Lain',title:'General Manager',position:'GM',unit:'ACH',unitId:'ach',level:2,signer:false});
 }
 const sidebar:any={name:'Pengguna '+long,initials:'PG',position:role,positionCode:role,positionLevel:options.user.position.level,isSuperAdmin:role==='ADMIN',access:navigationAccess({hasAssignment:true,isSuperAdmin:role==='ADMIN',positionCode:role,isOfficialSigner:true,isFinance:true,reviewerAssigned:role==='GM',approverAssigned:false})};
