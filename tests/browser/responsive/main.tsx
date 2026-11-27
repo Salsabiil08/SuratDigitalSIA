@@ -7,6 +7,7 @@ if(params.has('r05')){
  options.organizationUnits=[{id:'fin',parentId:null},{id:'ach',parentId:null}];
  options.categories=[{code:'PEMBERITAHUAN',name:'Pemberitahuan'}];
  options.paymentAccounts=[];
+ if(params.has('no-gm')) options.people=options.people.filter((person:{id:string})=>person.id!=='gm');
  options.people.push({id:'actor',name:'Pembuat Surat',title:'Jabatan '+role,position:role,unit:'FIN',unitId:'fin',level:options.user.position.level,signer:role==='SM'||role==='DIR'});
  if(params.has('multi')) options.people.push({id:'second-gm',name:'Pejabat GM Kedua',title:'General Manager',position:'GM',unit:'FIN',unitId:'fin',level:2,signer:false});
  options.people.push({id:'other-gm',name:'GM Unit Lain',title:'General Manager',position:'GM',unit:'ACH',unitId:'ach',level:2,signer:false});
