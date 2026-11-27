@@ -382,7 +382,7 @@ export function LetterEditor({
               label={r05 ? "Kepada (To)" : "Penerima Internal"}
               htmlFor="recipient-user"
               required
-              hint={blockedRecipients.length ? "Penerima di bagian Tidak tersedia belum memiliki pejabat setara dalam hierarki pembuat yang dapat menjadi pengirim resmi. Pengirim dan penerima harus berbeda." : undefined}
+              hint={blockedRecipients.length ? "Penerima di bagian Tidak tersedia belum memiliki pengirim resmi yang berwenang dalam hierarki pembuat. Pengirim dan penerima harus berbeda." : undefined}
               error={r05 && blockedRecipientIds.has(input.recipientUserId || "") ? senderHint : undefined}
             >
               <Select

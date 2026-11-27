@@ -4,7 +4,7 @@ Keputusan pembina pada permintaan R.05 adalah acuan implementasi aktif. Aturan R
 
 | Jenis | Pengirim resmi dan persetujuan | Pengesahan |
 | --- | --- | --- |
-| Internal | Pembuat untuk penerima setara atau di bawahnya. Untuk penerima lebih tinggi, pejabat dalam hierarki pembuat pada level penerima menjadi pengirim dan penyetuju. Pengirim tidak boleh sama dengan penerima. Jika tidak ada kandidat sah, pengajuan diblokir. | Tanpa TTD dan stempel |
+| Internal | Pembuat untuk penerima setara atau di bawahnya. Staff memakai GM terkait untuk penerima GM atau SM, dan GM atau SM terkait untuk penerima Direktur. Untuk pembuat di atas Staff yang mengirim ke level lebih tinggi, pertahankan pejabat pada level penerima dalam hierarki pembuat. Pengirim resmi yang berbeda dari pembuat menjadi pemeriksa dan satu-satunya penyetuju. Staff dapat memulai surat tanpa disposisi. Pengirim tidak boleh sama dengan penerima. Jika tidak ada kandidat sah, pengajuan diblokir. | Tanpa TTD dan stempel |
 | Eksternal | Pengirim resmi SM atau Dirut sekaligus penyetuju. Pengirim yang juga pembuat mengonfirmasi finalisasi dan TTD. | Satu TTD melalui Setujui & Tanda Tangani, stempel opsional |
 | Tagihan | Finance saja. SM Finance & Accounting mengajukan, lalu Dirut menyetujui. Lampiran wajib. | Dua TTD melalui SIADocs, stempel opsional |
 

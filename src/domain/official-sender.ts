@@ -43,9 +43,13 @@ export function internalSenderOptions(
     supervisor = byAssignment.get(supervisor)?.supervisorAssignmentId;
   }
 
+  const eligibleRoles: readonly CorrespondenceRole[] = creator.role === 'STF'
+    ? recipient.role === 'DIR' ? ['GM', 'SM'] : ['GM']
+    : [recipient.role];
+
   return members.filter(member =>
     member.id !== recipient.id &&
-    member.role === recipient.role &&
+    eligibleRoles.includes(member.role) &&
     (ancestors.has(member.unitId) || (!!member.assignmentId && supervisors.has(member.assignmentId))),
   );
 }
