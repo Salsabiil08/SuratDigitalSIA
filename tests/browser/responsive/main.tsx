@@ -1,3 +1,5 @@
+import { MasterLetterManagement } from '../../../src/app/(dashboard)/admin/master-surat/management-client';
+import { PaymentAccountManagement } from '../../../src/app/(dashboard)/master-rekening/management-client';
 import React from 'react';import {createRoot} from 'react-dom/client';import {DashboardShell} from '../../../src/components/layout/dashboard-shell';import {NotifikasiClient} from '../../../src/app/(dashboard)/notifikasi/notifikasi-client';import {LetterEditor} from '../../../src/components/letters/letter-editor';import {SuratSayaClient} from '../../../src/app/(dashboard)/surat/surat-client';import {PersetujuanClient} from '../../../src/app/(dashboard)/persetujuan/persetujuan-client';import {OrganisasiClient} from '../../../src/app/(dashboard)/admin/organisasi/organisasi-client';import {PasswordForm} from '../../../src/app/(dashboard)/profil/password-form';import {DisposisiClient} from '../../../src/app/(dashboard)/disposisi/disposisi-client';import {MailboxClient} from '../../../src/components/mailbox/mailbox-client';import {SignPanel} from '../../../src/components/letters/sign-panel';import {ActionNoticeProvider} from '../../../src/components/ui/action-notice';import {LiveClock} from '../../../src/components/ui/live-clock';import {Card} from '../../../src/components/ui/card';import {PageHeader} from '../../../src/components/ui/page-header';import {Table,TableBody,TableRow,TableCell} from '../../../src/components/ui/table';import {navigationAccess} from '../../../src/domain/navigation-access';import {notifications} from './actions';import '../../../src/app/globals.css';
 // Match the app's sans-serif font stack; Next font variables are supplied by the real root layout.
 document.documentElement.style.setProperty('--font-inter','Arial');
@@ -19,6 +21,13 @@ const mailbox:any={items:[{dispatch_id:'d',letter_id:'l',sender_id:'sender',send
 let content:React.ReactNode;
 if(page==='notifications')content=<NotifikasiClient initialData={notifications} initialUnread={6}/>;
 else if(['create','billing','import'].includes(page))content=<LetterEditor source={page==='import'?'UPLOAD':'CREATE'} billing={page==='billing'} initialOptions={options} manualReservation={page==='import'&&!params.has('r05')?{id:'reserved',official_number:'001-Tag/FIN/SIA/11.2026',subject:long,typeCode:'Tag',reserved_signer_id:null,letter_id:null,status:'RESERVED'}:undefined}/>;
+else if(page==='master-letter')content=<MasterLetterManagement versions={[]} banks={[
+ {id:'bank-a',code:'RK-A',name:'Bank Uji A',is_active:true},
+ {id:'bank-b',code:'RK-B',name:'Bank Uji B',is_active:false}
+]} publish={async()=>({error:'DOCX uji ditolak.'})} saveBank={async()=>({})}/>;
+else if(page==='master-accounts')content=<PaymentAccountManagement accounts={[
+ {id:'acc-a',bank_id:'bank-a',bankName:'Bank Uji A',holder_name:'Pemilik Uji',account_number:'0012',is_active:true}
+]} banks={[{id:'bank-a',name:'Bank Uji A',is_active:true}]} save={async()=>({})}/>;
 else if(page==='letters')content=<SuratSayaClient initialData={letters}/>;
 else if(page==='approval')content=<PersetujuanClient initialData={[{id:'a',letterId:'l',subject:long,letterType:'Surat Eksternal',creatorName:long,recipientName:long,stepOrder:1,totalSteps:2,revision:1}]}/>;
 else if(page==='organization')content=<OrganisasiClient initialUnits={[{id:'u',name:long,code:'FIN',isActive:true}]} initialPositions={[{id:'p',name:long,code:'SM',level:3,isActive:true}]}/>;

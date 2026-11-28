@@ -21,9 +21,14 @@ export async function getLetterhead(code:string) {
     .eq('letter_types.code',code).eq('is_active',true).not('template_path','is',null).maybeSingle();
   if(error)throw new Error('Master kop belum dapat dimuat.');
   if(!data)return undefined;
-  const object=await db.storage.from('letter-documents').download(data.template_path);
+  return downloadLetterhead(data.template_path,data.template_hash);
+}
+
+export async function downloadLetterhead(path:string,hash:string) {
+  const db=createAdminClient();
+  const object=await db.storage.from('letter-documents').download(path);
   if(object.error||!object.data)throw new Error('Berkas master kop tidak tersedia.');
   const bytes=new Uint8Array(await object.data.arrayBuffer());
-  if(digest(bytes)!==data.template_hash)throw new Error('Berkas master kop tidak sesuai catatan.');
+  if(digest(bytes)!==hash)throw new Error('Berkas master kop tidak sesuai catatan.');
   return bytes;
 }

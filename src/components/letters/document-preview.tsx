@@ -8,9 +8,11 @@ export function DocumentPreview({
   format,
   onLoaded,
   onLayoutCopy,
+  compact = false,
 }: {
   url: string;
   format: string;
+  compact?: boolean;
   onLoaded?: () => void;
   onLayoutCopy?: (isCopy: boolean) => void;
 }) {
@@ -68,7 +70,7 @@ export function DocumentPreview({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [url, format, visible, attempt]);
   return (
-    <div ref={container} className="min-w-0 max-w-full space-y-2">
+    <div ref={container} className={compact?"h-36 min-w-0 overflow-hidden rounded-xl border bg-neutral-50":"min-w-0 max-w-full space-y-2"}>
       {loading&&<p role="status" className="text-sm text-neutral-600">Pratinjau sedang disiapkan.</p>}
       {error && <><ActionNotice>{error}</ActionNotice><Button variant="secondary" onClick={()=>setAttempt(n=>n+1)}>Muat Ulang Pratinjau</Button></>}
         {format==='PDF'?(!error&&pdfBlob&&<div className="w-full h-[680px] overflow-auto bg-neutral-200 rounded-xl border p-2 sm:p-4"><PdfCanvas blob={pdfBlob} onLoaded={onLoaded}/></div>):<iframe
@@ -76,7 +78,8 @@ export function DocumentPreview({
           ref={frame}
           sandbox="allow-same-origin"
           title="Pratinjau dokumen surat"
-          className="w-full h-[680px] bg-neutral-100 border rounded-xl"
+          className={compact?"h-[680px] w-full pointer-events-none":"w-full h-[680px] bg-neutral-100 border rounded-xl"}
+          tabIndex={compact ? -1 : undefined}
         />}
 
     </div>
