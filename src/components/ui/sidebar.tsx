@@ -52,8 +52,6 @@ export function Sidebar({ user, unreadNotificationsCount, className }: SidebarPr
   if (access?.correspondence) suratItems.push({ label: 'Disposisi', href: '/disposisi' });
   const adminItems: NavItem[] = access?.administration ? [
     { label: 'Akun Pengguna', href: '/admin/pengguna' },
-    { label: 'Master Organisasi', href: '/admin/organisasi' },
-    { label: 'Seri Penomoran', href: '/admin/seri' },
     { label: 'Riwayat Aktivitas', href: '/admin/log' },
   ] : [];
 
@@ -74,7 +72,11 @@ export function Sidebar({ user, unreadNotificationsCount, className }: SidebarPr
     {
       title: 'Master',
       items: [
-        ...(access?.administration ? [{label:'Master Kop dan Bank',href:'/admin/master-surat'}] : []),
+        ...(access?.administration ? [
+          { label: 'Master Organisasi', href: '/admin/organisasi' },
+          { label: 'Master Kop dan Bank', href: '/admin/master-surat' },
+          { label: 'Jenis & Seri Penomoran', href: '/admin/seri' },
+        ] : []),
         ...(access?.billing ? [{label:'Master Rekening',href:'/master-rekening'}] : []),
         ...(access?.signatures ? [{label:'Master Pengesahan',href:'/master-pengesahan'}] : []),
       ],
