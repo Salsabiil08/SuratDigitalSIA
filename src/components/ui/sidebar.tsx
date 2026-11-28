@@ -67,7 +67,8 @@ export function Sidebar({ user, unreadNotificationsCount, className }: SidebarPr
     },
     {
       title: 'Data/Laporan',
-      items: access?.correspondence ? [{label:'Register Nomor Surat',href:'/register-nomor'}] : [],
+      items: access?.administration || access?.correspondence
+        ? [{label:access.administration?'Riwayat Surat':'Register Nomor Surat',href:'/register-nomor'}] : [],
     },
     {
       title: 'Master',
@@ -136,8 +137,9 @@ export function Sidebar({ user, unreadNotificationsCount, className }: SidebarPr
                   key={item.href}
                   href={item.href}
                   prefetch={false}
+                  aria-current={isActive ? "page" : undefined}
                   className={cn(
-                    'flex items-center justify-between px-2.5 py-2 rounded-lg text-sm transition-colors min-h-[38px]',
+                    'flex items-center justify-between px-2.5 py-2 rounded-lg text-sm transition-colors min-h-[38px] focus-visible:outline-offset-[-2px]',
                     isActive
                       ? 'bg-[rgba(242,106,15,0.22)] text-[#FFB27A] font-semibold'
                       : 'text-[#E1E5EA] hover:bg-white/[0.08]'

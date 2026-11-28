@@ -1,5 +1,5 @@
 import JSZip from 'jszip';
-import { numberRegister, registerCells, registerColumns } from '@/server/number-register';
+import { numberRegister } from '@/server/number-register';
 
 const sheetNs='http://schemas.openxmlformats.org/spreadsheetml/2006/main';
 const officeNs='http://schemas.openxmlformats.org/officeDocument/2006/relationships';
@@ -8,14 +8,14 @@ const xml = (value:string) => value.replace(/[\u0000-\u0008\u000b\u000c\u000e-\u
 
 export async function GET(request:Request) {
   try {
-    const read = await numberRegister(new URL(request.url).searchParams);
-    const cells:Array<Array<string|number|null>> = [registerColumns];
+    const register = await numberRegister(new URL(request.url).searchParams);
+    const cells:Array<Array<string|number|null>> = [register.columns];
     for(let offset=0;;offset+=500) {
-      const rows=await read(offset,500);
-      cells.push(...rows.map(registerCells));
+      const rows=await register.read(offset,500);
+      cells.push(...rows.map(register.cells));
       if(rows.length<500) break;
       if(offset>=19500) {
-        if((await read(20000,1)).length) return Response.json({error:'Persempit filter untuk mengekspor maksimal 20.000 nomor.'},{status:413});
+        if((await register.read(20000,1)).length) return Response.json({error:'Persempit filter untuk mengekspor maksimal 20.000 nomor.'},{status:413});
         break;
       }
     }

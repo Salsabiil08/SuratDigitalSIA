@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 import { requireUser } from '@/server/auth';
 
 export const registerColumns = ['Nomor urut','Nomor surat','Tanggal surat','Jenis surat','Unit','Pengirim','Penerima','Perihal','Bulan','Tahun','Status nomor'];
@@ -19,14 +20,20 @@ export function registerFilters(params: URLSearchParams) {
 }
 
 export async function numberRegister(params:URLSearchParams) {
-  await requireUser();
-  const db = await createClient();
+  const user = await requireUser();
+  const db = user.isSuperAdmin ? createAdminClient() : await createClient();
   const filters = registerFilters(params);
-  return async (offset:number, limit:number) => {
-    const {data,error} = await db.rpc('read_number_register',{...filters,p_offset:offset,p_limit:limit});
+  const read=async (offset:number, limit:number) => {
+    const args={...filters,p_offset:offset,p_limit:limit};
+    const {data,error}=user.isSuperAdmin
+      ? await db.rpc('read_admin_number_history',{...args,p_actor:user.id})
+      : await db.rpc('read_number_register',args);
     if(error) throw new Error('Register nomor belum dapat dimuat.');
     return (data||[]) as RegisterRow[];
   };
+  return {read,isAdmin:user.isSuperAdmin,
+    columns:user.isSuperAdmin?registerColumns.filter((_,index)=>index<5||index>7):registerColumns,
+    cells:(row:RegisterRow)=>user.isSuperAdmin?registerCells(row).filter((_,index)=>index<5||index>7):registerCells(row)};
 }
 
 interface RegisterRow {
